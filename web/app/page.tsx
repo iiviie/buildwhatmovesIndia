@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SahiReturnApp } from "./SahiReturnApp";
 
 export const metadata: Metadata = {
-  title: "Sahi Return | Defective return demo",
+  title: "Defective return demo",
   description:
     "An independent prototype that explains and corrects one synthetic Section 139(9) mismatch.",
 };
