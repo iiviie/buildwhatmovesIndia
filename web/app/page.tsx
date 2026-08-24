@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { SkeletonPreview } from "./_sites-preview/SkeletonPreview";
+import { SahiReturnApp } from "./SahiReturnApp";
 
 export const metadata: Metadata = {
-  title: "Your site is taking shape",
+  title: "Sahi Return | Defective return demo",
   description:
-    "Your first version will appear here automatically when it’s ready.",
-  other: {
-    "codex-preview": "development",
-  },
+    "An independent prototype that explains and corrects one synthetic Section 139(9) mismatch.",
 };
 
 export default function Home() {
-  return <SkeletonPreview />;
+  return <SahiReturnApp />;
 }
