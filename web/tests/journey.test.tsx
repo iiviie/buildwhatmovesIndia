@@ -179,6 +179,16 @@ describe("Sahi Return citizen journey", () => {
       screen.getByText(/No request was sent/),
     ).toBeInTheDocument();
   });
+
+  it("keeps contextual help keyboard dismissible", async () => {
+    const user = userEvent.setup();
+    render(<SahiReturnApp />);
+
+    await user.click(screen.getAllByRole("button", { name: "Help with this step" })[0]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });
 
 describe("synthetic file validation", () => {

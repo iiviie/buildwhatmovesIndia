@@ -8,7 +8,7 @@
   --green-bright: #226546;
   --mint: #d9efdf;
   --lime: #d9ef78;
-  --clay: #c75b3a;
+  --clay: #a83f22;
   --clay-soft: #f8ded4;
   --yellow: #f7de86;
   --line: #d7d1c5;
@@ -1065,6 +1065,8 @@ h2 {
   max-height: calc(100vh - 44px);
   overflow-y: auto;
   padding: clamp(25px, 5vw, 40px);
+  margin: 0;
+  border: 0;
   border-radius: 22px;
   background: var(--surface);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);

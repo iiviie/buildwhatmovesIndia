@@ -3,6 +3,7 @@
 import {
   type ChangeEvent,
   type FormEvent,
+  type KeyboardEvent,
   useEffect,
   useRef,
   useState,
@@ -70,6 +71,9 @@ export function SahiReturnApp() {
   const [clearOpen, setClearOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const helpCloseRef = useRef<HTMLButtonElement>(null);
+  const helpDialogRef = useRef<HTMLElement>(null);
+  const clearDialogRef = useRef<HTMLElement>(null);
+  const clearCancelRef = useRef<HTMLButtonElement>(null);
 
   const language = draft.language;
   const common = copy[language];
@@ -121,13 +125,48 @@ export function SahiReturnApp() {
     if (helpOpen) helpCloseRef.current?.focus();
   }, [helpOpen]);
 
+  useEffect(() => {
+    if (clearOpen) clearCancelRef.current?.focus();
+  }, [clearOpen]);
+
   const updateDraft = (next: Partial<DraftState>) => {
     setDraft((current) => ({ ...current, ...next }));
     setFormError("");
   };
 
   const goTo = (step: number) => {
-    updateDraft({ step: Math.max(0, Math.min(TOTAL_STEPS - 1, step)) });
+    const safeStep = Math.max(0, Math.min(TOTAL_STEPS - 1, step));
+    if (safeStep > 0) setHasSavedDraft(true);
+    updateDraft({ step: safeStep });
+  };
+
+  const keepFocusInDialog = (
+    event: KeyboardEvent<HTMLElement>,
+    dialog: HTMLElement | null,
+    closeDialog: () => void,
+  ) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeDialog();
+      return;
+    }
+    if (event.key !== "Tab" || !dialog) return;
+
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
   const switchLanguage = (nextLanguage: Language) => {
@@ -835,11 +874,16 @@ export function SahiReturnApp() {
 
       {helpOpen && (
         <div className="dialog-backdrop" role="presentation">
-          <section
+          <dialog
+            open
             className="dialog"
-            role="dialog"
             aria-modal="true"
             aria-labelledby="help-title"
+            tabIndex={-1}
+            ref={helpDialogRef}
+            onKeyDown={(event) =>
+              keepFocusInDialog(event, helpDialogRef.current, () => setHelpOpen(false))
+            }
           >
             <button
               className="dialog-close"
@@ -914,30 +958,40 @@ export function SahiReturnApp() {
                 </button>
               </form>
             )}
-          </section>
+          </dialog>
         </div>
       )}
 
       {clearOpen && (
         <div className="dialog-backdrop" role="presentation">
-          <section
+          <dialog
+            open
             className="dialog small"
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="clear-title"
             aria-describedby="clear-description"
+            tabIndex={-1}
+            ref={clearDialogRef}
+            onKeyDown={(event) =>
+              keepFocusInDialog(event, clearDialogRef.current, () => setClearOpen(false))
+            }
           >
             <h2 id="clear-title">{common.clearConfirm}</h2>
             <p id="clear-description">{common.clearExplanation}</p>
             <div className="button-row">
-              <button className="button secondary" onClick={() => setClearOpen(false)}>
+              <button
+                className="button secondary"
+                onClick={() => setClearOpen(false)}
+                ref={clearCancelRef}
+              >
                 {common.cancel}
               </button>
               <button className="button danger" onClick={clearDraft}>
                 {common.confirmClear}
               </button>
             </div>
-          </section>
+          </dialog>
         </div>
       )}
     </div>

@@ -34,6 +34,10 @@ test("server-renders the complete prototype start page", async () => {
   assert.match(html, /Synthetic data only/);
   assert.match(html, /Do not upload a real tax document or identifier/);
   assert.match(html, /Skip to main content/);
+  assert.match(
+    html,
+    /property="og:image" content="http:\/\/localhost(?::3000)?\/og\.png"/i,
+  );
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Starter Project/);
 });
 
