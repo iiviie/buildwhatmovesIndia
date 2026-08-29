@@ -1,0 +1,197 @@
+/* Hovercards: the jargon layer and the step previews.
+
+   The rule the rest of the interface follows is "no cards, no chips, no
+   shadows". A hovercard breaks it on purpose and only just: it is the one
+   thing on the page that genuinely sits above the page, and it has to read
+   that way or it looks like the paragraph has come apart. So it gets a border
+   and the faintest lift, and nothing else. */
+
+.hc {
+  display: inline;
+}
+
+/* The trigger is a button because a keyboard user must be able to reach it,
+   but it must not look like one: it is a word inside a sentence. The mark that
+   says it is one belongs to the glossary term rather than to every trigger —
+   the step rail and the masthead use the same mechanism on things that are
+   already obviously controls. */
+.hc-trigger {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: help;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  text-align: inherit;
+}
+
+.hc-trigger:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Marking a term in a paragraph.
+
+   This was a hairline in --rule-2, the grey the dividers are set in. Against
+   cream stock at reading size it was not there: someone looking straight at
+   the word "Form 16" could not tell it from the words on either side of it,
+   so the whole jargon layer went unfound. It is set in the supporting ink now,
+   which is the same weight as a caption and nowhere near the weight of the
+   sentence.
+
+   Broken rather than solid, and offset clear of the descenders, for two
+   reasons. A solid underline is what a link wears here, and these do not
+   navigate anywhere. And a sentence can hold two or three of them: a broken
+   rule leaves a line of prose reading as prose, where three solid ones would
+   not. Dashes rather than dots, because at reading size Chrome draws dots
+   small enough that the mark comes back to being a smudge. */
+.term .hc-trigger {
+  text-decoration: underline;
+  text-decoration-color: var(--ink-2);
+  text-decoration-style: dashed;
+  /* In em, so the mark keeps its weight at the larger text scales. A 1px rule
+     under 21px type reads as a hairline again. */
+  text-decoration-thickness: max(1px, 0.09em);
+  text-underline-offset: 0.24em;
+  /* Cut globally under prefers-reduced-motion by the rule in journey.css. */
+  transition: background-color var(--dur) var(--ease),
+    text-decoration-color var(--dur) var(--ease);
+}
+
+/* Answering. The mark closes up into a solid accent rule and the word takes
+   the faintest tint, so the term the panel belongs to is obvious when the
+   panel is open beside three other terms. Focus keeps its ring on top of
+   this: the ring says "you are here", the tint says "this one is open". */
+.term .hc-trigger:hover,
+.term .hc-trigger:focus-visible,
+.term .hc-trigger[aria-expanded="true"] {
+  background: var(--paper-2);
+  text-decoration-color: var(--accent);
+  text-decoration-style: solid;
+}
+
+.hc-panel {
+  background: var(--sheet);
+  border: 1px solid var(--rule-2);
+  box-shadow: 0 6px 22px -12px rgba(25, 23, 18, 0.5);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  line-height: 1.55;
+  max-width: min(34ch, calc(100vw - 24px));
+  /* The placement code flips the card above the term when there is no room
+     below, but on a short phone in landscape neither side has room for a long
+     definition and the card would simply run off. It scrolls instead, and the
+     clamped height is what the placement measures. */
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s3) var(--s4) var(--s4);
+  position: fixed;
+  z-index: 90;
+}
+
+[data-theme="dark"] .hc-panel {
+  box-shadow: 0 6px 22px -10px rgba(0, 0, 0, 0.8);
+}
+
+/* Rendered once before it has been measured, so it must not flash in the top
+   left corner of the screen on the way to its real position. */
+.hc-panel.is-measuring {
+  left: -9999px;
+  top: 0;
+  visibility: hidden;
+}
+
+.hc-panel > * + * {
+  margin-top: var(--s2);
+}
+
+.hc-term {
+  font-family: var(--serif);
+  font-size: var(--t-h3);
+  line-height: 1.25;
+}
+
+.hc-what {
+  color: var(--ink);
+}
+
+.hc-line {
+  color: var(--ink-2);
+}
+
+/* The label sits above its line rather than beside it: at 320px a lead-in on
+   the same line pushes the sentence into a two-character column. */
+.hc-line .label {
+  margin-bottom: 1px;
+}
+
+/* Step previews. Same panel, different contents. */
+.hc-step-summary {
+  color: var(--ink);
+}
+
+.hc-panel ul {
+  list-style: none;
+  margin-top: var(--s3);
+  padding: 0;
+}
+
+.hc-panel ul li {
+  color: var(--ink-2);
+  padding-left: var(--s4);
+  position: relative;
+}
+
+.hc-panel ul li + li {
+  margin-top: var(--s1);
+}
+
+.hc-panel ul li::before {
+  color: var(--ink-3);
+  content: "—";
+  left: 0;
+  position: absolute;
+}
+
+/* The panel is already a surface; a rule across it would be a second divider
+   level inside forty words. Space does the separating. */
+.hc-meta {
+  color: var(--ink-3);
+  margin-top: var(--s4);
+}
+
+.hc-meta span + span::before {
+  content: " · ";
+}
+
+/* In the step rail the trigger *is* the step button, so it must not pick up
+   the help cursor. Everything else about its layout stays with `.toc button`
+   in shell.css. */
+.toc .hc {
+  display: block;
+}
+
+.toc .hc-trigger {
+  cursor: pointer;
+}
+
+.toc .hc-trigger[aria-disabled="true"] {
+  cursor: default;
+}
+
+@media print {
+  .hc-panel {
+    display: none;
+  }
+
+  /* On paper there is nothing to hover, so the mark would only be a line under
+     a word for no reason. */
+  .term .hc-trigger {
+    background: none;
+    text-decoration: none;
+  }
+}

@@ -31,6 +31,14 @@ const localBindingConfig = {
         },
       ]
     : [],
+  // The public review link. A custom domain rather than a workers.dev
+  // subdomain, so the address a judge opens is stable and readable.
+  routes: [
+    {
+      pattern: "buildwhatmovesindia.iiviie.dev",
+      custom_domain: true,
+    },
+  ],
 };
 
 export default defineConfig(async () => {
@@ -44,9 +52,16 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      // The dev server refuses requests whose Host header it does not know, so
+      // that a hostile page cannot reach it by DNS rebinding. Sharing a review
+      // link over an ngrok tunnel needs those hostnames allowed — and only
+      // those. Development only; `vinext build` is unaffected.
+      allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io"],
+      ...(isCodexSeatbeltSandbox
+        ? { watch: { useFsEvents: false, usePolling: true } }
+        : {}),
+    },
     plugins: [
       vinext(),
       sites(),

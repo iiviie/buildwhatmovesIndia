@@ -1,0 +1,1190 @@
+.app {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- Standing authenticity disclosure ---------- */
+
+.trust {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+
+.trust-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  padding-block: 10px;
+}
+
+.trust-mark {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.trust-line {
+  display: flex;
+  max-width: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  color: var(--ink-2);
+}
+
+.trust-sep {
+  color: var(--rule-2);
+}
+
+.trust-toggle {
+  position: relative;
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  margin-left: auto;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.24em;
+}
+
+/* Three legal phrases and a sentence of link text came to seven stacked lines
+   across 280 usable pixels, all of it before the citizen meets anything. On a
+   phone the phrases keep the row — none of them may be hidden — and the
+   disclosure keeps only its chevron, with its wording left as the button's
+   accessible name. Sentence case buys back most of a line of width. */
+@media (max-width: 699px) {
+  .trust-bar {
+    flex-wrap: nowrap;
+    gap: var(--s2);
+    padding-block: 6px;
+  }
+
+  /* Running text, not flex items: an item that does not fit takes a whole line
+     of its own, so "Synthetic data only" was costing one by itself. */
+  .trust-line {
+    display: block;
+    flex: 1;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+    text-transform: none;
+  }
+
+  .trust-sep {
+    margin-inline: 3px;
+  }
+
+  .trust-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    flex: none;
+    justify-content: center;
+    margin-left: 0;
+  }
+
+  .trust-toggle-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.trust-chevron {
+  display: inline-flex;
+  transition: transform var(--dur) var(--ease);
+}
+
+.trust-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.trust-panel {
+  border-top: 1px solid var(--rule);
+  background: var(--sheet);
+}
+
+.trust-grid {
+  display: grid;
+  gap: var(--s5);
+  padding-block: var(--s5) var(--s6);
+}
+
+@media (min-width: 820px) {
+  .trust-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(40px, 4vw, 88px);
+  }
+}
+
+.trust-grid h2 {
+  padding-bottom: var(--s2);
+  margin-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.trust-grid p {
+  max-width: 46ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.trust-grid p + p {
+  margin-top: var(--s3);
+}
+
+.trust-grid .trust-source {
+  color: var(--ink-3);
+}
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.masthead-inner {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s5);
+  padding-block: var(--s3);
+}
+
+/* The account controls already wrap under the brand here (site.css), so the
+   masthead is two rows either way; the 76-pixel floor and the wide padding
+   were sized for one. Specificity is raised only to reach past that rule. */
+@media (max-width: 699px) {
+  .masthead .masthead-inner {
+    min-height: 0;
+    gap: var(--s2);
+    padding-block: var(--s2);
+  }
+}
+
+.brand {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.brand-name {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+:lang(hi) .brand-name {
+  font-family: var(--sans);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.brand-sub {
+  max-width: none;
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+:lang(hi) .brand-sub {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* The strapline describes the service rather than offering anything to do. On
+   a phone it gives its line to the work and is left to the screen reader. */
+@media (max-width: 559px) {
+  .brand-sub {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.masthead-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+}
+
+@media (min-width: 700px) {
+  .masthead-tools {
+    gap: var(--s5);
+  }
+}
+
+/* The command trigger is a ruled field, not a chip. */
+.cmd-trigger {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  gap: var(--s2);
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule-2);
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: var(--t-small);
+  text-align: left;
+}
+
+.cmd-trigger:hover {
+  border-bottom-color: var(--ink);
+  color: var(--ink-2);
+}
+
+.cmd-trigger-text,
+.cmd-trigger .keys {
+  display: none;
+}
+
+@media (min-width: 940px) {
+  .cmd-trigger {
+    min-width: 250px;
+  }
+
+  .cmd-trigger-text {
+    display: block;
+    flex: 1;
+    padding-right: var(--s4);
+  }
+
+  .cmd-trigger .keys {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 939px) {
+  .cmd-trigger {
+    justify-content: center;
+    border-bottom-color: transparent;
+  }
+}
+
+.keys {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: var(--t-label);
+  letter-spacing: 0.06em;
+}
+
+.tool-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+
+.tool-btn:hover,
+.tool-btn[aria-expanded="true"] {
+  color: var(--accent);
+}
+
+.tool-btn svg {
+  flex: none;
+}
+
+.tool-label {
+  display: none;
+}
+
+@media (min-width: 940px) {
+  .tool-label {
+    display: inline;
+  }
+}
+
+/* ---------- Settings popover ---------- */
+
+.menu-wrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 70;
+  top: calc(100% + 12px);
+  right: 0;
+  /* Sized in rem so the menu grows with the text-size setting it holds. Fixed
+     at 310px it clipped "Match device" at the largest setting — the one place
+     the setting is chosen was the one place it did not fit. */
+  width: min(21rem, calc(100vw - 32px));
+  padding: var(--s5);
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+}
+
+/* The menu hangs twelve pixels below its icon, and a pointer travelling from
+   one to the other crosses that gap — over the page, not over the menu, which
+   reads as leaving. This carries the menu's hit area up to meet the icon so
+   the trip is made without ever stepping outside. */
+.menu::before {
+  position: absolute;
+  top: -12px;
+  right: 0;
+  left: 0;
+  height: 12px;
+  content: "";
+}
+
+[data-theme="dark"] .menu {
+  border-color: var(--rule-2);
+  background: var(--paper-2);
+}
+
+.menu-group + .menu-group {
+  margin-top: var(--s5);
+}
+
+.menu-group > .label {
+  margin-bottom: var(--s2);
+}
+
+.menu-hint {
+  max-width: none;
+  margin-top: var(--s2);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.45;
+}
+
+/* Fixed track, equal columns: switching language never resizes the header. */
+.segmented {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  border: 1px solid var(--rule-2);
+}
+
+.segmented button {
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--rule-2);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.segmented-lang button {
+  min-width: 82px;
+}
+
+/* The text-size control shows its three sizes at their three sizes.
+
+   The markup has always carried the size on each glyph, and nothing was ever
+   written to read it, so the control rendered as three identical As: a
+   setting you could only understand by trying it. The ratios are the ones the
+   setting actually applies — 100%, 112.5%, 125% — so the buttons are a
+   preview of the thing they do. The names stay in the markup for a screen
+   reader, and are said in full under the group. */
+.segmented-size button {
+  align-items: baseline;
+  padding-block: var(--s2);
+  line-height: 1;
+}
+
+.segmented-size [data-size] {
+  font-weight: 600;
+}
+
+.segmented-size [data-size="base"] {
+  font-size: 0.9375rem;
+}
+
+.segmented-size [data-size="large"] {
+  font-size: 1.125rem;
+}
+
+.segmented-size [data-size="larger"] {
+  font-size: 1.375rem;
+}
+
+
+/* Four appearances do not fit on one line of a menu, and "Match device" is not
+   going to be abbreviated into fitting. Two rows of two. */
+.segmented-theme {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.segmented-theme button + button {
+  border-left: 0;
+}
+
+.segmented-theme button:nth-child(even) {
+  border-left: 1px solid var(--rule-2);
+}
+
+.segmented-theme button:nth-child(n + 3) {
+  border-top: 1px solid var(--rule-2);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s1) 0;
+  cursor: pointer;
+}
+
+.switch-row input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.switch-title {
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.switch-hint {
+  padding-left: 32px;
+}
+
+/* ---------- Portal nav, folded when the row will not fit ---------- */
+
+/* The strip itself is set in site.css; only its folded form is here. Scrolled
+   sideways it cut a section name in half mid-word, which reads as a rendering
+   fault rather than as an invitation to scroll. The seven names need about a
+   thousand pixels to sit in a row, so below that they fold behind one named
+   control instead of running off the edge. */
+
+.navmenu-toggle {
+  display: none;
+}
+
+@media (max-width: 999px) {
+  .navmenu-toggle {
+    display: inline-flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    gap: var(--s2);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: var(--t-small);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .navmenu-toggle .nav-chevron {
+    margin-left: auto;
+  }
+
+  /* Nothing here is wider than the phone once the list is a column, so the
+     scroller can stop clipping and let a focus ring show in full. */
+  .portalnav .portalnav-inner {
+    overflow: visible;
+  }
+
+  .portalnav .portalnav-list {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-bottom: var(--s2);
+  }
+
+  .portalnav-list.is-collapsed {
+    display: none;
+  }
+
+  .portalnav .navlink {
+    width: 100%;
+    min-height: 48px;
+    justify-content: space-between;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 0;
+  }
+}
+
+/* Above that the row is drawn in full, and takes a second line on the laptops
+   where the seven names are a little too wide for one. A wrapped name is
+   readable; a scrolled one was not. */
+@media (min-width: 1000px) {
+  .portalnav .portalnav-list {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Journey grid ---------- */
+
+.main {
+  flex: 1;
+  padding-block: var(--s6) var(--s8);
+}
+
+.layout {
+  display: grid;
+  align-items: start;
+  gap: var(--s6);
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) var(--margin-col);
+    gap: var(--s7);
+  }
+}
+
+@media (min-width: 1200px) {
+  .layout {
+    grid-template-columns: var(--nav-col) minmax(0, 1fr) var(--margin-col);
+    gap: var(--s7);
+  }
+}
+
+@media (min-width: 1700px) {
+  .layout {
+    column-gap: clamp(64px, 5vw, 104px);
+  }
+}
+
+.work {
+  min-width: 0;
+  container-type: inline-size;
+  container-name: work;
+}
+
+/* The left column holds the journey rail. Its rules live in styles/steprail.css:
+   the connector track that runs through the marks is geometry rather than
+   layout, and it was the only thing in this file that had to be read as a
+   drawing. */
+
+/* ---------- Right: marginalia, set as text and rules ---------- */
+
+.margin-col {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .margin-col {
+    position: sticky;
+    top: var(--s5);
+  }
+}
+
+.margin-block + .margin-block {
+  margin-top: var(--s6);
+}
+
+.margin-block > .label {
+  padding-bottom: var(--s2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.margin-list {
+  margin-top: var(--s1);
+}
+
+.margin-list > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-small);
+}
+
+.margin-list dt {
+  color: var(--ink-3);
+}
+
+.margin-list dd {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.margin-links {
+  margin-top: var(--s3);
+}
+
+.margin-links li {
+  padding: 6px 0;
+  font-size: var(--t-small);
+}
+
+.margin-note {
+  max-width: none;
+  margin-top: var(--s3);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.45;
+}
+
+.helpline {
+  display: block;
+  margin-top: var(--s2);
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- The deadline, set as marginal type ---------- */
+
+.deadline-num {
+  display: block;
+  margin-top: var(--s3);
+  color: var(--accent);
+  font-family: var(--serif);
+  font-size: clamp(3.6rem, 2.6rem + 2vw, 5rem);
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 0.9;
+}
+
+:lang(hi) .deadline-num {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 3rem;
+}
+
+.deadline-unit {
+  display: block;
+  margin-top: var(--s2);
+  color: var(--ink);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.deadline-dates {
+  max-width: none;
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.45;
+}
+
+.deadline-inline {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- Progress strip (below 1200, replaces the toc) ---------- */
+
+.stepstrip {
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 1200px) {
+  .stepstrip {
+    display: none;
+  }
+}
+
+.stepstrip-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--s4);
+  padding-block: var(--s3);
+}
+
+.stepstrip-name {
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.stepstrip .deadline-inline {
+  margin-left: auto;
+}
+
+/* Below the rail's breakpoint this strip is the only progress indicator, so it
+   stays; it does not have to be four lines. The count and the step name share
+   a line and the deadline takes the next one, rather than each item claiming a
+   row of its own once the deadline can no longer shrink. */
+@media (max-width: 699px) {
+  .stepstrip-inner {
+    gap: 0 var(--s3);
+    padding-block: 6px;
+  }
+
+  .stepstrip .deadline-inline {
+    flex-basis: 100%;
+    margin-left: 0;
+    line-height: 1.35;
+  }
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--rule);
+}
+
+.footer-inner {
+  display: grid;
+  gap: var(--s5);
+  padding-block: var(--s6) var(--s7);
+}
+
+@media (min-width: 820px) {
+  .footer-inner {
+    grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
+    gap: var(--s7);
+  }
+}
+
+.footer-inner p {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.footer-col > .label {
+  padding-bottom: var(--s2);
+  margin-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.footer-col li {
+  padding: 5px 0;
+  font-size: var(--t-small);
+}
+
+.footer-mark {
+  margin-bottom: var(--s3);
+  font-family: var(--serif);
+  font-size: 1.4rem;
+}
+
+:lang(hi) .footer-mark {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* ---------- Overlays ---------- */
+
+.backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  padding: var(--s3);
+  background: var(--overlay);
+}
+
+@media (min-width: 700px) {
+  .backdrop {
+    align-items: center;
+    padding: var(--s5);
+  }
+}
+
+.modal {
+  width: min(540px, 100%);
+  max-height: min(88dvh, 780px);
+  padding: var(--s6);
+  overflow-y: auto;
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .modal,
+[data-theme="dark"] .palette {
+  border-color: var(--rule-2);
+  background: var(--paper-2);
+}
+
+.modal-sm {
+  width: min(420px, 100%);
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+
+.modal-head h2 {
+  margin-top: var(--s2);
+}
+
+.modal-close {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--accent);
+}
+
+/* ---------- Command panel: a directory, not a dropdown ---------- */
+
+.panel-backdrop {
+  align-items: start;
+  justify-items: stretch;
+  padding: 0;
+}
+
+.panel {
+  width: 100%;
+  max-height: 100dvh;
+  overflow-y: auto;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: var(--sheet);
+}
+
+.panel-inner {
+  padding-block: var(--s5) var(--s5);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-here {
+  margin-top: var(--s2);
+  font-size: var(--t-h2);
+}
+
+/* The palette opens with the caret already in this field, so the field has to
+   look like it is being typed into before anything is typed: the rule under it
+   goes to the accent and the search mark with it. The input keeps no outline
+   of its own — the whole row is the focus indicator. */
+.panel-search {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule-2);
+  color: var(--ink-3);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.panel-search:focus-within {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+.panel-search input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  caret-color: var(--accent);
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 2rem);
+  outline: none;
+}
+
+:lang(hi) .panel-search input {
+  font-family: var(--sans);
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+}
+
+.panel-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2) var(--s4);
+  padding-block: var(--s4);
+}
+
+.panel-filter > .label {
+  color: var(--ink-3);
+}
+
+.filter-btn {
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+
+.filter-btn:hover {
+  color: var(--ink);
+}
+
+.filter-btn[aria-pressed="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.panel-body {
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+}
+
+.panel-grid {
+  display: grid;
+  gap: var(--s5) clamp(32px, 4vw, 80px);
+}
+
+@media (min-width: 760px) {
+  .panel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .panel-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.panel-results {
+  display: grid;
+  gap: 0;
+  max-width: 62ch;
+}
+
+.panel-group {
+  padding-bottom: var(--s2);
+  margin-bottom: var(--s2);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-3);
+}
+
+.panel-item {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 0 9px var(--s4);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.panel-item[data-active="true"] .panel-item-title {
+  color: var(--accent);
+}
+
+.panel-item[data-active="true"] .panel-item-title::before {
+  position: absolute;
+  margin-left: -18px;
+  content: "\2192";
+}
+
+.panel-item-title {
+  position: relative;
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.panel-item-sub {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.panel-empty {
+  max-width: none;
+  padding: var(--s6) 0;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.panel-foot {
+  display: flex;
+  max-width: none;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  padding-top: var(--s4);
+  margin-top: var(--s5);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: var(--t-label);
+}
+
+
+/* ---------- Masthead: icons rather than a sentence ---------- */
+
+/* The tools row used to spell out search, help, dashboard, logout and settings
+   in words, which read as a line of prose competing with the page it sits
+   above. Each is an icon now. The name is not lost: it is the button's
+   accessible name and it is on a hovercard after the usual delay, so a glyph
+   never has to be guessed. */
+
+.masthead-tools .tool {
+  display: inline-flex;
+}
+
+.masthead-tools .tool-btn {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  /* The hovercard trigger carries a dotted underline, which is right for a
+     word inside a sentence and wrong for an icon. */
+  border-bottom: 0;
+  border-radius: 8px;
+  gap: 0;
+  cursor: pointer;
+}
+
+/* Settings owns its own trigger, so it is matched here rather than reshaped
+   in the component. Its label is kept for a screen reader. */
+.masthead-tools .menu-wrap .tool-btn .tool-label {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.masthead-tools .menu-wrap .tool-btn {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border-radius: 8px;
+  gap: 0;
+}
+
+.masthead-tools .menu-wrap .tool-btn:hover,
+.masthead-tools .menu-wrap .tool-btn[aria-expanded="true"] {
+  background: var(--paper-2);
+  color: var(--accent);
+}
+
+.masthead-tools .menu-wrap .tool-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.masthead-tools .tool-btn:hover {
+  background: var(--paper-2);
+  color: var(--accent);
+}
+
+.masthead-tools .tool-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* A tooltip carries a name, not a definition, so it is set tighter than the
+   glossary panel it shares a mechanism with. */
+.hc-tip {
+  max-width: 26ch;
+  padding: var(--s2) var(--s3);
+}
+
+.hc-tool {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  font-size: var(--t-small);
+  white-space: nowrap;
+}
+
+.hc-keys {
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  letter-spacing: 0.06em;
+}
+
+/* Below the fold-out width the account name is the one thing worth its space;
+   the identifier under it is not. */
+@media (max-width: 699px) {
+  .account-id {
+    display: none;
+  }
+}

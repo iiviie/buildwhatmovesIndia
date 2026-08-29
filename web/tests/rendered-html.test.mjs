@@ -28,9 +28,9 @@ test("server-renders the complete prototype start page", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Defective return demo \| Sahi Return<\/title>/i);
+  assert.match(html, /<title>Salaried ITR filing demo \| Sahi Return<\/title>/i);
   assert.match(html, /Independent hackathon prototype/);
-  assert.match(html, /Start the synthetic case/);
+  assert.match(html, /Start the return/);
   assert.match(html, /Synthetic data only/);
   assert.match(html, /Do not upload a real tax document or identifier/);
   assert.match(html, /Skip to main content/);
@@ -38,6 +38,8 @@ test("server-renders the complete prototype start page", async () => {
     html,
     /property="og:image" content="http:\/\/localhost(?::3000)?\/og\.png"/i,
   );
+  assert.match(html, /Not an Income Tax Department service/);
+  assert.match(html, /Search or run a command/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Starter Project/);
 });
 

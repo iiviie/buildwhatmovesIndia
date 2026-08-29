@@ -1,0 +1,637 @@
+/* Personal Information: the filing section, the representative assessee
+   question, and the bank details.
+
+   Nine filing sections and two bank accounts are exactly the shape of list the
+   old interface would have ruled off line by line. There is no hairline in
+   here. The answer sits on a lit surface, the sections a citizen may want to
+   read sit on quieter ones, the group that only follows a notice is recessed
+   further still, and space does the rest. Every state — the section that
+   applies, Validated, not validated, nominated, does not apply here — is a
+   word before it is a colour. */
+
+.pers {
+  margin-top: var(--s5);
+}
+
+.pers-block + .pers-block {
+  margin-top: var(--s7);
+}
+
+.pers-title {
+  margin-bottom: var(--s3);
+}
+
+.pers-lede {
+  max-width: 54ch;
+  color: var(--ink-2);
+}
+
+/* ---------- The section that applies ---------- */
+
+.pers-answer {
+  min-width: 0;
+  padding: var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s4);
+  background: var(--sheet);
+}
+
+/* The edge repeats what the reason sentence already says; it never carries it
+   alone. On time is settled, anything later is not. */
+.pers-answer.is-ontime {
+  box-shadow: inset 2px 0 0 var(--ok);
+}
+
+.pers-answer.is-late {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.pers-answer-no {
+  margin-top: var(--s2);
+  font-family: var(--serif);
+  font-size: var(--t-h2);
+  line-height: 1.1;
+}
+
+/* Instrument Serif has no Devanagari, and a section number is Latin either
+   way, so only the sentence around it needs the reading face. */
+:lang(hi) .pers-answer-no {
+  font-family: var(--sans);
+  font-weight: 600;
+}
+
+/* The portal's own toggle label, kept with the number so the two read together
+   the way the form prints them: "Filed u/s 139(1)". */
+.pers-answer-us {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.pers-answer-why {
+  max-width: 52ch;
+  margin-top: var(--s2);
+  overflow-wrap: break-word;
+}
+
+.pers-answer-official,
+.pers-answer-plain {
+  max-width: 56ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.pers-answer-official .label,
+.pers-when .label {
+  margin-bottom: 1px;
+}
+
+/* ---------- The rest of the list ---------- */
+
+.pers-subhead {
+  margin-top: var(--s6);
+}
+
+.pers-note {
+  max-width: 56ch;
+  margin-top: var(--s2);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.pers-options {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+.pers-option {
+  min-width: 0;
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+.pers-option-toggle,
+.pers-option-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+  min-width: 0;
+  text-align: start;
+}
+
+/* A summary is a list-item by default and drags a marker with it; the chevron
+   is the disclosure sign here, so the marker goes. */
+.pers-option-toggle {
+  min-height: 44px;
+  padding: var(--s3) var(--s4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.pers-option-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.pers-option-toggle:hover .pers-option-no {
+  color: var(--accent);
+}
+
+.pers-option-no {
+  grid-area: 1 / 1;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pers-option-official {
+  grid-area: 2 / 1 / auto / -1;
+  min-width: 0;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.pers-chevron {
+  grid-area: 1 / 2;
+  align-self: center;
+  color: var(--ink-3);
+  transition: transform var(--dur) var(--ease);
+}
+
+.pers-option[open] .pers-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pers-chevron {
+    transition: none;
+  }
+}
+
+.pers-option-body {
+  padding: 0 var(--s4) var(--s4);
+}
+
+.pers-option-plain {
+  max-width: 56ch;
+  margin-top: var(--s2);
+  overflow-wrap: break-word;
+}
+
+.pers-when {
+  max-width: 56ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- The four that only follow a notice ---------- */
+
+/* Recessed rather than lit: the surface under it is the one thing on the block
+   that reads as further back than the page, which is where these belong until
+   an envelope arrives. */
+.pers-notice {
+  min-width: 0;
+  padding: var(--s4);
+  border-radius: 10px;
+  margin-top: var(--s6);
+  background: var(--paper-2);
+}
+
+.pers-notice-head {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.pers-notice-name {
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+/* The recessed surface is darker than the page in light and lighter in dark,
+   and the quietest ink loses too much against it either way. Everything on
+   this panel is set one step stronger than it would be on the page. */
+.pers-notice .label,
+.pers-notice .pers-option-official {
+  color: var(--ink-2);
+}
+
+.pers-notice-us {
+  margin-top: var(--s4);
+}
+
+.pers-more {
+  margin-top: var(--s3);
+}
+
+.pers-more > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-block: var(--s1);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+}
+
+.pers-more > summary:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+/* Behind one disclosure already, so nothing in here folds a second time. */
+.pers-notice-options {
+  display: grid;
+  gap: var(--s5);
+  margin-top: var(--s3);
+}
+
+.pers-notice-option {
+  min-width: 0;
+}
+
+.pers-notice-option .pers-option-body {
+  padding: 0;
+}
+
+/* ---------- A question shown with its answer ---------- */
+
+.pers-shown {
+  min-width: 0;
+  padding: var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s4);
+  background: var(--sheet);
+}
+
+.pers-question {
+  max-width: 56ch;
+  margin-top: var(--s1);
+  overflow-wrap: break-word;
+}
+
+.pers-answer-label {
+  margin-top: var(--s4);
+}
+
+.pers-value {
+  margin-top: var(--s1);
+  font-family: var(--serif);
+  font-size: var(--t-lede);
+  line-height: 1.2;
+}
+
+:lang(hi) .pers-value {
+  font-family: var(--sans);
+  font-weight: 600;
+}
+
+.pers-plain {
+  max-width: 56ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- Bank details ---------- */
+
+.pers-warning {
+  max-width: 56ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* A fieldset's default min-width is min-content, which is what would push a
+   long account number off the side of a narrow screen. */
+.pers-accounts {
+  min-width: 0;
+  margin-top: var(--s5);
+}
+
+.pers-legend {
+  margin-bottom: var(--s3);
+}
+
+.pers-list {
+  display: grid;
+  gap: var(--s3);
+}
+
+.pers-account {
+  min-width: 0;
+  padding: var(--s4);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+/* The nominated account carries an edge, a filled radio and the portal's own
+   word for the state. Any one of the three could be missed on its own. */
+.pers-account.is-chosen {
+  box-shadow: inset 2px 0 0 var(--ok);
+}
+
+.pers-account-pick {
+  display: grid;
+  grid-template-columns: 1.3em minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s1) var(--s2);
+  min-height: 44px;
+  min-width: 0;
+  padding-block: var(--s2);
+  cursor: pointer;
+}
+
+.pers-account-pick:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+/* Sized against the words beside it rather than in pixels, so it grows with
+   the larger-text setting instead of shrinking away from it. */
+.pers-account-pick input {
+  grid-area: 1 / 1;
+  width: 1.3em;
+  height: 1.3em;
+  margin: 0.28em 0 0;
+}
+
+.pers-account-bank {
+  grid-area: 1 / 2;
+  min-width: 0;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.pers-account-state {
+  grid-area: 2 / 2;
+}
+
+.pers-account-facts {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+.pers-fact {
+  min-width: 0;
+}
+
+.pers-fact dd {
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+@container work (min-width: 620px) {
+  .pers-fact {
+    display: grid;
+    grid-template-columns: minmax(0, 14ch) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s4);
+  }
+}
+
+.pers-account-note,
+.pers-nominated {
+  max-width: 56ch;
+  margin-top: var(--s3);
+  overflow-wrap: break-word;
+}
+
+.pers-account-note {
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- The portal's numbered rules ---------- */
+
+.pers-rules-label {
+  margin-top: var(--s6);
+}
+
+.pers-rules {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s3);
+  counter-reset: pers-rule;
+}
+
+.pers-rule {
+  display: grid;
+  grid-template-columns: 2.4ch minmax(0, 1fr);
+  gap: var(--s2);
+  min-width: 0;
+  counter-increment: pers-rule;
+}
+
+.pers-rule::before {
+  color: var(--ink-3);
+  content: counter(pers-rule) ".";
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.pers-rule-text {
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- A control that is not one ---------- */
+
+/* Dashed, and never a button. The portal has this control here; nothing in
+   this prototype is behind it, and a thing that looks live and does nothing is
+   worse than a thing that says so. */
+.pers-inert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  max-width: none;
+  margin-top: var(--s6);
+}
+
+.pers-inert-name {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: var(--s2) var(--s4);
+  border: 1px dashed var(--rule-2);
+  border-radius: 8px;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.pers-inert-note {
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- Narrow widths ---------- */
+
+/* A surface's own padding is eating a fifth of every line set inside it once
+   the reading column is phone-width. Keyed to the column rather than the
+   window, so a narrow column in a wide window is treated the same way. */
+@container work (max-width: 420px) {
+  .pers-answer,
+  .pers-shown {
+    padding: var(--s4);
+  }
+
+  .pers-block + .pers-block {
+    margin-top: var(--s6);
+  }
+}
+
+/* On paper there is nothing to open, so everything is on the page. */
+@media print {
+  .pers-chevron {
+    display: none;
+  }
+}
+
+/* ---------- Prefilled profile and contact ---------- */
+
+/* Two cards the department filled in before the citizen arrived. They have to
+   read as a record being shown, not as a form waiting to be filled, so the
+   resting state is type on a quiet surface and the only control is the one
+   that opens it. What has been changed is a word, never a colour alone. */
+
+.pers-pre .pers-read {
+  margin-top: var(--s4);
+}
+
+.pers-portal-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2);
+  margin-top: var(--s4);
+}
+
+.pers-portal-word {
+  font-family: var(--mono, var(--sans));
+  font-size: var(--t-small);
+  color: var(--ink-2);
+}
+
+.pers-mandatory {
+  margin-bottom: var(--s4);
+}
+
+.pers-changed,
+.pers-field-lock {
+  margin-inline-start: var(--s3);
+}
+
+.pers-changed-note,
+.pers-locked-note {
+  max-width: 60ch;
+  margin-top: var(--s4);
+}
+
+/* Empty until a save happens, so it must not hold a line of space open. */
+.pers-saved:empty {
+  display: none;
+}
+
+.pers-saved {
+  max-width: 60ch;
+  margin-top: var(--s4);
+  color: var(--ok);
+  font-size: var(--t-small);
+}
+
+.pers-form {
+  margin-top: var(--s5);
+}
+
+.pers-fields {
+  padding: 0;
+  border: 0;
+  margin: 0 0 var(--s6);
+}
+
+.pers-group-head {
+  padding: 0;
+  margin-bottom: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+/* Two boxes to a row where there is room, which is how the portal prints them,
+   and one where there is not. */
+.pers-grid {
+  display: grid;
+  gap: var(--s4);
+}
+
+@media (min-width: 640px) {
+  .pers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pers-field {
+  min-width: 0;
+}
+
+/* A locked field is text, not a disabled box: a box still looks like somewhere
+   to type, and this is somewhere you cannot. */
+.pers-field.is-locked {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+}
+
+.pers-field-fixed {
+  padding: var(--s3) 0;
+  color: var(--ink-2);
+}
+
+.pers-star {
+  color: var(--alert);
+}
+
+.pers-same {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s4);
+  padding: 0;
+  border: 0;
+  margin: 0 0 var(--s5);
+}
+
+.pers-same-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}

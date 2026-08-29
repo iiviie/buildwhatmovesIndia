@@ -1,0 +1,474 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+dl,
+dd,
+ul,
+ol,
+fieldset,
+legend {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+fieldset {
+  border: 0;
+}
+
+/* Display type is the one place the serif appears. It carries headings and the
+   single accented statement on each screen; everything else is set in the sans
+   so numbers and controls stay unambiguous. */
+h1,
+h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+h1 {
+  max-width: 28ch;
+  font-size: var(--t-h1);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: var(--t-h2);
+  line-height: 1.16;
+}
+
+h3 {
+  font-family: var(--sans);
+  font-size: var(--t-h3);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+}
+
+/* Instrument Serif has no Devanagari. Rather than let a random system serif
+   stand in, Hindi display type is set in the reading face at a heavier weight. */
+:lang(hi) h1,
+:lang(hi) h2,
+:lang(hi) .statement {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+:lang(hi) h1 {
+  max-width: 24ch;
+  font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.5rem);
+  line-height: 1.3;
+}
+
+:lang(hi) h2 {
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.55rem);
+  line-height: 1.4;
+}
+
+:lang(hi) {
+  line-height: 1.75;
+}
+
+p {
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+button,
+a,
+label,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--rule-2);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+}
+
+a:hover {
+  text-decoration-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--sheet);
+}
+
+/* ---------- Utility ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 200;
+  top: var(--s3);
+  left: var(--s3);
+  padding: 12px 18px;
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--s6)));
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* The only label style in the product: small, spaced, upright, no container. */
+.label {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: var(--t-label);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.label-ink {
+  color: var(--ink-2);
+}
+
+.label-head {
+  margin-bottom: var(--s4);
+}
+
+.label-alert {
+  color: var(--alert);
+}
+
+.label-ok {
+  color: var(--ok);
+}
+
+:lang(hi) .label {
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* ---------- Reading hierarchy ----------
+
+   Three levels, and each one has to be told apart at a glance: the lede that
+   says what a screen is for, the body under it, and the notes and sources
+   beside it. */
+
+/* On a phone the scale barely separates the lede from body copy — 18px against
+   17px — so the step down cannot be carried by size alone. The lede keeps full
+   ink and everything below it is set in --ink-2, which reads at every width.
+   The measure is shorter than the body's, because a long first line is the
+   hardest one to start. */
+.lede {
+  max-width: 52ch;
+  color: var(--ink);
+  font-size: var(--t-lede);
+  line-height: 1.55;
+}
+
+/* The signature: one accented serif line per screen carrying the single fact
+   that decides what the citizen does next. */
+.statement {
+  max-width: 26ch;
+  color: var(--accent);
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.3rem);
+  font-style: italic;
+  line-height: 1.14;
+}
+
+/* Not a small `.statement` — it never carried the accent, the italic or the
+   serif, and it is never used alongside one. It is the subhead over a block
+   inside a section, a step below `h2`. */
+.subhead {
+  max-width: 34ch;
+  font-family: var(--serif);
+  font-size: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+:lang(hi) .subhead {
+  font-family: var(--sans);
+  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.rule {
+  height: 1px;
+  border: 0;
+  background: var(--rule);
+}
+
+.prose {
+  max-width: var(--measure);
+  color: var(--ink-2);
+}
+
+.prose strong {
+  color: var(--ink);
+}
+
+/* Notes, sources, captions and consequences: the third level. Small text set
+   at reading leading floats apart into separate lines instead of reading as
+   one aside, so it is closed up. Devanagari needs the room back. */
+.consequence,
+.finding-note,
+.swap-note,
+.fine,
+.rules-line,
+.docs-line,
+.docs-check-line,
+.docs-row dd,
+.choice-help,
+.deadline-cost,
+.deadline-note,
+.sequence li p,
+.rules-list li,
+.start-facts li,
+.receipt-next p,
+.servicecard-note,
+.navservice-note,
+.navpanel-note,
+.task-note,
+.servicerow-note,
+.auth-alt,
+.assistant-intro,
+.assistant-note,
+.assistant-said p,
+.rules-note {
+  line-height: 1.5;
+}
+
+:lang(hi) .consequence,
+:lang(hi) .finding-note,
+:lang(hi) .swap-note,
+:lang(hi) .fine,
+:lang(hi) .rules-line,
+:lang(hi) .docs-line,
+:lang(hi) .docs-check-line,
+:lang(hi) .docs-row dd,
+:lang(hi) .choice-help,
+:lang(hi) .deadline-cost,
+:lang(hi) .deadline-note,
+:lang(hi) .sequence li p,
+:lang(hi) .rules-list li,
+:lang(hi) .start-facts li,
+:lang(hi) .receipt-next p,
+:lang(hi) .servicecard-note,
+:lang(hi) .navservice-note,
+:lang(hi) .navpanel-note,
+:lang(hi) .task-note,
+:lang(hi) .servicerow-note,
+:lang(hi) .auth-alt,
+:lang(hi) .assistant-intro,
+:lang(hi) .assistant-note,
+:lang(hi) .assistant-said p,
+:lang(hi) .rules-note {
+  line-height: 1.7;
+}
+
+/* ---------- Controls ---------- */
+
+.btn {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: 12px 24px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  text-align: center;
+  text-decoration: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--sheet);
+}
+
+[data-theme="dark"] .btn {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+[data-theme="dark"] .btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.btn-secondary {
+  border-color: var(--rule-2);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+
+[data-theme="dark"] .btn-secondary {
+  border-color: var(--rule-2);
+  background: transparent;
+  color: var(--ink);
+}
+
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn-quiet {
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+}
+
+.btn-quiet:hover:not(:disabled) {
+  background: none;
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.btn-danger {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--sheet);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Inline text action: a link that happens to be a button. */
+.link-btn {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+}
+
+.link-btn:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+  align-items: center;
+  margin-top: var(--s6);
+}

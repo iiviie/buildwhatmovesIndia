@@ -1,5 +1,9 @@
 # Public-service opportunity research
 
+Created: 2026-08-24 02:00 IST (UTC+05:30)
+
+Last updated: 2026-08-24 02:00 IST (UTC+05:30)
+
 Research date: 23 August 2026
 
 The [official builder brief](https://buildwhatmovesindia.com/brief) and [FAQ](https://buildwhatmovesindia.com/faq) are the governing sources for this research. They favour one real problem, a complete citizen journey, mobile and low-bandwidth usability, clear mock boundaries, and end-to-end operational thinking.
@@ -8,7 +12,7 @@ The [official builder brief](https://buildwhatmovesindia.com/brief) and [FAQ](ht
 
 Build a guided consumer complaint filing flow for [e-Jagriti](https://e-jagriti.gov.in/).
 
-Decision confirmed on 23 August 2026. The implementation scope and acceptance criteria are in the [e-Jagriti product plan](e-jagriti-product-plan.md). The reusable release gates are in the [government digital service scorecard](government-service-quality-checklist.md).
+Decision confirmed on 23 August 2026. The implementation scope and acceptance criteria are in the [e-Jagriti product plan](2026-08-24-e-jagriti-product-plan.md). The reusable release gates are in the [government digital service scorecard](2026-08-24-government-service-quality-checklist.md).
 
 The narrow problem should be:
 

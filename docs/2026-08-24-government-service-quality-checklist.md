@@ -1,5 +1,9 @@
 # Government digital service scorecard and checklist
 
+Created: 2026-08-24 02:00 IST (UTC+05:30)
+
+Last updated: 2026-08-24 02:00 IST (UTC+05:30)
+
 Status: working outer checklist
 
 Last reviewed: 24 August 2026

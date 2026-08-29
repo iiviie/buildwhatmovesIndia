@@ -1,9 +1,15 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { handleAssistant } from "./assistant";
 
 interface Env {
   ASSETS: Fetcher;
+  /* Set with `wrangler secret put OPENAI_API_KEY`, or in `.dev.vars` locally.
+     Absent is a supported state: the assistant reports itself unavailable and
+     the filing journey is unaffected. */
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL?: string;
   DB: D1Database;
   IMAGES: {
     input(stream: ReadableStream): {
@@ -28,6 +34,15 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    /* The assistant's model call. Kept in the worker so the API key never
+       reaches the browser. */
+    if (url.pathname === "/api/assistant") {
+      if (request.method !== "POST") {
+        return new Response("Method not allowed", { status: 405 });
+      }
+      return handleAssistant(request, env);
+    }
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];

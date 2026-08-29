@@ -1,0 +1,13 @@
+# Local secrets for `npm run dev`. Copy to `.dev.vars`, which is gitignored.
+#
+# The filing assistant calls OpenAI from the Cloudflare Worker
+# (worker/assistant.ts), so the key never reaches the browser. Without it the
+# assistant reports itself unavailable and every other part of the prototype
+# works unchanged.
+#
+# For a deployed build, set the same value as a Worker secret instead:
+#   npx wrangler secret put OPENAI_API_KEY
+
+OPENAI_API_KEY=sk-...
+# Optional. Defaults to gpt-4.1-mini.
+# OPENAI_MODEL=gpt-4.1-mini

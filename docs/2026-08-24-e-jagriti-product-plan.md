@@ -1,5 +1,9 @@
 # e-Jagriti product plan
 
+Created: 2026-08-24 02:00 IST (UTC+05:30)
+
+Last updated: 2026-08-24 02:00 IST (UTC+05:30)
+
 Status: confirmed product direction
 
 Working product name: Nivaran
@@ -26,7 +30,7 @@ The filing burden is visible in the official material. The March 2025 [Consumer 
 
 The [e-Jagriti FAQ](https://e-jagriti.gov.in/faq) says that citizens should contact the relevant Consumer Commission for exact and updated formats of mandatory documents such as the affidavit, memo of parties, and synopsis. That handoff creates a practical gap. A digital portal exists, but the citizen may still need procedural help before they can use it.
 
-Forum reports in the [opportunity research](public-service-opportunity-research.md) are not a representative survey. They do, however, show the same failure pattern: uncertainty about document formats, notarisation, scrutiny, seller details, upload failures, and what happens after submission. We should validate these points with two recent users before treating them as common.
+Forum reports in the [opportunity research](2026-08-24-public-service-opportunity-research.md) are not a representative survey. They do, however, show the same failure pattern: uncertainty about document formats, notarisation, scrutiny, seller details, upload failures, and what happens after submission. We should validate these points with two recent users before treating them as common.
 
 ## The user and the supported case
 
@@ -526,7 +530,7 @@ The second minute should explain the fixed template model, deterministic validat
 | The Hindi journey drifts | Keep strings versioned together and require bilingual review before release |
 | Weak connection loses work | Save at each step, show sync state, and test interruption and retry |
 | Help becomes stale | Give each item a source, owner, version, and review date |
-| Features crowd out completion | Apply the feature gate in the [government-service checklist](government-service-quality-checklist.md) |
+| Features crowd out completion | Apply the feature gate in the [government-service checklist](2026-08-24-government-service-quality-checklist.md) |
 
 ## Open questions to close before coding
 

@@ -1,0 +1,442 @@
+/* Total Deductions and the five Tax Paid schedules.
+
+   These are the two blocks of ITR-1 that are genuinely rows of figures, so the
+   hairlines the rest of the interface gave up are kept here — a line means
+   tabular data. Nothing else is ruled: the five schedules are separated by
+   space and a quiet surface, not by a rule apiece.
+
+   Written narrow-first. Four of the portal's column headings need something
+   like sixty characters of width between them, so the default is a stack of
+   labelled lines and the table only assembles itself once the reading column
+   can hold it. */
+
+.tp {
+  margin-top: var(--s5);
+}
+
+.tp-block + .tp-block {
+  margin-top: var(--s7);
+}
+
+.tp-title {
+  margin-bottom: var(--s3);
+}
+
+.tp-lede {
+  max-width: 54ch;
+  color: var(--ink-2);
+}
+
+.tp-count {
+  margin-top: var(--s4);
+}
+
+/* ---------- The ledger, stacked ---------- */
+
+.tp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--s4);
+  font-variant-numeric: tabular-nums;
+}
+
+.tp-table,
+.tp-table thead,
+.tp-table tbody,
+.tp-table tfoot,
+.tp-table tr,
+.tp-table th,
+.tp-table td {
+  display: block;
+  width: auto;
+  min-width: 0;
+}
+
+/* The headings stay in the accessibility tree and keep their scope; only the
+   sighted reader loses them, and `data-label` hands each one back beside its
+   own value rather than leaving a column of unnamed figures. */
+.tp-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* A caption inside a display:block table collapses to a shrink-to-fit column,
+   which wraps the line one word at a time. */
+.tp-caption {
+  display: block;
+  width: auto;
+  padding-bottom: var(--s3);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  text-align: left;
+}
+
+.tp-table tr {
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tp-table th,
+.tp-table td {
+  padding: 0;
+  border: 0;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+/* One value, against its own column heading. Scoped through `.tp-table` so it
+   outweighs the blanket block rule above rather than losing to it. */
+.tp-table .tp-cell-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3) var(--s4);
+  padding: 3px 0;
+  text-align: right;
+}
+
+.tp-cell-line::before,
+.tp-cell-block::before {
+  color: var(--ink-3);
+  content: attr(data-label);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+}
+
+/* The heading takes whatever the value leaves and wraps into it. */
+.tp-cell-line::before {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* A floor of min-content, not zero. A flex item allowed to shrink past its own
+   content does not wrap, it spills — and with min-content read under
+   break-word the floor is the longest single word, so a name still wraps at
+   its spaces while ₹12,45,000 and DEMO98765D stay in one piece. */
+.tp-cell-line > span {
+  flex: 0 1 auto;
+  min-width: min-content;
+  overflow-wrap: break-word;
+}
+
+/* The description column is a paragraph, not a figure, so its heading goes
+   above it and the words keep the left margin. */
+.tp-table .tp-cell-block {
+  padding: var(--s2) 0;
+}
+
+.tp-cell-block::before {
+  display: block;
+  margin-bottom: var(--s1);
+}
+
+.tp-table tbody th.tp-cell-line > span,
+.tp-table tfoot .tp-total-figure > span {
+  font-weight: 600;
+}
+
+/* ---------- Inside a deduction row ---------- */
+
+.tp-plain {
+  display: block;
+  max-width: 52ch;
+  overflow-wrap: break-word;
+}
+
+.tp-why {
+  display: block;
+  max-width: 56ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.tp-why .label {
+  margin-bottom: 1px;
+}
+
+/* A word first, and only then a colour: a row the regime closes and a row with
+   nothing in it are both ₹0, and the difference has to survive a monochrome
+   screen and a screen reader. */
+.tp-status {
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.tp-status.is-claimed {
+  color: var(--ok);
+}
+
+.tp-table .tp-total-head {
+  padding-top: var(--s2);
+}
+
+.tp-total-section {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.tp-total-name {
+  display: block;
+  font-family: var(--sans);
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+/* The one row that is a sum carries the heavier rule the rest of the ledger
+   does not. */
+.tp-table tfoot tr {
+  border-top: 3px double var(--ink);
+  border-bottom: 0;
+}
+
+.tp-total-note {
+  margin-top: var(--s4);
+}
+
+/* ---------- The portal's own wording ---------- */
+
+.tp-official {
+  margin-top: var(--s3);
+}
+
+.tp-official > summary {
+  display: inline-block;
+  padding-block: var(--s1);
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: var(--t-small);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+}
+
+.tp-official > summary:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.tp-official-text {
+  max-width: 56ch;
+  margin-top: var(--s2);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- The five schedules ---------- */
+
+.tp-schedules {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s5);
+}
+
+/* Space between them and a surface under each. A hairline here would compete
+   with the hairlines inside the tables, which are the ones doing work. */
+.tp-schedule {
+  min-width: 0;
+  padding: var(--s5) var(--s4);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+/* The portal's schedule name is the heading so the section is navigable and a
+   citizen can match it against the real form, but it is set quietly: our own
+   sentence below it is what should be read first. */
+.tp-schedule-name {
+  max-width: 56ch;
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.tp-schedule-plain {
+  max-width: 56ch;
+  margin-top: var(--s1);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+.tp-schedule-state {
+  margin-top: var(--s2);
+}
+
+.tp-empty {
+  max-width: 56ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* A total is a ledger line, not prose, so it takes the full column rather than
+   the reading measure every other paragraph is held to. */
+.tp-grand {
+  display: flex;
+  max-width: none;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+  padding-top: var(--s4);
+  margin-top: var(--s5);
+  border-top: 3px double var(--ink);
+}
+
+.tp-grand-name {
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.tp-grand-figure {
+  margin-left: auto;
+  font-size: var(--t-h3);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ---------- Wide enough for the columns to stand side by side ---------- */
+
+@container work (min-width: 680px) {
+  .tp-table {
+    display: table;
+  }
+
+  .tp-caption {
+    display: table-caption;
+  }
+
+  .tp-table thead {
+    display: table-header-group;
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .tp-table tbody {
+    display: table-row-group;
+  }
+
+  .tp-table tfoot {
+    display: table-footer-group;
+  }
+
+  .tp-table tr {
+    display: table-row;
+    padding: 0;
+    border: 0;
+  }
+
+  .tp-table th,
+  .tp-table td,
+  .tp-table .tp-cell-line,
+  .tp-table .tp-cell-block {
+    display: table-cell;
+    padding: var(--s4) var(--s3) var(--s4) 0;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+
+  .tp-table th:last-child,
+  .tp-table td:last-child {
+    padding-right: 0;
+  }
+
+  .tp-cell-line::before,
+  .tp-cell-block::before {
+    content: none;
+  }
+
+  .tp-table thead th {
+    padding-top: 0;
+    border-bottom-color: var(--rule-2);
+    color: var(--ink-3);
+    font-family: var(--sans);
+    font-size: var(--t-label);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  :lang(hi) .tp-table thead th {
+    font-size: var(--t-small);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Specific enough to beat the left alignment set on every cell above. */
+  .tp-table .tp-num {
+    text-align: right;
+  }
+
+  .tp-table .tp-num > span {
+    display: block;
+  }
+
+  .tp-col-section {
+    width: 14%;
+  }
+
+  .tp-col-what {
+    width: 50%;
+  }
+
+  .tp-col-status {
+    width: 16%;
+  }
+
+  .tp-col-amount {
+    width: 20%;
+  }
+
+  .tp-table tfoot tr {
+    border-top: 0;
+  }
+
+  .tp-table .tp-total-head,
+  .tp-table .tp-total-figure {
+    padding-top: var(--s4);
+    border-top: 3px double var(--ink);
+    border-bottom: 0;
+  }
+
+  .tp-total-section {
+    display: inline;
+    margin-right: var(--s3);
+  }
+
+  .tp-total-name {
+    display: inline;
+  }
+
+  .tp-schedule {
+    padding: var(--s5);
+  }
+}

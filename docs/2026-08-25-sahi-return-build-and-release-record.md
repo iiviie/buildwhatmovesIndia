@@ -2,9 +2,11 @@
 
 Created: 2026-08-25 00:34 IST (UTC+05:30)
 
-Last updated: 2026-08-25 00:34 IST (UTC+05:30)
+Last updated: 2026-08-25 21:36 IST (UTC+05:30)
 
-Status: ready for product and visual review
+Status: superseded in part
+
+The interface described below was rebuilt on 25 August 2026. Read [Sahi Return interface redesign](2026-08-25-sahi-return-interface-redesign.md) for the current interface, its check against the official portal flow, and its evidence. The working behavior, mock inventory, and outstanding human review in this record still apply.
 
 ## Build reviewed
 

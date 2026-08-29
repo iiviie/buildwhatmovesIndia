@@ -1,0 +1,2248 @@
+/* ---------- Page openings ---------- */
+
+.page-head {
+  padding-bottom: 0;
+  margin-bottom: var(--s7);
+}
+
+/* An eyebrow and the title it names are one object, so they sit closer to each
+   other than either sits to anything else. */
+.page-head > .label {
+  margin-bottom: var(--s2);
+}
+
+.page-head h1 {
+  margin-bottom: var(--s4);
+}
+
+.page-head .lede {
+  margin-bottom: 0;
+}
+
+.head-open {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* The opening stays stacked at every width.
+
+   It used to split once the reading column passed 860px — headline left,
+   summary right — which meant the page looked like one thing on a large
+   monitor at 100% and another thing entirely to anyone with the browser
+   zoomed, and the split version was the worse of the two: the headline and
+   the sentence explaining it stopped reading as one thought, and the summary
+   was squeezed into a column narrower than its own measure. Two people
+   comparing screens found the difference before they found the feature. The
+   stacked opening is what everybody gets. */
+
+.hero h1 {
+  max-width: 19ch;
+  font-size: var(--t-display);
+  line-height: 1.02;
+}
+
+:lang(hi) .hero h1 {
+  max-width: 20ch;
+  font-size: clamp(1.9rem, 1.45rem + 1.8vw, 2.9rem);
+  line-height: 1.26;
+}
+
+/* The one lede that stays supporting. A step's headline is only its name, so
+   the lede under it carries the screen and holds full ink; here the headline
+   is the whole message, and a second paragraph in the same ink beside it is
+   two things asking to be read first. */
+.hero .lede {
+  margin-top: var(--s5);
+  color: var(--ink-2);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  padding-top: 0;
+  margin-top: var(--s7);
+}
+
+/* One deliberate divider, for a genuine change of subject rather than for
+   every block. Most sections are separated by space and their own heading. */
+.section-ruled {
+  padding-top: var(--s6);
+  border-top: 1px solid var(--rule);
+}
+
+/* A section is separated from the one before it by --s7 and from what it
+   introduces by --s3, so a heading reads as belonging to the block under it
+   rather than floating between two of them. */
+.section > .label {
+  margin-bottom: var(--s3);
+}
+
+.section h2 {
+  margin-bottom: var(--s3);
+}
+
+.section-tight {
+  margin-top: var(--s5);
+  padding-top: var(--s5);
+}
+
+.two-col {
+  display: grid;
+  gap: var(--s5);
+}
+
+@media (min-width: 760px) {
+  .two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s7);
+  }
+}
+
+.two-col > div > h2 {
+  margin-bottom: var(--s3);
+  font-size: var(--t-h2);
+}
+
+.two-col p {
+  max-width: 42ch;
+  color: var(--ink-2);
+}
+
+.col-alert h2 {
+  color: var(--alert);
+}
+
+/* ---------- Numbered sequence ---------- */
+
+.sequence {
+  counter-reset: seq;
+  display: grid;
+  gap: var(--s5);
+}
+
+.sequence li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 2px var(--s3);
+  counter-increment: seq;
+}
+
+.sequence li h3,
+.sequence li p {
+  grid-column: 2;
+}
+
+@media (min-width: 760px) {
+  .sequence li {
+    grid-template-columns: 56px minmax(0, 24ch) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s5);
+  }
+
+  .sequence li h3 {
+    grid-column: 2;
+  }
+
+  .sequence li p {
+    grid-column: 3;
+  }
+}
+
+.sequence li::before {
+  color: var(--ink-3);
+  content: counter(seq, decimal-leading-zero);
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence li h3 {
+  font-size: 1.0625rem;
+}
+
+.sequence li p {
+  max-width: 46ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- Plain definition rows ---------- */
+
+.rows {
+  border-top: 1px solid var(--rule);
+}
+
+.rows > div {
+  display: grid;
+  gap: 2px;
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 560px) {
+  .rows > div {
+    grid-template-columns: minmax(0, 20ch) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s5);
+  }
+}
+
+.rows dt {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.rows dd {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+/* ---------- The notice, set as a sheet on the desk ---------- */
+
+.sheet {
+  border: 1px solid var(--rule-2);
+  background: var(--sheet);
+}
+
+.sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+  padding: var(--s4) var(--s5);
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.sheet-body {
+  padding: var(--s5);
+}
+
+@media (min-width: 700px) {
+  .sheet-body {
+    padding: var(--s6);
+  }
+}
+
+.sheet-facts {
+  display: grid;
+  gap: var(--s5);
+}
+
+@media (min-width: 720px) {
+  .sheet-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(36px, 3.5vw, 72px);
+  }
+}
+
+.sheet-facts .rows > div {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 560px) {
+  .sheet-facts .rows > div {
+    grid-template-columns: minmax(0, 12ch) minmax(0, 1fr);
+    gap: var(--s3);
+  }
+}
+
+.quote {
+  max-width: 46ch;
+  padding-left: var(--s4);
+  border-left: 2px solid var(--accent);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  line-height: 1.7;
+}
+
+.swap {
+  display: grid;
+  gap: var(--s5);
+  margin-top: var(--s6);
+}
+
+@media (min-width: 760px) {
+  .swap {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s7);
+  }
+}
+
+/* Each panel measures itself, because the ledgers inside it have to restack
+   against the panel's width and not the window's: two of these side by side
+   are never more than about 520 pixels each, however wide the screen. */
+.swap > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  container-type: inline-size;
+  padding: var(--s5);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--sheet);
+}
+
+/* The two panels hold the same argument at different lengths, so the button
+   that ends each one has to be found twice at two different heights. The
+   action is pushed to the foot of its panel instead, which puts the two
+   choices on one line and makes them a pair to be picked between rather than
+   two things to be read in turn. */
+.swap > div > .actions {
+  margin-top: auto;
+  padding-top: var(--s5);
+}
+
+/* The two choices are one decision, so they are given one shape: each fills
+   the foot of its own panel. That keeps them identical whatever the arguments
+   above them ran to, and it stops the longer of the two labels wrapping to a
+   second line in a column this narrow, which was the other half of why they
+   never lined up. */
+.swap > div > .actions .btn {
+  width: 100%;
+  padding-inline: var(--s3);
+}
+
+.swap > div > .label {
+  margin-bottom: var(--s3);
+}
+
+.consequence {
+  max-width: 52ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- Documents ---------- */
+
+.rules-line {
+  max-width: 58ch;
+  margin-bottom: var(--s5);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.files {
+  display: grid;
+  gap: var(--s3);
+}
+
+.files li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s3);
+  padding: var(--s4);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+@media (min-width: 680px) {
+  .files li {
+    grid-template-columns: minmax(0, 24ch) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--s5);
+  }
+}
+
+.file-name {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.file-meta {
+  display: block;
+  max-width: none;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  overflow-wrap: anywhere;
+}
+
+.file-state {
+  display: block;
+  margin-top: 2px;
+}
+
+.file-pick {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 8px 0;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+  justify-self: start;
+}
+
+.file-pick:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.file-pick:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.file-pick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* ---------- Comparison, set as a ledger table ---------- */
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-table caption {
+  padding-bottom: var(--s3);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  text-align: left;
+}
+
+.ledger-table th,
+.ledger-table td {
+  padding: var(--s4) var(--s3) var(--s4) 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.ledger-table thead th {
+  padding-top: 0;
+  border-bottom-color: var(--rule-2);
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: var(--t-label);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+:lang(hi) .ledger-table thead th {
+  font-size: var(--t-small);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ledger-table tbody th {
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.ledger-table .col-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ledger-table .col-record {
+  width: 36%;
+}
+
+.ledger-table .col-figure {
+  width: 16%;
+}
+
+.ledger-table .col-verdict {
+  width: 32%;
+  padding-left: var(--s4);
+}
+
+.ledger-table td:last-child,
+.ledger-table th:last-child {
+  padding-right: 0;
+}
+
+.was {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.verdict-missing {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.verdict-ok {
+  color: var(--ok);
+}
+
+/* Below the point where four columns fit, each row becomes a small block with
+   its own labels. The markup stays a real table, so the reading order and the
+   header association survive.
+
+   Asked of whatever box the table is actually in rather than of the window: a
+   slab working set inside half a reading column ran off the side of its panel
+   on any screen wide enough for the two regimes to sit side by side. */
+@container (max-width: 620px) {
+  .ledger-table,
+  .ledger-table tbody,
+  .ledger-table tr,
+  .ledger-table tbody th,
+  .ledger-table td {
+    display: block;
+    width: auto;
+  }
+
+  .ledger-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* A table caption inside a display:block table collapses to a shrink-to-fit
+     column, which wraps the heading one word per line. */
+  .ledger-table caption {
+    display: block;
+    width: auto;
+  }
+
+  .ledger-table .col-record,
+  .ledger-table .col-figure,
+  .ledger-table .col-verdict {
+    width: auto;
+  }
+
+  .ledger-table tr {
+    padding: var(--s4) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ledger-table tbody th {
+    padding: 0 0 var(--s2);
+    border: 0;
+  }
+
+  .ledger-table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s4);
+    padding: 3px 0;
+    border: 0;
+    text-align: right;
+  }
+
+  .ledger-table td::before {
+    color: var(--ink-3);
+    content: attr(data-label);
+    font-size: var(--t-small);
+    text-align: left;
+  }
+
+  .ledger-table td:empty {
+    display: none;
+  }
+
+  .ledger-table .col-verdict {
+    padding-left: 0;
+  }
+
+  /* A row that is only a name and a figure does not need two lines of screen
+     to say so: the label keeps the left and the figure keeps the right. Where
+     the pair genuinely will not fit — a long label in a half-width panel — the
+     figure wraps to its own line and stays right, which is where it was
+     before. */
+  .ledger-table tr:has(td:only-of-type) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s2) var(--s4);
+  }
+
+  .ledger-table tr:has(td:only-of-type) > th {
+    flex: 1 1 auto;
+    min-width: min-content;
+    padding-bottom: 0;
+  }
+
+  .ledger-table tr:has(td:only-of-type) > td {
+    display: block;
+    flex: none;
+    margin-inline-start: auto;
+    padding: 0;
+  }
+}
+
+/* Set on a span inside a table heading as well as on a paragraph, so it has to
+   claim its own line rather than running on from the field name. */
+.source-line {
+  display: block;
+  max-width: 58ch;
+  margin-top: var(--s4);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.finding {
+  padding: var(--s4) var(--s5) var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s4);
+  background: var(--sheet);
+}
+
+/* The three facts an AIS entry carries, read across rather than down.
+
+   As table rows they were a label and a right-aligned figure on three lines
+   of their own, which put two hundred pixels of rule and padding between the
+   entry's name and the question it is asking. Side by side they are one band,
+   and because every entry lays them out on the same grid, the four entries on
+   this step can be compared down the page as well as read one at a time. */
+.entry-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3) var(--s4);
+  margin-bottom: var(--s2);
+}
+
+.entry-fact {
+  min-width: 0;
+}
+
+.entry-fact dt {
+  margin-bottom: 2px;
+}
+
+.entry-fact dd {
+  color: var(--ink);
+  font-size: var(--t-body);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+/* The amount is the figure being confirmed; the other two are there to check
+   it against. */
+.entry-fact.is-lead dd {
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.entry-fact.is-amended {
+  padding-left: var(--s3);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Below the first breakpoint the amount keeps the full width and the two
+   supporting facts share the line under it, rather than three columns each too
+   narrow for a rupee figure. */
+@container work (max-width: 560px) {
+  .entry-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .entry-fact.is-lead {
+    grid-column: 1 / -1;
+  }
+}
+
+.finding .statement {
+  margin-bottom: var(--s4);
+}
+
+/* A fieldset's legend is laid out on the border edge, so on a phone, where the
+   entry's name wraps, the surface starts between its two lines. Floating it
+   takes it out of that role and makes it an ordinary block at the top of the
+   surface. */
+.finding > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--s4);
+}
+
+.finding > legend + * {
+  clear: both;
+}
+
+.finding-note {
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* Two of these follow the salary table, and without this they run together
+   into one paragraph about two different figures. */
+.finding-note + .finding-note {
+  margin-top: var(--s3);
+}
+
+/* ---------- Choices ---------- */
+
+.choices {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+
+/* An answer and what it does, on one line.
+
+   Each option used to be a two-line block in its own box: a bold title, a
+   consequence under it, and a paragraph's worth of padding around both. Three
+   of them ran to four hundred pixels for a question with a one-word answer.
+   The consequence is short enough to sit beside the answer it belongs to, and
+   wraps under it when the column is too narrow to hold both. */
+.choice {
+  display: grid;
+  grid-template-columns: 1.2em minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--sheet);
+  cursor: pointer;
+}
+
+.choice > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.7ch;
+  min-width: 0;
+}
+
+.choice:hover {
+  border-color: var(--rule-2);
+}
+
+/* The chosen answer is marked by a heavier border and a filled control, not by
+   colour alone. The control is sized in ems so the larger-text settings carry
+   it along with the words. */
+.choice:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.choice:hover .choice-title {
+  color: var(--accent);
+}
+
+.choice:has(input:checked) {
+  padding-left: var(--s4);
+  border-left-color: var(--accent);
+  background: var(--paper-2);
+}
+
+.choice input {
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0;
+}
+
+.choice-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.choice-help {
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* The consequence is a clause on the answer, not a second sentence about it.
+   Below the breakpoint it always wraps onto its own line, where a leading
+   separator would be a mark dangling at the start of a line, so it goes. */
+.choice-help::before {
+  margin-right: 0.6ch;
+  color: var(--ink-3);
+  content: "·";
+}
+
+@container work (max-width: 560px) {
+  .choice-help::before {
+    content: none;
+  }
+}
+
+/* The portal's own wording is a third line whatever the width: it is a
+   reference, not part of the reading. */
+.choice-portal {
+  flex-basis: 100%;
+  margin-top: var(--s1);
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Stop route ---------- */
+
+.stop {
+  margin-top: var(--s6);
+  padding-top: var(--s5);
+  border-top: 2px solid var(--accent);
+}
+
+.stop h2 {
+  margin-bottom: var(--s3);
+  color: var(--accent);
+}
+
+.stop p {
+  max-width: 52ch;
+  color: var(--ink-2);
+}
+
+.stop .sequence {
+  margin-top: var(--s5);
+}
+
+/* ---------- Review ---------- */
+
+.declare {
+  display: grid;
+  grid-template-columns: 1.35em minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s4);
+  padding: var(--s5);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  margin-top: var(--s6);
+  background: var(--sheet);
+  cursor: pointer;
+}
+
+.declare:has(input:checked) {
+  border-color: var(--accent);
+}
+
+.declare input {
+  width: 1.2em;
+  height: 1.2em;
+  margin: 4px 0 0;
+}
+
+.declare span {
+  max-width: 52ch;
+}
+
+.declare:has(input:checked) span {
+  color: var(--ink);
+}
+
+.alert {
+  max-width: 52ch;
+  padding: var(--s4) 0 var(--s4) var(--s4);
+  border-left: 2px solid var(--alert);
+  margin-block: var(--s5);
+}
+
+.alert strong {
+  display: block;
+  color: var(--alert);
+  font-size: 1.0625rem;
+}
+
+.alert-code {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  letter-spacing: 0.08em;
+}
+
+.caution {
+  max-width: 52ch;
+  padding-left: var(--s4);
+  border-left: 2px solid var(--alert);
+  margin-block: var(--s6);
+}
+
+.caution h2 {
+  margin-bottom: var(--s2);
+  font-size: var(--t-h2);
+}
+
+.caution p {
+  color: var(--ink-2);
+}
+
+.fine {
+  max-width: 56ch;
+  margin-top: var(--s4);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+/* ---------- Acknowledgement, set as a certificate ---------- */
+
+.receipt {
+  border: 1px solid var(--ink);
+  background: var(--sheet);
+}
+
+.receipt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+  padding: var(--s4) var(--s5);
+  border-bottom: 3px double var(--ink);
+}
+
+.receipt-body {
+  padding: var(--s5);
+}
+
+@media (min-width: 700px) {
+  .receipt-body {
+    padding: var(--s6);
+  }
+}
+
+/* Each reference already sits on a rule of its own, and the block below opens
+   with one. The container's own bottom border made a second hairline a few
+   pixels under the last cell's, which reads as a mistake rather than as a
+   rule. */
+.receipt-refs {
+  display: grid;
+  gap: var(--s5);
+  margin-bottom: var(--s5);
+}
+
+@media (min-width: 560px) {
+  .receipt-refs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Ten references in two columns is five deep; in three it is four, and the
+   certificate stops running past the fold on a desk. Keyed off the column the
+   certificate is in, not the window. */
+@container work (min-width: 820px) {
+  .receipt-refs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s4) var(--s5);
+  }
+}
+
+/* A reference sets its label over its figure.
+
+   The pairs in here are `.rows > div`, which splits into a twenty-character
+   label column and a value column once the *window* is wide enough. Two of
+   these sit side by side inside the certificate, so each pair was handed half
+   the certificate and then split it again — and what was left for a
+   twenty-one character acknowledgement number came out at one character to a
+   line. On paper the same block ran to three sheets. Inside the certificate
+   the pairs always stack, whatever the window is doing. */
+.receipt-refs > div {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.receipt-refs dd {
+  margin-top: var(--s2);
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  /* `anywhere` also shrinks the intrinsic width the grid sizes against, which
+     is what let the column collapse to a character in the first place.
+     `break-word` still breaks a reference too long for its column, but only
+     once the column has been given its proper width. */
+  overflow-wrap: break-word;
+}
+
+.receipt-next {
+  margin-top: var(--s5);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule);
+}
+
+.receipt-next h2 {
+  margin-bottom: var(--s3);
+  font-size: var(--t-h2);
+}
+
+.receipt-next p {
+  max-width: 56ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- Save state ---------- */
+
+.savebar {
+  display: flex;
+  max-width: none;
+  min-height: 22px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s5);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.savebar-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.savebar-dot.is-off {
+  background: var(--alert);
+}
+
+/* ---------- Forms ---------- */
+
+.field {
+  display: block;
+}
+
+.field + .field {
+  margin-top: var(--s5);
+}
+
+.field > span {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--sheet);
+  color: var(--ink);
+}
+
+.field textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.field-hint {
+  max-width: none;
+  margin-top: var(--s2);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.big-ref {
+  max-width: none;
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+
+.stack > * + * {
+  margin-top: var(--s4);
+}
+
+/* ---------- Lite mode ---------- */
+
+.lite * {
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Print ---------- */
+
+@media print {
+  .trust,
+  .masthead,
+  .stepstrip,
+  .toc,
+  .margin-col,
+  .site-footer,
+  .no-print,
+  .backdrop,
+  /* Screen furniture that has no business on a printed certificate: the skip
+     link is off-screen until focused but prints wherever it sits, and where
+     the draft is saved is a fact about this browser, not about the return. */
+  .skip-link,
+  .savebar {
+    display: none !important;
+  }
+
+  /* The heading is focused when the step opens, so the focus ring was being
+     printed as a box around the title. */
+  :focus-visible {
+    outline: none;
+  }
+
+  /* A reference that wraps is a reference someone has to reassemble by eye.
+     Set smaller on paper, where the columns are narrower than any screen, so
+     each one sits on a single line. */
+  .receipt-refs {
+    gap: var(--s4) var(--s5);
+  }
+
+  .receipt-refs dd {
+    margin-top: var(--s1);
+    font-size: 1.0625rem;
+  }
+
+  /* Whatever else breaks across sheets, these do not: a numbered list of what
+     happens next is unreadable split down the middle. */
+  .receipt-next,
+  .receipt-next li,
+  .caution {
+    break-inside: avoid;
+  }
+
+  /* Set to fit one sheet. The spacing on screen is scaled to a column you
+     scroll; a certificate that spills three lines onto a second sheet is a
+     second sheet someone has to keep. */
+  .receipt-body {
+    padding: var(--s4) var(--s5);
+  }
+
+  /* The head is a two-up row on screen and wraps only because the headline is
+     too wide to share a line. Set smaller for paper it stops wrapping, and the
+     eyebrow and the headline end up side by side, which is not the reading
+     order. On paper it is a stack. */
+  .receipt-head {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--s3) var(--s5);
+  }
+
+  /* A headline sized for a screen you scroll is the single largest thing
+     standing between this certificate and one sheet of paper. */
+  .receipt-head h1 {
+    font-size: 1.75rem;
+  }
+
+  .receipt-head .lede {
+    font-size: 1rem;
+  }
+
+  .receipt-refs {
+    margin-bottom: var(--s3);
+  }
+
+  .caution {
+    margin-top: var(--s3);
+  }
+
+  .receipt-next {
+    margin-top: var(--s4);
+    padding-top: var(--s4);
+  }
+
+  .receipt-next h2 {
+    margin-bottom: var(--s3);
+    font-size: 1.25rem;
+  }
+
+  .sequence {
+    gap: var(--s3);
+  }
+
+  .sequence li {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 2px var(--s3);
+  }
+
+  .sequence li h3 {
+    grid-column: 2;
+    font-size: 1rem;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .main {
+    padding: 0;
+  }
+
+  .layout {
+    display: block;
+  }
+
+  .receipt {
+    border: 2px solid #000;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+  }
+}
+
+/* Inside the certificate the surrounding blocks already carry rules; drop the
+   list's own so no double hairline appears. */
+.receipt-body .rows {
+  border-top: 0;
+}
+
+/* In a two-column grid the last child is the right-hand cell of the final
+   row, so dropping its rule left the pair mismatched. Every cell keeps its
+   rule; they are the certificate's ruling. */
+
+.swap-note {
+  max-width: 42ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.load-row {
+  margin-top: var(--s5);
+  margin-bottom: var(--s5);
+}
+
+/* ---------- Missed-deadline alarm ---------- */
+
+/* A passed due date is the most expensive thing a citizen can find out late,
+   so it leads the page rather than sitting in the margin. It is announced by
+   an icon, a heading and a border, not by colour alone. */
+.alarm {
+  padding: var(--s5);
+  border: 1px solid var(--alert);
+  border-left-width: 4px;
+  border-radius: 10px;
+  margin-bottom: var(--s6);
+  background: var(--sheet);
+}
+
+.alarm-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+  color: var(--accent);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+:lang(hi) .alarm-head {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.alarm-lede {
+  font-size: var(--t-lede);
+  font-weight: 600;
+}
+
+.alarm p + p {
+  margin-top: var(--s3);
+}
+
+.alarm p {
+  max-width: 56ch;
+  color: var(--ink-2);
+}
+
+.alarm .alarm-head,
+.alarm .alarm-lede {
+  color: var(--ink);
+}
+
+.alarm .alarm-head {
+  color: var(--alert);
+}
+
+.alarm-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.alarm-count strong {
+  font-size: 1.3em;
+  color: var(--ink);
+}
+
+/* ---------- Deadline block in the margin ---------- */
+
+.deadline-block .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deadline-block.is-late,
+.deadline-block.is-closed {
+  padding: var(--s4);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+.deadline-passed {
+  margin-bottom: var(--s3);
+  color: var(--ink);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.deadline-cost,
+.deadline-note {
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.deadline-inline.is-late {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- Upload rules, said before the control ---------- */
+
+.rules-list {
+  display: grid;
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+}
+
+.rules-list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s3);
+  max-width: 56ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.rules-list svg {
+  margin-top: 2px;
+  color: var(--ink-3);
+}
+
+.file-done {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s2);
+  max-width: 52ch;
+  color: var(--ok);
+  font-size: var(--t-small);
+}
+
+.file-done svg {
+  margin-top: 2px;
+}
+
+.file-pick input:disabled + span,
+.file-pick:has(input:disabled) {
+  opacity: 0.6;
+}
+
+/* The official portal's own wording for a field, so a citizen who goes to the
+   real site can find the same box, and a reviewer can check we did not invent
+   the form. Quiet, but still a sentence somebody is meant to read and carry to
+   the real site, so it sits at the small-text floor rather than at label size,
+   where it was too small to be worth printing. */
+.portal-line {
+  display: block;
+  max-width: 60ch;
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+:lang(hi) .portal-line {
+  line-height: 1.65;
+}
+
+.portal-line code {
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: inherit;
+  font-style: italic;
+}
+
+/* ---------- Homepage ---------- */
+
+/* The primary action gets a surface of its own so it is the first thing that
+   reads as actionable, rather than one tile among eighteen. */
+.start-card {
+  max-width: 54ch;
+  padding: var(--s5);
+  border: 1px solid var(--rule-2);
+  border-radius: 12px;
+  margin-top: var(--s5);
+  background: var(--sheet);
+}
+
+.start-facts {
+  display: grid;
+  gap: var(--s3);
+  margin: var(--s3) 0 var(--s5);
+}
+
+.start-facts li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.start-facts svg {
+  margin-top: 2px;
+  color: var(--ok);
+}
+
+.btn-lg {
+  min-height: 56px;
+  padding-inline: var(--s6);
+  font-size: 1.125rem;
+}
+
+/* ---------- Notices ---------- */
+
+.notice-list {
+  display: grid;
+  gap: var(--s5);
+}
+
+.notice-list li {
+  max-width: 62ch;
+}
+
+.notice-list p:last-child {
+  color: var(--ink-2);
+}
+
+/* ---------- The notices archive ---------- */
+
+/* The home page's four notices hand over here. */
+.notices-more {
+  margin-top: var(--s5);
+}
+
+.notices-more .link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.notices-more svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.notices-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3) var(--s4);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Three words, so it sizes to them rather than stretching across the page the
+   way the segmented controls inside a 310px menu do. */
+.segmented-notices {
+  grid-auto-columns: auto;
+  border-radius: 8px;
+}
+
+.segmented-notices button {
+  padding-inline: var(--s4);
+}
+
+.notices-count {
+  color: var(--ink-3);
+}
+
+/* A month is how anybody remembers when they saw a notice, so it is the
+   heading. Set quieter than a section heading on a reading page: it is a
+   divider in a list, not a change of subject. */
+.notices-month {
+  margin-top: var(--s6);
+}
+
+.notices-month h2 {
+  padding-bottom: var(--s2);
+  margin-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-h3);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.notices-note {
+  max-width: 62ch;
+  margin-top: var(--s6);
+}
+
+.notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+
+.notice-date {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A pill carries a word, so it never depends on colour to be understood. */
+.pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:lang(hi) .pill {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.pill.is-alert {
+  border-color: var(--alert);
+  color: var(--alert);
+}
+
+.pill.is-quiet {
+  color: var(--ink-3);
+}
+
+.pill.is-open {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* ---------- Grouped links ---------- */
+
+.link-groups {
+  display: grid;
+  gap: var(--s6);
+  margin-top: var(--s5);
+}
+
+@container work (min-width: 700px) {
+  .link-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s7);
+  }
+}
+
+.link-groups > div > .label {
+  margin-bottom: var(--s3);
+}
+
+.link-list {
+  display: grid;
+  gap: var(--s2);
+}
+
+.link-tile {
+  display: grid;
+  width: 100%;
+  gap: 3px;
+  padding: var(--s3) var(--s4);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--sheet);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--t-small);
+  text-align: left;
+  text-decoration: none;
+}
+
+.link-tile:hover {
+  border-color: var(--rule-2);
+  color: var(--accent);
+}
+
+.link-tile svg {
+  margin-left: 5px;
+  vertical-align: -1px;
+}
+
+/* Every tile says whether it does something here or leaves for the real site,
+   so nothing in the demo looks clickable and turns out to be scenery. */
+.tile-kind {
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+:lang(hi) .tile-kind {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.tile-kind.is-demo {
+  color: var(--ok);
+}
+
+/* ---------- Helplines ---------- */
+
+.help-list {
+  display: grid;
+  gap: var(--s5);
+  margin-top: var(--s5);
+}
+
+@container work (min-width: 700px) {
+  .help-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s5);
+  }
+}
+
+.help-list li {
+  padding: var(--s4);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+/* On a phone these are the one thing on the page a citizen will actually tap,
+   and a `tel:` link the width of a phone number is only twenty pixels tall. */
+.help-list .helpline {
+  display: flex;
+  width: fit-content;
+  min-height: 44px;
+  align-items: center;
+  margin-top: 0;
+}
+
+.help-for {
+  margin-bottom: var(--s2);
+  color: var(--ink);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.help-hours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s2);
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  line-height: 1.6;
+}
+
+/* The headline and the primary action share the first screen, so the button is
+   visible without scrolling past a wall of type. */
+.home-top {
+  display: grid;
+  gap: var(--s5);
+  margin-bottom: var(--s7);
+}
+
+@container work (min-width: 640px) {
+  .home-top {
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    align-items: start;
+    column-gap: var(--s6);
+  }
+}
+
+.hero-home h1 {
+  margin-bottom: var(--s4);
+}
+
+.hero-home .lede {
+  max-width: 40ch;
+  margin-bottom: 0;
+}
+
+.home-top .start-card {
+  max-width: none;
+  margin-top: 0;
+}
+
+/* A compact alarm: the fact and the countdown on one line, the cost behind a
+   disclosure, so it warns without displacing the task. */
+.alarm-more {
+  margin-top: var(--s3);
+}
+
+.alarm-more summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.24em;
+}
+
+.alarm-more p {
+  margin-top: var(--s3);
+}
+
+/* On a narrow screen the warning must not push the task off the screen. It
+   stays first and stays legible, but it stops being a headline. */
+@media (max-width: 600px) {
+  .alarm {
+    padding: var(--s4);
+  }
+
+  .alarm-lede {
+    font-size: var(--t-body);
+  }
+
+  .alarm p + p {
+    margin-top: var(--s2);
+  }
+
+  .alarm-count strong {
+    font-size: 1.15em;
+  }
+}
+
+/* ---------- The four documents, explained ---------- */
+
+/* Grouped by surface and by space. There is no rule between one document and
+   the next: four hairlines at the same weight as the section boundary would
+   flatten the whole panel into one undifferentiated list.
+
+   Held to a measure as well: left to fill a plain page these surfaces run past
+   a thousand pixels while the sentence inside them stops at fifty characters,
+   which is a lot of ruled emptiness for a reader to cross. */
+.docs-panel {
+  max-width: 68ch;
+  margin-top: var(--s5);
+}
+
+/* It is the heading of its section on the home page, so it is set like one.
+   Left at the h3 default it was the same size and weight as the name of every
+   document under it, and the group had no top. */
+.docs-title {
+  margin-bottom: var(--s3);
+  font-family: var(--serif);
+  font-size: var(--t-h2);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  line-height: 1.16;
+}
+
+:lang(hi) .docs-title {
+  font-family: var(--sans);
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.docs-title-checks {
+  margin-top: var(--s7);
+}
+
+.docs-list,
+.docs-checks {
+  display: grid;
+  gap: var(--s3);
+}
+
+.docs-item,
+.docs-check {
+  min-width: 0;
+  padding: var(--s4);
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+.docs-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+  margin-bottom: var(--s2);
+}
+
+.docs-name,
+.docs-pair {
+  min-width: 0;
+  font-size: var(--t-h3);
+  overflow-wrap: break-word;
+}
+
+/* Needed or not needed is carried by the word. The accent only sharpens a
+   distinction the sentence already makes, so it survives monochrome.
+
+   It is pushed to the far end only once the name and the flag fit on one line.
+   Below that the flag wraps, and an automatic margin would strand it on the
+   right of a line of its own. */
+@container work (min-width: 420px) {
+  .docs-flag {
+    margin-inline-start: auto;
+  }
+}
+
+.docs-flag.is-needed {
+  color: var(--accent);
+}
+
+/* A gloss on the name above it, not a paragraph of its own: at body size it
+   made every document read as four equal lines of prose. */
+.docs-line {
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.docs-more {
+  margin-top: var(--s3);
+}
+
+/* A thumb needs 44 pixels; the sentence does not. The box grows around the
+   word rather than the word growing. */
+.docs-more > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-block: var(--s1);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+}
+
+.docs-more > summary:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.docs-detail {
+  display: grid;
+  gap: var(--s4);
+  margin-top: var(--s4);
+}
+
+.docs-row {
+  display: grid;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+@container work (min-width: 620px) {
+  .docs-row {
+    grid-template-columns: minmax(0, 16ch) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s5);
+  }
+}
+
+.docs-row dd {
+  min-width: 0;
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.docs-uses {
+  display: grid;
+  gap: var(--s2);
+}
+
+.docs-uses li {
+  display: grid;
+  grid-template-columns: 0.85em minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.docs-uses li::before {
+  color: var(--ink-3);
+  content: "\2022";
+}
+
+.docs-check-line {
+  max-width: 58ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.docs-check-line > .label {
+  margin-bottom: var(--s1);
+}
+
+/* ---------- Adjacent blocks ----------
+
+   Most blocks here carry their own top margin, so the pairs that do not end up
+   touching: a heading and the fine print that qualifies it, a verdict and the
+   figure that follows from it. Set on the pair rather than on either half, so
+   neither gains space it does not need elsewhere. */
+
+.portal-line + .label {
+  margin-top: var(--s3);
+}
+
+.statement + .lede,
+.statement + .prose {
+  margin-top: var(--s3);
+}
+
+/* ---------- Narrow widths ---------- */
+
+/* A phone has two problems a desk does not. A surface's own padding is eating
+   a fifth of every line set inside it, and gaps measured for a wide page turn
+   the same content into a much longer scroll. Both are keyed to the reading
+   column rather than to the window, so a narrow column in a wide window is
+   treated the same way. */
+@container work (max-width: 420px) {
+  .page-head,
+  .home-top {
+    margin-bottom: var(--s6);
+  }
+
+  .section {
+    margin-top: var(--s6);
+  }
+
+  .section-ruled {
+    padding-top: var(--s5);
+  }
+
+  .docs-title-checks {
+    margin-top: var(--s6);
+  }
+
+  .actions {
+    margin-top: var(--s5);
+  }
+
+  .start-card,
+  .finding,
+  .swap > div,
+  .declare,
+  .sheet-body,
+  .receipt-body {
+    padding: var(--s4);
+  }
+
+  /* Two panels stacked on surfaces of their own already read as two objects.
+     The outline around each is a third line saying it again, over the two
+     ledgers inside, which are the lines that have to be read. The start card
+     keeps its outline: it is one box among borderless ones, and the outline
+     is what marks it as the thing to act on. */
+  .swap > div {
+    border-color: transparent;
+  }
+
+  .hero h1 {
+    font-size: 2.05rem;
+    line-height: 1.12;
+  }
+
+  /* Leading set for a long line is too open for a short one. */
+  .lede {
+    line-height: 1.45;
+  }
+
+  .sequence {
+    gap: var(--s4);
+  }
+
+  /* Two digits do not need a 34-pixel column when the sentence beside them has
+     234 to live in. */
+  .sequence li {
+    grid-template-columns: 2.5ch minmax(0, 1fr);
+    gap: 2px var(--s2);
+  }
+
+  .start-card .btn-lg {
+    width: 100%;
+    padding-inline: var(--s4);
+  }
+}
+
+
+/* One line of deadline above the action; the full alert follows it. */
+.home-deadline {
+  margin-bottom: var(--s4);
+}
+
+
+/* Getting the primary action onto the first screen of a phone.
+
+   Principle 7 asks whether the thing the citizen came to do is visible without
+   scrolling at 320 pixels. Measured at 390 it was at y=1169: a 274-pixel
+   deadline alert, a three-sentence lede and a "saved on this device" line for a
+   draft that did not exist yet, all above the button. Those are fixed
+   elsewhere; this is the last of it, tightening the gaps that remain rather
+   than removing anything. */
+@container work (max-width: 480px) {
+  .home-top {
+    gap: var(--s4);
+  }
+
+  .hero-home h1 {
+    margin-bottom: var(--s3);
+  }
+
+  .home-deadline {
+    margin-bottom: var(--s3);
+  }
+
+  .start-facts {
+    gap: var(--s2);
+  }
+}
+
+/* ---------- The account a refund is paid into ---------- */
+
+/* Named on the same screen as the figure, because a refund with no destination
+   is not an answer. Recessed under the amount rather than beside it: it is the
+   second thing to read, not a competing headline. */
+.refund-account {
+  padding: var(--s4) var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s5);
+  background: var(--sheet);
+  box-shadow: inset 2px 0 0 var(--ok);
+}
+
+.refund-account.is-missing {
+  box-shadow: inset 2px 0 0 var(--alert);
+}
+
+.refund-account-name {
+  margin-top: 2px;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.refund-account .prose {
+  max-width: 52ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+/* ---------- Verification, after filing ---------- */
+
+/* The acknowledgement screen's one piece of unfinished business. It is set
+   apart from the receipt above it because it is not part of the receipt: the
+   receipt records what happened, and this is the thing that has not happened
+   yet. Pending and done are a word and a heading before they are an edge. */
+.verify {
+  padding: var(--s6);
+  border-radius: 14px;
+  margin-top: var(--s7);
+  background: var(--sheet);
+}
+
+.verify.is-pending {
+  box-shadow: inset 3px 0 0 var(--alert);
+}
+
+.verify.is-done {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.verify-title {
+  margin-top: var(--s2);
+}
+
+.verify .prose,
+.verify-consequence {
+  max-width: 58ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+}
+
+.verify-deadline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s5);
+}
+
+.verify-date {
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.verify-route {
+  padding: var(--s4) var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s5);
+  background: var(--ground, transparent);
+}
+
+.verify-route-name {
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.verify-route-plain,
+.verify-needs {
+  max-width: 58ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.verify-note {
+  max-width: 58ch;
+  margin-top: var(--s3);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.verify-refs {
+  margin-top: var(--s5);
+}
+
+.verify-more {
+  margin-top: var(--s6);
+}
+
+.verify-routes {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+
+/* ---------- Where the error actually is ---------- */
+
+/* Being told "confirm the figures before continuing" is no use if the tick box
+   is a screen and a half up the page. Refusing to continue now scrolls to the
+   thing that is wrong and rings it, and the ring has to survive the reader
+   arriving a beat after the scroll finished — so it holds rather than flashing
+   once and vanishing.
+
+   Two intents, and they must not look alike. Being stopped is the alert edge
+   the rest of the interface uses for a problem; being sent into a box you
+   asked to edit is the ordinary accent. Neither carries meaning on its own:
+   the error always has its own sentence beside it, and the edit always has the
+   caret sitting in the box. */
+
+.is-spotlit {
+  position: relative;
+  border-radius: 12px;
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  animation: spotlight-hold 2.6s ease-out 1 forwards;
+}
+
+.is-spotlit-error {
+  outline-color: var(--alert);
+  animation-name: spotlight-hold-alert;
+}
+
+/* An input is already a box with its own edge; ringing it needs less room. */
+.amend-input.is-spotlit {
+  border-radius: 8px;
+  outline-offset: 2px;
+}
+
+@keyframes spotlight-hold {
+  0% { outline-color: transparent; }
+  8% { outline-color: var(--accent); }
+  70% { outline-color: var(--accent); }
+  100% { outline-color: transparent; }
+}
+
+@keyframes spotlight-hold-alert {
+  0% { outline-color: transparent; }
+  8% { outline-color: var(--alert); }
+  70% { outline-color: var(--alert); }
+  100% { outline-color: transparent; }
+}
+
+/* No pulse, but the ring itself stays: someone who has asked for less motion
+   still needs to be shown where they were taken. */
+@media (prefers-reduced-motion: reduce) {
+  .is-spotlit {
+    animation: none;
+  }
+}
+
+/* ---------- The regime figures, repeated at the decision ---------- */
+
+/* The card is already a sheet, so a second sheet inside it would be invisible.
+   A rule and some air is enough to say "this is the summing-up". */
+.regime-recap {
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule-2);
+  margin-top: var(--s5);
+}
+
+.regime-recap .statement {
+  margin-top: var(--s1);
+}
+
+.regime-recap .rows {
+  margin-top: var(--s3);
+}
+
+/* A 20ch label column is right in a full-width page and wrong inside a card
+   half that wide: it squeezed the amount until ₹13,11,600 broke across two
+   lines. Here the label takes what is left and the figure is never broken. */
+.regime-recap .rows > div {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s4);
+}
+
+.regime-recap .rows dd {
+  overflow-wrap: normal;
+  text-align: end;
+  white-space: nowrap;
+}

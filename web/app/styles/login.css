@@ -1,0 +1,59 @@
+/* Sign-in: the demo way in.
+
+   A reviewer arrives holding no synthetic PAN, so the demo shortcut is the one
+   control they must be able to find without scrolling. It sits on the same row
+   as Continue rather than below Register and a rule — beside the citizen's
+   real path, not in place of it. Continue stays the filled button; the
+   shortcut is the outlined one, with its note directly underneath so the pair
+   reads as one aside rather than a second primary action. */
+
+/* One step tighter than the usual action row. The whole point of moving the
+   shortcut up here is that a reviewer meets it without scrolling, and on a
+   short phone the row is close enough to the fold that the step is worth it. */
+.login-actions {
+  align-items: start;
+  margin-top: var(--s5);
+}
+
+.login-demo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+/* The button fills its own column so the note lines up under it rather than
+   hanging off one side. The column may shrink, which is what keeps the longer
+   Hindi label inside 320 CSS pixels. */
+.login-demo > .btn {
+  width: 100%;
+}
+
+.login-demo-note {
+  max-width: none;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.35;
+}
+
+/* Narrow: the two ways in stack, matched in width, so the only thing telling
+   them apart is weight — filled against outlined — and not size. */
+@media (max-width: 559px) {
+  .login-actions {
+    display: grid;
+    gap: var(--s3);
+  }
+
+  .login-actions > .btn {
+    width: 100%;
+  }
+}
+
+/* Wide enough for a row: the shortcut keeps to a short measure so it never
+   outgrows Continue. */
+@media (min-width: 560px) {
+  .login-demo {
+    max-width: 32ch;
+  }
+}

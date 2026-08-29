@@ -21,8 +21,11 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | Sahi Return",
     },
     description:
-      "An independent Build What Moves India prototype for one synthetic defective-return journey.",
+      "An independent Build What Moves India prototype that lets a salaried citizen file their own income tax return.",
     applicationName: "Sahi Return",
+    /* An inline SVG mark rather than a bitmap: it is under 300 bytes, it is the
+       only image the shell needs, and without it every page load logs a 404. */
+    icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }] },
     robots: {
       index: true,
       follow: true,
@@ -30,13 +33,13 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       title: "Sahi Return",
-      description: "Understand, check, and respond to one synthetic defective-return notice.",
+      description: "File a salaried income tax return yourself, with every figure shown beside its source.",
       images: [{ url: socialImage, width: 1200, height: 630, alt: "Sahi Return independent prototype" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Sahi Return",
-      description: "Understand, check, and respond to one synthetic defective-return notice.",
+      description: "File a salaried income tax return yourself, with every figure shown beside its source.",
       images: [socialImage],
     },
   };
@@ -45,8 +48,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#143d2b",
+  /* The service opens on paper whatever the device says, so the browser
+     furniture is told the same thing rather than flashing another colour
+     around it. */
+  themeColor: "#f2eee3",
 };
+
+/* Applies the saved appearance, text size, and language before first paint so a
+   reader never sees a flash of the wrong theme or a resize. A reader who has
+   chosen nothing gets paper, which is what the service opens on. */
+const BOOT = `try{var r=document.documentElement;var p=JSON.parse(localStorage.getItem("sahi-return-prefs-v1")||"{}");var t=p.theme||"paper";r.dataset.theme=t==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;if(p.textScale)r.dataset.text=p.textScale;var d=JSON.parse(localStorage.getItem("sahi-return-filing-draft-v1")||"{}");if(d.language==="hi"||d.language==="en")r.lang=d.language;}catch(e){}`;
 
 export default function RootLayout({
   children,
@@ -54,8 +65,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: BOOT }} />
+        {children}
+      </body>
     </html>
   );
 }

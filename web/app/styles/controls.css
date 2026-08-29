@@ -1,0 +1,141 @@
+/* Controls, drawn rather than borrowed.
+
+   The native radio and checkbox are the one part of this interface the browser
+   was typesetting for us, and it does it differently in every engine: at the
+   em sizes used here Chrome puts the inner dot a fraction off centre, and the
+   tick is whatever the platform feels like. So the control is drawn here — a
+   ring and a dot from a radial gradient, which is centred by construction and
+   cannot drift, and a tick from a single inline SVG that takes the paper
+   colour of the current theme.
+
+   Sizes stay with the component: each place that uses a control already sets
+   its width and height in ems so it grows with the larger-text settings. What
+   lives here is only the drawing. */
+
+:root {
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] {
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2308080a' stroke-width='3.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7'/%3E%3C/svg%3E");
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  box-sizing: border-box;
+  flex: none;
+  padding: 0;
+  border: 1.5px solid var(--rule-2);
+  appearance: none;
+  background: var(--paper);
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+input[type="checkbox"] {
+  border-radius: 0.3em;
+}
+
+input[type="radio"]:hover,
+input[type="checkbox"]:hover {
+  border-color: var(--ink-3);
+}
+
+/* The dot is a gradient stop rather than a box inside a box, so it sits on the
+   exact centre of the ring at any size and any zoom. */
+input[type="radio"]:checked {
+  border-color: var(--accent);
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    var(--accent) 0 44%,
+    transparent 46% 100%
+  );
+}
+
+input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  background-image: var(--tick);
+  background-size: 76% 76%;
+}
+
+input[type="radio"]:disabled,
+input[type="checkbox"]:disabled {
+  border-color: var(--rule);
+  background-color: var(--paper-2);
+  cursor: default;
+}
+
+/* A disabled control that is nonetheless checked still has to read as checked:
+   it is showing an answer, not offering one. */
+input[type="radio"]:disabled:checked {
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    var(--ink-3) 0 44%,
+    transparent 46% 100%
+  );
+}
+
+/* Text fields, one description of them.
+
+   Every field in the product was carrying its own border, radius and padding,
+   which is why no two of them lined up. They share one now; a component only
+   overrides what is genuinely particular to it, such as tabular figures on a
+   rupee amount. */
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+input[type="email"],
+input[type="search"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  border: 1px solid var(--rule-2);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="tel"]:hover,
+input[type="email"]:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--ink-3);
+}
+
+input[type="text"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="tel"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="search"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="date"]:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: var(--accent);
+}
+
+/* A number field is a rupee figure everywhere it appears here. The spinners
+   are noise on one, and on a phone they eat the right edge of the field. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}

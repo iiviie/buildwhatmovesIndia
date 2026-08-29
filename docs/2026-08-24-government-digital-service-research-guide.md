@@ -1,12 +1,16 @@
 # What makes a good government digital service
 
+Created: 2026-08-24 02:00 IST (UTC+05:30)
+
+Last updated: 2026-08-24 02:00 IST (UTC+05:30)
+
 Status: planning reference
 
 Research date: 24 August 2026
 
 Applies to: citizen-facing public-service websites, transactional services, and the e-Jagriti prototype
 
-Related control document: [Government digital service scorecard and checklist](government-service-quality-checklist.md)
+Related control document: [Government digital service scorecard and checklist](2026-08-24-government-service-quality-checklist.md)
 
 ## Executive finding
 
@@ -405,7 +409,7 @@ Do not average a country index, certificate, automated accessibility score, serv
 
 ## The benchmark we should use for this project
 
-The existing [project scorecard](government-service-quality-checklist.md) remains the release control. This research gives it an evidence model.
+The existing [project scorecard](2026-08-24-government-service-quality-checklist.md) remains the release control. This research gives it an evidence model.
 
 ### Layer 1: release gates
 

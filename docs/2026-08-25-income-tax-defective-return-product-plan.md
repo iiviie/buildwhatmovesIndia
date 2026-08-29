@@ -2,9 +2,15 @@
 
 Created: 2026-08-25 00:14 IST (UTC+05:30)
 
-Last updated: 2026-08-25 00:14 IST (UTC+05:30)
+Last updated: 2026-08-25 21:36 IST (UTC+05:30)
 
-Status: confirmed implementation direction
+Status: superseded on 2026-08-27 by [the salaried ITR filing product plan](2026-08-27-salaried-itr-filing-product-plan.md)
+
+> This plan started the journey after a Section 139(9) notice had already
+> arrived. The product now covers the ordinary salaried filing journey that
+> produces such a notice, and runs the defect rules recorded here as a
+> pre-submission check instead. The analysis below remains the source for those
+> rules and is kept for that reason.
 
 Prototype deadline: 2026-08-28 20:00 IST (UTC+05:30)
 
@@ -134,5 +140,6 @@ The build is complete only when:
 - [Income Tax Department tax-credit mismatch guidance](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/tax-credit-mismatch)
 - [Government digital service scorecard](2026-08-24-government-service-quality-checklist.md)
 - [Government digital service research guide](2026-08-24-government-digital-service-research-guide.md)
+- [Sahi Return interface redesign](2026-08-25-sahi-return-interface-redesign.md)
 
 Tax rules and portal behavior change. Recheck the official sources before the demo and submission. This plan defines a fictional prototype case, not tax advice.

@@ -1,0 +1,71 @@
+/* Correcting a prefilled figure.
+
+   The statement is often nearly right and occasionally wrong by a few hundred
+   rupees, and until now the only answers on offer were to accept a wrong
+   number or to deny an entry that is genuinely yours. This is the third one.
+
+   The correction happens in the row the figure is stated in. An earlier
+   version opened a labelled field under the entry, which restated the number,
+   restated what the field was for, and asked the citizen to type the
+   correction somewhere other than where the wrong figure was sitting. Saying
+   "the figure is wrong" now simply makes that figure editable. */
+
+/* The rupee sign and the figure are one field, so the box reads as the thing
+   you type in rather than as a symbol sitting beside a box. */
+.amend-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3ch;
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--rule-2);
+  border-radius: 8px;
+  background: var(--paper);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.amend-cell:focus-within {
+  border-color: var(--accent);
+}
+
+.amend-unit {
+  color: var(--ink-3);
+}
+
+/* Written against the shared field styling rather than around it: the box is
+   drawn once, on .amend-cell, and the input inside it carries none of its
+   own. */
+.amend-cell .amend-input {
+  width: 7ch;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-h3);
+  text-align: left;
+  /* Comfortable on a phone, and sized in em so the larger-text settings carry
+     it. The spinners are dropped by the shared control layer. */
+  min-height: 1.9em;
+}
+
+/* The ring belongs to the field as a whole, drawn on the box above. */
+.amend-cell .amend-input:focus-visible {
+  outline: none;
+}
+
+/* What the statement said, kept beside where the statement itself is named,
+   because that is the same fact: this is the record, and you are departing
+   from it. */
+.amend-was {
+  display: block;
+  margin-top: 2px;
+}
+
+.amend {
+  margin-top: var(--s4);
+}
+
+.amend .finding-note {
+  margin-bottom: var(--s2);
+}

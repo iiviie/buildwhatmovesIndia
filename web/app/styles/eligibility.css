@@ -1,0 +1,541 @@
+/* "Help me select ITR", answered.
+
+   Eighteen questions with a hairline under each one is the wall this panel
+   exists to replace, so there is not a single rule in here. Six quiet surfaces
+   carry the sections, space carries the rows inside them, and the two states
+   that matter — an answer the citizen changed, an answer that decided the
+   form — are said in a word before they are said in a colour. */
+
+.elig-panel {
+  margin-top: var(--s5);
+}
+
+/* This is the heading of its own section on step 1, sitting directly under a
+   serif "Decided for you". At the default h3 size it was the same weight as
+   the six section names beneath it, so the group had no top. Matches
+   `.docs-title`, which had the same problem. */
+.elig-title {
+  margin-bottom: var(--s3);
+  font-family: var(--serif);
+  font-size: var(--t-h2);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  line-height: 1.16;
+}
+
+:lang(hi) .elig-title {
+  font-family: var(--sans);
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.elig-lede {
+  max-width: 54ch;
+  color: var(--ink-2);
+}
+
+.elig-count {
+  margin-top: var(--s4);
+}
+
+/* ---------- The decision ---------- */
+
+/* The one place a form is named. It is set larger than any heading on the
+   panel, including the panel's own title, because it is the answer to the
+   question the eighteen rows below it exist to ask. */
+
+.elig-outcome {
+  min-width: 0;
+  padding: var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s4);
+  background: var(--sheet);
+}
+
+/* The accent, not the alert colour. A citizen who genuinely has to file ITR-2
+   has answered correctly and nothing has gone wrong, but --alert is the hue
+   this interface keeps for a notice and a missed deadline — and in the paper
+   theme it is a printer's red, which a first-time reader takes to mean they
+   have done something wrong. The accent is the same family as every other
+   "look here" on the page, including the edge on the answers listed below, so
+   the eye still runs from one to the other. The settled edge takes no hue at
+   all. */
+.elig-outcome.is-settled {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.elig-outcome.is-blocked {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.elig-outcome-form {
+  margin-top: var(--s1);
+  font-family: var(--serif);
+  font-size: var(--t-h1);
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+
+/* Instrument Serif has no Devanagari, and the form names are Latin either way,
+   so only the surrounding sentence needs the reading face. */
+:lang(hi) .elig-outcome-form {
+  font-family: var(--sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.elig-outcome-line {
+  max-width: 52ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+/* Paper inside the sheet: an aside about the prototype, not part of the
+   verdict, and it should not be mistaken for one. */
+.elig-outcome-scope {
+  max-width: 54ch;
+  padding: var(--s3);
+  border-radius: 8px;
+  margin-top: var(--s4);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.elig-causes-label {
+  margin-top: var(--s5);
+}
+
+.elig-causes {
+  display: grid;
+  gap: var(--s4);
+  margin-top: var(--s3);
+}
+
+/* The same inset edge the rows themselves carry, so the answers listed here
+   and the answers marked down the page read as one set. */
+.elig-cause {
+  min-width: 0;
+  padding-left: var(--s3);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.elig-cause-q {
+  max-width: 52ch;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.elig-cause-why {
+  max-width: 56ch;
+  margin-top: var(--s1);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- The six sections ---------- */
+
+.elig-sections {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s5);
+}
+
+.elig-section {
+  min-width: 0;
+  border-radius: 10px;
+  background: var(--sheet);
+}
+
+.elig-section-head {
+  font: inherit;
+}
+
+.elig-section-toggle {
+  display: grid;
+  grid-template-columns: 2.4ch minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+  width: 100%;
+  padding: var(--s4);
+  text-align: start;
+}
+
+.elig-section-toggle {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.elig-section-toggle:hover .elig-section-name {
+  color: var(--accent);
+}
+
+.elig-section-no {
+  grid-area: 1 / 1;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.elig-section-name {
+  grid-area: 1 / 2;
+  min-width: 0;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+/* Below the name at 320px rather than beside it: a count and a status word in
+   the same row as the name would leave the name a three-character column. */
+.elig-section-meta {
+  grid-area: 2 / 2 / auto / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+  min-width: 0;
+}
+
+.elig-section-count {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+/* The darker accent, because this is small uppercase type on a panel: at
+   --accent the paper theme lands just under 4.5:1 against the sheet, and the
+   strong step is what that token is for. */
+.elig-section-state.is-blocking {
+  color: var(--accent-strong);
+}
+
+.elig-section-state.is-settled {
+  color: var(--ok);
+}
+
+.elig-chevron {
+  grid-area: 1 / 3;
+  align-self: center;
+  color: var(--ink-3);
+  transition: transform var(--dur) var(--ease);
+}
+
+.elig-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elig-chevron {
+    transition: none;
+  }
+}
+
+@container work (min-width: 620px) {
+  .elig-section-toggle {
+    grid-template-columns: 2.4ch minmax(0, 1fr) auto auto;
+  }
+
+  .elig-section-meta {
+    grid-area: 1 / 3;
+    justify-content: flex-end;
+  }
+
+  .elig-chevron {
+    grid-area: 1 / 4;
+  }
+}
+
+/* ---------- One question ---------- */
+
+.elig-section-body {
+  padding: 0 var(--s4) var(--s5);
+}
+
+.elig-questions {
+  display: grid;
+  gap: var(--s6);
+}
+
+.elig-question {
+  min-width: 0;
+}
+
+/* An inset edge, next to the word that says the same thing. It is the same
+   accent the section head carries, so the eye can run from the chip on the
+   closed section straight to the answer that earned it. */
+.elig-question.is-blocking {
+  padding-left: var(--s3);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* A fieldset's default min-width is min-content, which is what makes a long
+   unbroken answer push a narrow screen sideways. */
+.elig-field {
+  min-width: 0;
+}
+
+.elig-legend {
+  display: block;
+  max-width: 52ch;
+  font-size: var(--t-body);
+  overflow-wrap: break-word;
+}
+
+.elig-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s5);
+  margin-top: var(--s2);
+}
+
+/* One line of small type is a 20-pixel target. The padding is what makes it
+   tappable, and it is vertical only so the answers stay on one row. */
+.elig-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  min-width: 0;
+  padding-block: var(--s3);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+}
+
+/* The chosen answer is carried by the filled control and by the weight of the
+   words next to it, so it survives a monochrome screen. */
+.elig-opt:has(input:checked) {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Sized against the words beside it rather than in pixels, so it grows with
+   the larger-text setting instead of shrinking away from it. */
+.elig-opt input {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+  margin: 2px 0 0;
+}
+
+.elig-flag,
+.elig-changed,
+.elig-why {
+  max-width: 56ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.elig-changed .label,
+.elig-why .label {
+  margin-bottom: 1px;
+}
+
+/* The row says it was part of the decision; it does not say what the decision
+   was. The word carries that on its own — the colour and the inset edge beside
+   it only make it findable in a scroll, which is why it can be the accent and
+   does not need to shout. */
+.elig-flag-mark {
+  color: var(--accent-strong);
+}
+
+.elig-official {
+  margin-top: var(--s3);
+}
+
+.elig-official > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-block: var(--s1);
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: var(--t-small);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.24em;
+}
+
+.elig-official > summary:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.elig-official-text {
+  max-width: 56ch;
+  margin-top: var(--s2);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+/* ---------- Where that leaves you ---------- */
+
+/* The same shape as the block at the top, on purpose: a reader who has just
+   worked through eighteen rows should recognise what they are looking at
+   without reading it twice. What makes it an ending rather than a repeat is
+   the gap above it — the widest on the panel, so the last section closes
+   before this begins — and what it holds: what the reader changed, and the
+   one way out of the prototype. */
+.elig-close {
+  min-width: 0;
+  padding: var(--s5);
+  border-radius: 12px;
+  margin-top: var(--s6);
+  background: var(--sheet);
+}
+
+.elig-close.is-settled {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.elig-close.is-blocked {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.elig-close-form {
+  margin-top: var(--s1);
+  font-family: var(--serif);
+  font-size: var(--t-h1);
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+
+:lang(hi) .elig-close-form {
+  font-family: var(--sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.elig-close-line {
+  max-width: 52ch;
+  margin-top: var(--s3);
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+.elig-close-note {
+  max-width: 56ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.elig-close-changes {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+
+/* The same inset edge as the answers listed at the top of the panel, but in
+   the rule grey rather than the accent: these are the answers the citizen
+   touched, which is not the same set as the answers that decided the form, and
+   two accented lists inside one panel would claim they were. */
+.elig-close-change {
+  min-width: 0;
+  padding-left: var(--s3);
+  box-shadow: inset 2px 0 0 var(--rule-2);
+}
+
+.elig-close-change-q {
+  max-width: 52ch;
+  font-size: var(--t-small);
+  overflow-wrap: break-word;
+}
+
+.elig-close-change-a {
+  margin-top: 1px;
+  font-size: var(--t-small);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.elig-close-out {
+  margin-top: var(--s5);
+}
+
+/* Left to flow inline rather than laid out as a flex row: the label carries a
+   form name and wraps onto two lines on a phone, and only an inline icon
+   follows the last word instead of floating beside the middle of the block. */
+.elig-close-out a {
+  font-weight: 600;
+}
+
+.elig-close-out svg {
+  margin-left: var(--s2);
+  color: var(--ink-3);
+  vertical-align: -2px;
+}
+
+.elig-close-out a:hover svg {
+  color: var(--accent);
+}
+
+/* ---------- Standing notes ---------- */
+
+.elig-notes {
+  margin-top: var(--s5);
+}
+
+.elig-note {
+  max-width: 56ch;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.elig-note + .elig-note {
+  margin-top: var(--s2);
+}
+
+/* ---------- Narrow widths ---------- */
+
+/* The panel is six surfaces inside a reading column that is already only 280
+   pixels wide on a small phone. Its own padding is the first thing to give. */
+@container work (max-width: 420px) {
+  .elig-outcome {
+    padding: var(--s4);
+  }
+
+  .elig-outcome-scope {
+    padding: var(--s3) var(--s2);
+  }
+
+  .elig-close {
+    padding: var(--s4);
+  }
+
+  .elig-section-toggle {
+    gap: var(--s1) var(--s2);
+  }
+
+  .elig-section-body {
+    padding: 0 var(--s4) var(--s4);
+  }
+
+  .elig-questions {
+    gap: var(--s5);
+  }
+
+  .elig-causes {
+    gap: var(--s3);
+  }
+}
+
+/* On paper there is nothing to open, so everything is on the page. */
+@media print {
+  .elig-section-body[hidden] {
+    display: block;
+  }
+
+  .elig-chevron {
+    display: none;
+  }
+}

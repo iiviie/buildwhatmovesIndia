@@ -1,0 +1,110 @@
+/* The masthead search.
+
+   It was a bare magnifying glass. Ctrl K opens the same panel, but that was
+   written only inside the tooltip you get for hovering the glass — and nobody
+   hovers a glyph they think they already understand, so nobody found the
+   shortcut. At rest the control now says both what it is and which key opens
+   it, without anything having to be opened first.
+
+   It is the one thing in the masthead that carries a border. The rule against
+   containers holds for anything that is only labelling itself; a field is a
+   different case, because "a box you can type into" is the shape people read
+   as an invitation to type. It borrows the border, radius and hover of the
+   real text fields in controls.css so it is the same object.
+
+   Below the width where the words fit it goes back to being the glass. A
+   placeholder cut off after two words is worse than no placeholder, and the
+   magnifier is the one icon in the row nobody has to guess. */
+
+.search-trigger {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  text-align: left;
+}
+
+.search-trigger:hover {
+  background: var(--paper-2);
+  color: var(--accent);
+}
+
+.search-trigger svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.search-trigger-text,
+.search-trigger-keys {
+  display: none;
+}
+
+/* 1000 rather than the 940 the tool labels use. At 940 the row is already
+   carrying the account name and four icons, and the field is squeezed to the
+   point of clipping its own placeholder — which is the failure this control
+   exists to avoid. */
+@media (min-width: 1000px) {
+  .search-trigger {
+    /* Sized in em rather than pixels, so the box grows with the text scale
+       instead of squeezing its own placeholder out at 125%. It stays a flex
+       item that may shrink, so a crowded row costs the field some width
+       rather than running off the side of the screen. */
+    display: inline-flex;
+    width: clamp(11em, 16vw, 15em);
+    height: 42px;
+    align-items: center;
+    gap: var(--s2);
+    padding: 0 var(--s3);
+    border: 1px solid var(--rule-2);
+    background: var(--paper);
+    color: var(--ink-3);
+    transition: border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .search-trigger:hover {
+    border-color: var(--ink-3);
+    background: var(--paper);
+    color: var(--ink-2);
+  }
+
+  .search-trigger-text {
+    display: block;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* A hairline box, because the thing being named is a key and a key has an
+     edge. It stays at label size and in the quietest ink: it is a reminder for
+     the second visit, not something to read on the first. */
+  .search-trigger-keys {
+    display: inline-block;
+    flex: none;
+    padding: 1px 5px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--ink-3);
+    font-size: var(--t-label);
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+}
+
+@media print {
+  .search-trigger {
+    display: none;
+  }
+}

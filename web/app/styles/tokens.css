@@ -1,0 +1,181 @@
+/* Sahi Return design tokens.
+
+   Direction: "Notice, properly set". A Section 139(9) notice arrives as a
+   printed legal document. The interface typesets that document rather than
+   wrapping it in dashboard furniture: paper, ink, hairline rules, and one
+   accent. No cards, no chips, no shadows.
+
+   The palette is black, white and one blue. The greys are neutral: earlier
+   versions tinted every surface towards the accent, which put a blue-grey
+   under the whole interface and left nothing for the accent itself to stand
+   against. Paper is paper and ink is ink; the blue is the only hue in the
+   furniture.
+
+   The accent is the blue, and it is the only colour used for emphasis — a
+   current step, a chosen answer, a link. One further colour marks something
+   that wants the reader's attention: amber, not red. Red and green read as a
+   traffic light bolted onto a typeset page, and a return that needs a second
+   look is not an emergency. A state that is settled takes no colour at all —
+   it recedes to a muted ink, because "done" is precisely the thing you do not
+   need to look at. So: blue for where you are, amber for what wants you, grey
+   for what is finished. No state is ever carried by colour alone; each one
+   also has a word and usually a mark. */
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-latin-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
+}
+
+:root {
+  color-scheme: light;
+
+  --paper: #ffffff;
+  --paper-2: #f3f3f4;
+  --sheet: #fafafa;
+  --overlay: rgba(10, 10, 11, 0.45);
+
+  --ink: #0b0b0c;
+  --ink-2: #4c4c52;
+  --ink-3: #71717a;
+  --rule: #e3e3e5;
+  --rule-2: #c2c2c7;
+
+  --accent: #2f6fb0;
+  --accent-strong: #235587;
+
+  /* Attention, and settledness. Amber is dark enough here to be read as text
+     on paper; the settled grey is the same ink the supporting lines use, so a
+     finished thing sits back at the weight of a caption. */
+  --ok: #5c5c63;
+  --alert: #8a5a00;
+
+  --focus: #2f6fb0;
+
+  --serif: "Instrument Serif", Georgia, "Iowan Old Style", "Palatino Linotype",
+    "Times New Roman", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+
+  --t-label: 0.6875rem;
+  --t-small: 0.875rem;
+  --t-body: 1.0625rem;
+  --t-lede: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);
+  --t-h3: 1.0625rem;
+  --t-h2: clamp(1.5rem, 1.3rem + 0.85vw, 2.2rem);
+  --t-h1: clamp(2.1rem, 1.55rem + 2.2vw, 3.6rem);
+  --t-display: clamp(2.4rem, 1.75rem + 2.6vw, 5rem);
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 18px;
+  --s5: 28px;
+  --s6: 40px;
+  --s7: 64px;
+  --s8: 96px;
+
+  --shell: min(96vw, 2200px);
+  --gutter: clamp(20px, 4vw, 88px);
+  --nav-col: clamp(172px, 11vw, 250px);
+  --margin-col: clamp(248px, 17vw, 390px);
+  --measure: 62ch;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur: 140ms;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #08080a;
+  --paper-2: #17171a;
+  --sheet: #121214;
+  --overlay: rgba(0, 0, 0, 0.72);
+
+  --ink: #f1f1f3;
+  --ink-2: #a9a9b1;
+  --ink-3: #7e7e88;
+  --rule: #232327;
+  --rule-2: #3b3b42;
+
+  --accent: #6ea8e2;
+  --accent-strong: #9ec9f2;
+
+  --ok: #9b9ba4;
+  --alert: #f0b429;
+
+  --focus: #6ea8e2;
+}
+
+/* The paper theme.
+
+   The original of this interface was set on cream stock rather than on white:
+   a Section 139(9) notice arrives printed, and printed paper is warm. It is
+   kept as a third choice because it is the most comfortable of the three to
+   read a long screen of prose on, and because the hierarchy inverts — here the
+   page is the tinted stock and the panels sit on top of it in near-white,
+   which is how a document behaves and not how a dashboard does.
+
+   Red and green survive in this theme only. On cream they read as the printer's
+   second and third inks, which is where they came from; on the neutral themes
+   they read as a traffic light bolted to the page, so there they are amber and
+   grey instead. The role of each token is unchanged: --alert is whatever this
+   theme uses to ask for attention. */
+[data-theme="paper"] {
+  color-scheme: light;
+
+  --paper: #f2eee3;
+  --paper-2: #eae4d6;
+  --sheet: #faf9f4;
+  --overlay: rgba(25, 23, 18, 0.45);
+
+  --ink: #191712;
+  --ink-2: #55503f;
+  --ink-3: #7d7663;
+  --rule: #ded7c6;
+  --rule-2: #c4bca6;
+
+  --accent: #3474b4;
+  --accent-strong: #285a8f;
+
+  --ok: #1c7a52;
+  --alert: #a11520;
+
+  --focus: #3474b4;
+}
+
+/* A wide viewport is not an invitation to stretch a line of prose. The columns
+   and the type both grow, so the extra width is filled by the reading rather
+   than by empty gutters. */
+@media (min-width: 1700px) {
+  :root {
+    --t-body: 1.1875rem;
+    --t-small: 0.9375rem;
+    --t-label: 0.75rem;
+    --t-lede: 1.4rem;
+    --t-h3: 1.1875rem;
+    --measure: 66ch;
+    --s7: 76px;
+    --s8: 120px;
+  }
+}
+
+:root[data-text="large"] { font-size: 112.5%; }
+:root[data-text="larger"] { font-size: 125%; }

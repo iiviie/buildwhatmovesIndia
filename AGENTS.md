@@ -8,6 +8,14 @@ This repository contains our submission for the 2026 Build What Moves India hack
 
 The repository is a minimal scaffold. Keep research and project documentation in `docs/`. Keep hackathon requirements and Codex context in `.codex/`. Do not choose an application structure or technology stack until the planning stage records that decision.
 
+### Documentation dates
+
+- Give every new project document a `Created` and `Last updated` timestamp directly below its title. Use `YYYY-MM-DD HH:MM IST (UTC+05:30)` so the date, time, and timezone are explicit.
+- Prefix every new document filename in `docs/` with its creation date in `YYYY-MM-DD` form, for example `2026-08-24-service-architecture.md`. Keep conventional repository filenames such as `README.md` and `AGENTS.md` unchanged.
+- Keep the original `Created` value. Update `Last updated` whenever the document changes materially.
+- When a new dated document supersedes an older one, mark the older document as superseded and link to its replacement. Do not delete or ignore a document based only on the date in its filename.
+- Update every repository link when a document is renamed.
+
 No package manager, build system, formatter, test runner, or deployment target is configured yet. Do not present example commands as working commands. Once the stack is chosen, document the real setup, development, test, lint, and production build commands in `README.md`.
 
 ## Hackathon guardrails

@@ -3,100 +3,442 @@
 import {
   type ChangeEvent,
   type FormEvent,
-  type KeyboardEvent,
+  type ReactNode,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { copy, helpByStep, journeyCopy } from "./content";
 import {
-  copy,
-  helpByStep,
-  journeyCopy,
-} from "./content";
-import {
+  allIncomeAnswered,
+  answeredCount,
+  buildFilingWindow,
+  buildComparison,
+  buildComputation,
+  type CheckId,
+  checksNeedingAttention,
+  claimableTds,
   createDownload,
   defaultDraft,
-  DEMO_REFERENCE,
+  defaultPrefs,
+  DEMO_ACKNOWLEDGEMENT,
+  DEMO_TRANSACTION,
   demoCase,
   demoDocuments,
+  disputedEntries,
   DRAFT_KEY,
+  FEEDBACK_REFERENCE,
+  formatDate,
+  formatDateTime,
+  formatLongDate,
+  formatHour,
+  formatPercent,
   formatRupees,
   hasAllDocuments,
+  helplines,
+  incomeEntries,
+  isHelplineOpen,
+  type IncomeAnswer,
+  MAX_FILE_MB,
+  OFFICIAL_AIS_HELP,
+  OFFICIAL_DEFECTIVE_FAQ,
+  OFFICIAL_FILING_HELP,
+  OFFICIAL_HELPLINES,
+  OFFICIAL_PORTAL,
+  otherIncomeTotal,
+  PREFS_KEY,
+  type QuickLink,
+  quickLinks,
+  type Regime,
+  runChecks,
+  strandedTds,
+  SUPPORT_REFERENCE,
+  type DocumentKind,
   type DraftState,
   type Language,
+  type Prefs,
+  type TextScale,
+  type Theme,
   validateFile,
 } from "./case-data";
+import { REBATE_NEW_LIMIT } from "./tax";
+import {
+  formatBytes,
+  isImage,
+  type PreparedFile,
+  prepareDocument,
+} from "./file-tools";
+import {
+  isScreen,
+  maskUserId,
+  parseSession,
+  SCREEN_KEY,
+  SESSION_KEY,
+  type Screen,
+  type Session,
+} from "./auth";
+import { decideForm, demoAnswers } from "./eligibility";
+import { bankAccounts } from "./personal-section";
+import { DEMO_VERIFY_REFERENCE, DEMO_VERIFY_ROUTE } from "./verification";
+import { buildContext } from "./assistant";
+import { serviceById, services, type SectionId, type ServiceId } from "./services";
+import { Assistant } from "./components/Assistant";
+import { Dashboard } from "./components/Dashboard";
+import { DocumentsPanel } from "./components/DocumentsPanel";
+import { EligibilityPanel } from "./components/EligibilityPanel";
+import { PersonalSection } from "./components/PersonalSection";
+import { VerifySection } from "./components/VerifySection";
+import { TaxPaidSection } from "./components/TaxPaidSection";
+import { LoginScreen } from "./components/LoginScreen";
+import { PortalNav } from "./components/PortalNav";
+import { RegisterScreen } from "./components/RegisterScreen";
+import { newestFirst, notices } from "./notices";
+import { NoticesPage } from "./components/NoticesPage";
+import { StepRail } from "./components/StepRail";
+import { SearchTrigger } from "./components/SearchTrigger";
+import { TermLanguage } from "./components/Term";
+import { markUp, Prose } from "./components/Prose";
+import { Hovercard } from "./components/Hovercard";
+import { CommandPalette, type Command } from "./components/CommandPalette";
+import { DeadlineInline, DeadlineMargin } from "./components/DeadlineMeter";
+import { Modal } from "./components/Modal";
+import { SettingsMenu } from "./components/SettingsMenu";
+import { TrustBanner } from "./components/TrustBanner";
+import {
+  AlertIcon,
+  ArrowIcon,
+  CheckIcon,
+  ExternalIcon,
+  FileIcon,
+  GridIcon,
+  HelpIcon,
+  LockIcon,
+  SignInIcon,
+  SignOutIcon,
+  UserPlusIcon,
+} from "./components/icons";
 
-const OFFICIAL_FAQ =
-  "https://www.incometax.gov.in/iec/foportal/taxonomy/term/38";
-const OFFICIAL_PORTAL = "https://www.incometax.gov.in/iec/foportal/";
-const TOTAL_STEPS = 7;
+/* The three appearances, in the order the command palette hands them out.
+   "Match device" is deliberately not in the cycle: it is a standing preference
+   a reader sets once in Settings, not a thing to land on halfway through
+   pressing a shortcut repeatedly. */
+const THEME_CYCLE: Theme[] = ["dark", "light", "paper"];
+
+const nextTheme = (current: Theme): Theme =>
+  THEME_CYCLE[(THEME_CYCLE.indexOf(current) + 1) % THEME_CYCLE.length];
+
+/* The account the fixture nominates, used until the citizen picks another. */
+const defaultNominatedAccount =
+  bankAccounts.find((account) => account.nominated)?.id ?? bankAccounts[0].id;
+
+/* Steps 0 through 7. Step 0 is the start screen and is not numbered in the
+   citizen-facing step list, so the visible count is TOTAL_STEPS - 1. */
+const TOTAL_STEPS = 8;
+
+const RECEIPT_STEP = 7;
+
+/* How many notices the home page carries before handing over to the archive.
+   Four is a glance; the rest is a page. */
+const HOME_NOTICES = 4;
 
 const parseDraft = (value: string | null): DraftState | null => {
   if (!value) return null;
   try {
-    const draft = JSON.parse(value) as DraftState;
-    if (
-      typeof draft.step !== "number" ||
-      !Array.isArray(draft.documents) ||
-      !["en", "hi"].includes(draft.language)
-    ) {
-      return null;
-    }
-    return draft;
+    const parsed = JSON.parse(value) as Partial<DraftState>;
+    if (typeof parsed.step !== "number") return null;
+    return {
+      ...defaultDraft,
+      ...parsed,
+      step: Math.max(0, Math.min(TOTAL_STEPS - 1, parsed.step)),
+      /* You cannot be standing further along than you have ever been, so the
+         mark is never below the step. That also carries a draft written before
+         the mark existed: where it was left is where it has been. */
+      reached: Math.min(
+        TOTAL_STEPS - 1,
+        Math.max(
+          0,
+          parsed.step,
+          typeof parsed.reached === "number" ? parsed.reached : 0,
+        ),
+      ),
+      documents: Array.isArray(parsed.documents)
+        ? parsed.documents
+        : defaultDraft.documents,
+      incomeAnswers:
+        parsed.incomeAnswers && typeof parsed.incomeAnswers === "object"
+          ? parsed.incomeAnswers
+          : {},
+      incomeAmounts:
+        parsed.incomeAmounts && typeof parsed.incomeAmounts === "object"
+          ? parsed.incomeAmounts
+          : {},
+      eligibilityAnswers:
+        parsed.eligibilityAnswers && typeof parsed.eligibilityAnswers === "object"
+          ? parsed.eligibilityAnswers
+          : {},
+      personalDetails:
+        parsed.personalDetails && typeof parsed.personalDetails === "object"
+          ? parsed.personalDetails
+          : {},
+    };
   } catch {
     return null;
   }
 };
 
-const Field = ({ label, value }: { label: string; value: string }) => (
-  <div className="fact-field">
+const parsePrefs = (value: string | null): Prefs | null => {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as Partial<Prefs>;
+    return { ...defaultPrefs, ...parsed };
+  } catch {
+    return null;
+  }
+};
+
+const Row = ({ label, value }: { label: string; value: string }) => (
+  <div>
     <dt>{label}</dt>
     <dd>{value}</dd>
   </div>
 );
 
+const OutLink = ({
+  children,
+  href,
+  newWindow,
+}: {
+  children: ReactNode;
+  href: string;
+  newWindow: string;
+}) => (
+  <a href={href} rel="noreferrer noopener" target="_blank">
+    {children}
+    <ExternalIcon />
+    <span className="sr-only">{newWindow}</span>
+  </a>
+);
+
 export function SahiReturnApp() {
   const [draft, setDraft] = useState<DraftState>(defaultDraft);
+  const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
   const [hydrated, setHydrated] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [notice, setNotice] = useState("");
   const [formError, setFormError] = useState("");
+
+  /* An error message that only names the problem leaves the reader to hunt for
+     it, and on a long step the offending box is usually off screen. So every
+     refusal to continue also points at the thing that is wrong: the page
+     scrolls to it, focus lands on it, and it is ringed for a moment so that
+     someone who did not watch the scroll happen can still see where they were
+     taken. The same mechanism carries a second, friendlier job — sending focus
+     into a field the reader has just asked to edit.
+
+     `intent` separates the two. Being stopped is not the same as being helped
+     along, and they must not look alike. */
+  const [spotlight, setSpotlight] = useState<
+    { id: string; intent: "error" | "edit" } | null
+  >(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [supportMode, setSupportMode] = useState(false);
   const [supportIssue, setSupportIssue] = useState("");
   const [supportDetails, setSupportDetails] = useState("");
   const [supportReference, setSupportReference] = useState("");
   const [clearOpen, setClearOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  /* Site-level state: which screen, who is signed in, and the two panels that
+     sit outside the journey. */
+  const [screen, setScreen] = useState<Screen>("home");
+  const [session, setSession] = useState<Session | null>(null);
+  /* Where the citizen was heading when the sign-in wall stopped them. */
+  const [intendedStep, setIntendedStep] = useState<number | null>(null);
+  const [navOpen, setNavOpen] = useState<SectionId | null>(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState<string | null>(null);
+  /* Bumped on every hand-off so the same question asked twice still lands. */
+  const [questionToken, setQuestionToken] = useState(0);
+  const [preparing, setPreparing] = useState<DocumentKind | null>(null);
+  const [preparedNote, setPreparedNote] = useState<{
+    kind: DocumentKind;
+    name: string;
+    from: string;
+    to: string;
+    converted: boolean;
+    compressed: boolean;
+  } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const helpCloseRef = useRef<HTMLButtonElement>(null);
-  const helpDialogRef = useRef<HTMLElement>(null);
-  const clearDialogRef = useRef<HTMLElement>(null);
-  const clearCancelRef = useRef<HTMLButtonElement>(null);
+
+  /* Carries out whatever the spotlight asked for. Focus lands on the control
+     itself where the target is one, and on the block otherwise — a block is
+     given `tabIndex={-1}` at its call site so that focus can rest there
+     without adding it to the tab order.
+
+     `preventScroll` on the focus call and a separate `scrollIntoView` is
+     deliberate: letting focus do the scrolling jumps the element to the edge
+     of the viewport, and the reader needs to see what is around it. */
+  useEffect(() => {
+    if (!spotlight) return;
+
+    const node = document.getElementById(spotlight.id);
+    if (!node) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "center",
+    });
+
+    const control = node.matches("input, select, textarea, button, a[href]")
+      ? node
+      : node.querySelector<HTMLElement>("input, select, textarea, button, a[href]");
+    const target = control ?? node;
+    target.focus({ preventScroll: true });
+
+    /* A figure they are about to replace is selected, so the first keystroke
+       overwrites it rather than landing in the middle of the old number. */
+    if (
+      spotlight.intent === "edit" &&
+      target instanceof HTMLInputElement &&
+      target.type !== "checkbox" &&
+      target.type !== "radio"
+    ) {
+      target.select();
+    }
+  }, [spotlight]);
+
+  /* The ring is a class on the target, and it has to come off again or the
+     page ends up with an old mark on it. */
+  const spotlightClass = (id: string) =>
+    spotlight?.id === id
+      ? spotlight.intent === "error"
+        ? " is-spotlit is-spotlit-error"
+        : " is-spotlit"
+      : "";
+
+  /* Refuse to continue, and say where. */
+  const stopAt = (id: string, message: string) => {
+    setFormError(message);
+    setSpotlight({ id, intent: "error" });
+  };
 
   const language = draft.language;
   const common = copy[language];
+
+  /* The wizard gives the verdict; the journey files ITR-1 either way, because
+     that is the only route this prototype builds. So the form named on the
+     return is always ITR-1, and where the wizard disagrees the interface says
+     so in words rather than quietly showing two different answers. */
+  const decision = decideForm({
+    ...demoAnswers,
+    ...draft.eligibilityAnswers,
+  });
+  const decidedForm = demoCase.form;
   const page = journeyCopy[language];
+  const comparison = useMemo(() => buildComparison(draft), [draft]);
+  const computation = useMemo(() => buildComputation(draft), [draft]);
+
+  /* The account a refund would actually reach: the nominated one, and only if
+     the portal has validated it. Nothing else can be paid into, so nothing
+     else may be named beside the figure. */
+  const refundAccount = useMemo(() => {
+    const chosen = draft.nominatedAccount || defaultNominatedAccount;
+    const account = bankAccounts.find((entry) => entry.id === chosen);
+    return account?.validated ? account : null;
+  }, [draft.nominatedAccount]);
+  const checks = useMemo(() => runChecks(draft), [draft]);
+
+  /* The late fee depends on total income, so the window is derived after the
+     computation rather than alongside it. */
+  const filing = useMemo(
+    () => buildFilingWindow(new Date(), computation.totalIncome),
+    [computation.totalIncome],
+  );
+
+  const now = useMemo(() => new Date(), []);
+
+  const money = useCallback(
+    (amount: number) => formatRupees(amount, language),
+    [language],
+  );
+
+  /* ---------------------------------------------------------- lifecycle */
 
   useEffect(() => {
-    const restoreTimer = window.setTimeout(() => {
+    /* Restore after paint so the server-rendered start screen is usable first. */
+    const restore = window.setTimeout(() => {
       const saved = parseDraft(window.localStorage.getItem(DRAFT_KEY));
       if (saved) {
         setDraft(saved);
         setHasSavedDraft(saved.step > 0 || saved.status !== "draft");
       }
+      const savedPrefs = parsePrefs(window.localStorage.getItem(PREFS_KEY));
+      if (savedPrefs) setPrefs(savedPrefs);
+      const savedSession = parseSession(window.localStorage.getItem(SESSION_KEY));
+      if (savedSession) setSession(savedSession);
+      const savedScreen = window.localStorage.getItem(SCREEN_KEY);
+      /* A signed-out session cannot land back inside the journey or the
+         dashboard, however the browser was left. */
+      if (isScreen(savedScreen)) {
+        setScreen(
+          savedSession || (savedScreen !== "journey" && savedScreen !== "dashboard")
+            ? savedScreen
+            : "home",
+        );
+      }
       setIsOnline(window.navigator.onLine);
       setHydrated(true);
     }, 0);
-    return () => window.clearTimeout(restoreTimer);
+    return () => window.clearTimeout(restore);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    document.documentElement.lang = draft.language;
   }, [draft, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  }, [prefs, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(SCREEN_KEY, screen);
+    if (session) {
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    } else {
+      window.localStorage.removeItem(SESSION_KEY);
+    }
+  }, [hydrated, screen, session]);
+
+  useEffect(() => {
+    document.documentElement.lang = draft.language;
+  }, [draft.language]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.text = prefs.textScale;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      root.dataset.theme =
+        prefs.theme === "system"
+          ? media.matches
+            ? "dark"
+            : "light"
+          : prefs.theme;
+    };
+    apply();
+    media.addEventListener?.("change", apply);
+    return () => media.removeEventListener?.("change", apply);
+  }, [prefs.textScale, prefs.theme]);
 
   useEffect(() => {
     const goOnline = () => {
@@ -116,86 +458,197 @@ export function SahiReturnApp() {
   }, [draft.language]);
 
   useEffect(() => {
-    if (hydrated && draft.step > 0) {
-      headingRef.current?.focus();
-    }
+    if (hydrated && draft.step > 0) headingRef.current?.focus();
   }, [draft.step, hydrated]);
 
   useEffect(() => {
-    if (helpOpen) helpCloseRef.current?.focus();
-  }, [helpOpen]);
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-  useEffect(() => {
-    if (clearOpen) clearCancelRef.current?.focus();
-  }, [clearOpen]);
+  /* ------------------------------------------------------------ actions */
 
-  const updateDraft = (next: Partial<DraftState>) => {
+  const updateDraft = useCallback((next: Partial<DraftState>) => {
     setDraft((current) => ({ ...current, ...next }));
     setFormError("");
-  };
+    setSpotlight(null);
+  }, []);
 
-  const goTo = (step: number) => {
-    const safeStep = Math.max(0, Math.min(TOTAL_STEPS - 1, step));
-    if (safeStep > 0) setHasSavedDraft(true);
-    updateDraft({ step: safeStep });
-  };
+  /* Moving onto a step, wherever the move came from: the rail, the login the
+     rail sent you through, or submitting the return. The mark of how far you
+     have been only ever rises. */
+  const enterStep = useCallback((step: number) => {
+    setDraft((current) => ({
+      ...current,
+      step,
+      reached: Math.max(current.reached, step),
+    }));
+    setFormError("");
+  }, []);
 
-  const keepFocusInDialog = (
-    event: KeyboardEvent<HTMLElement>,
-    dialog: HTMLElement | null,
-    closeDialog: () => void,
-  ) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeDialog();
-      return;
-    }
-    if (event.key !== "Tab" || !dialog) return;
+  /* The one door into the return.
 
-    const focusable = Array.from(
-      dialog.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    );
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+     The e-Filing portal will not let anyone start a return without signing in,
+     so neither does this. A citizen stopped at the door keeps the step they
+     were heading for, and is put back on it the moment they are through, rather
+     than being dropped at a dashboard to find their own way again. */
+  const goTo = useCallback(
+    (step: number) => {
+      const safeStep = Math.max(0, Math.min(TOTAL_STEPS - 1, step));
 
-  const switchLanguage = (nextLanguage: Language) => {
+      if (safeStep === 0) {
+        setScreen("home");
+        updateDraft({ step: 0 });
+        return;
+      }
+
+      if (!session) {
+        setIntendedStep(safeStep);
+        setScreen("login");
+        return;
+      }
+
+      setHasSavedDraft(true);
+      setScreen("journey");
+      enterStep(safeStep);
+    },
+    [enterStep, session, updateDraft],
+  );
+
+  const signIn = useCallback(
+    (next: Session) => {
+      setSession(next);
+      setNotice(copy[language].loginSuccess(next.name));
+      const target = intendedStep;
+      setIntendedStep(null);
+      if (target != null) {
+        setHasSavedDraft(true);
+        setScreen("journey");
+        enterStep(target);
+      } else {
+        setScreen("dashboard");
+      }
+    },
+    [enterStep, intendedStep, language],
+  );
+
+  const signOut = useCallback(() => {
+    setSession(null);
+    setIntendedStep(null);
+    setScreen("home");
+    setAssistantOpen(false);
+    setNotice(copy[language].signOutDone);
+    updateDraft({ step: 0, reached: 0 });
+  }, [language, updateDraft]);
+
+  /* A service tile anywhere in the site lands on the same place. Only the
+     salaried return is built; everything else is marked and inert, so this
+     only ever has one destination. */
+  const openService = useCallback(
+    (id: ServiceId) => {
+      const service = serviceById(id);
+      if (!service || service.state !== "live") return;
+      goTo(service.step ?? 1);
+    },
+    [goTo],
+  );
+
+  const askAssistant = useCallback((question: string) => {
+    setAssistantQuestion(question);
+    setQuestionToken((token) => token + 1);
+    setAssistantOpen(true);
+  }, []);
+
+  const switchLanguage = (nextLanguage: Language) =>
     updateDraft({ language: nextLanguage });
-  };
 
-  const loadDemoDocuments = () => {
+  const loadDemoDocuments = useCallback(() => {
     updateDraft({ documents: demoDocuments });
     setNotice(
       language === "hi"
-        ? "तीनों डेमो दस्तावेज़ लोड हो गए।"
-        : "All three demo documents are loaded.",
+        ? "दोनों डेमो दस्तावेज़ लोड हो गए।"
+        : "Both demo documents are loaded.",
     );
-  };
+  }, [language, updateDraft]);
 
-  const replaceDocument = (
+  /* A phone photo is the normal case, not an error case. Anything that is
+     already a document passes through; anything that is a picture is turned
+     into a PDF and brought under the limit here, on the device, so nobody has
+     to find a converter site and hand it a tax document. */
+  const replaceDocument = async (
     event: ChangeEvent<HTMLInputElement>,
-    kind: DraftState["documents"][number]["kind"],
+    kind: DocumentKind,
   ) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
     if (!file) return;
-    const validation = validateFile(file);
-    if (validation === "type") {
-      setFormError(page.documents.typeError);
+
+    const limit = MAX_FILE_MB * 1024 * 1024;
+    let prepared: PreparedFile | null = null;
+
+    if (isImage(file)) {
+      setPreparing(kind);
+      try {
+        prepared = await prepareDocument(file, limit);
+      } catch {
+        setFormError(
+          language === "hi"
+            ? "यह तस्वीर पढ़ी नहीं जा सकी: कोई और फ़ाइल चुनें।"
+            : "This picture could not be read: choose another file.",
+        );
+        setPreparing(null);
+        return;
+      }
+      setPreparing(null);
+    } else {
+      const validation = validateFile(file);
+      if (validation === "type") {
+        setFormError(
+          language === "hi"
+            ? `फाइल का प्रकार: PDF, JPG या PNG चुनें।`
+            : `File type: choose a PDF, JPG or PNG.`,
+        );
+        return;
+      }
+      if (validation === "size") {
+        setFormError(
+          language === "hi"
+            ? `फाइल का आकार: ${MAX_FILE_MB} MB से छोटी फाइल चुनें।`
+            : `File size: choose a file smaller than ${MAX_FILE_MB} MB.`,
+        );
+        return;
+      }
+    }
+
+    if (prepared && prepared.bytes > limit) {
+      setFormError(
+        language === "hi"
+          ? `यह तस्वीर ${MAX_FILE_MB} MB से नीचे नहीं लाई जा सकी। कम रोशनी में ली गई बड़ी तस्वीर दोबारा खींचकर देखें।`
+          : `This picture could not be brought under ${MAX_FILE_MB} MB. Try photographing the page again, closer and in better light.`,
+      );
       return;
     }
-    if (validation === "size") {
-      setFormError(page.documents.sizeError);
-      return;
+
+    const finalName = prepared ? prepared.name : file.name;
+    const finalBytes = prepared ? prepared.bytes : file.size;
+
+    if (prepared) {
+      setPreparedNote({
+        kind,
+        name: prepared.name,
+        from: formatBytes(prepared.originalBytes),
+        to: formatBytes(prepared.bytes),
+        converted: prepared.converted,
+        compressed: prepared.compressed,
+      });
+    } else {
+      setPreparedNote(null);
     }
 
     updateDraft({
@@ -203,8 +656,8 @@ export function SahiReturnApp() {
         document.kind === kind
           ? {
               ...document,
-              name: file.name,
-              size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+              name: finalName,
+              size: formatBytes(finalBytes),
               source:
                 language === "hi"
                   ? "इस ब्राउज़र में चुनी गई काल्पनिक फाइल"
@@ -214,46 +667,81 @@ export function SahiReturnApp() {
           : document,
       ),
     });
-    event.target.value = "";
   };
 
-  const continueFromDocuments = () => {
+  const answerEntry = (id: string, answer: IncomeAnswer) => {
+    updateDraft({ incomeAnswers: { ...draft.incomeAnswers, [id]: answer } });
+    /* Choosing "yes, but the figure is wrong" turns the figure above into a
+       box, several lines up from the radio that did it. Nothing about the
+       radio says that happened, so the caret is put in the box and the old
+       figure selected: the next thing they type replaces it. */
+    if (answer === "amended") {
+      setSpotlight({ id: `${id}-amount`, intent: "edit" });
+    }
+  };
+
+  /* An empty box is not zero income — clearing the field falls back to the
+     statement's own figure rather than silently wiping the entry. */
+  const amendEntry = (id: string, raw: string) => {
+    const next = { ...draft.incomeAmounts };
+    const parsed = Number(raw);
+    if (raw.trim() === "" || Number.isNaN(parsed) || parsed < 0) delete next[id];
+    else next[id] = Math.round(parsed);
+    updateDraft({ incomeAmounts: next });
+  };
+
+  const continueFromSalary = () => {
     if (!hasAllDocuments(draft.documents)) {
-      setFormError(page.documents.incomplete);
+      stopAt(
+        "documents-in-use",
+        language === "hi"
+          ? "दस्तावेज़: आगे बढ़ने से पहले दोनों दस्तावेज़ लोड करें।"
+          : "Documents: load both documents before continuing.",
+      );
+      return;
+    }
+    if (!draft.salaryConfirmed) {
+      stopAt("salary-confirm", page.salary.confirmError);
       return;
     }
     goTo(3);
   };
 
-  const continueFromConfirm = () => {
-    if (!draft.ownership) {
-      setFormError(page.confirm.required);
+  const continueFromIncome = () => {
+    if (!allIncomeAnswered(draft)) {
+      /* Four entries, and usually only one of them is unanswered. Point at
+         that one rather than at the list it is somewhere inside. */
+      const first = incomeEntries.find(
+        (entry) => !draft.incomeAnswers[entry.id],
+      );
+      stopAt(first ? `entry-${first.id}` : "income-entries", page.income.error);
       return;
     }
-    if (draft.ownership === "yes") {
-      goTo(5);
+    goTo(4);
+  };
+
+  const continueFromRegime = () => {
+    if (!draft.regime) {
+      stopAt("regime-choice", page.regime.error);
+      return;
     }
+    goTo(5);
   };
 
-  const finishDisputedRoute = () => {
-    const time = new Intl.DateTimeFormat(
-      language === "hi" ? "hi-IN" : "en-IN",
-      { dateStyle: "medium", timeStyle: "short" },
-    ).format(new Date());
-    updateDraft({
-      status: "disputed",
-      reference: "DEMO-CHECK-2026-0019",
-      submittedAt: time,
-      step: 6,
-    });
-  };
-
-  const submitResponse = async () => {
+  const submitReturn = async () => {
+    /* Already filed, and they have walked back to the review to look at
+       something. The button used to sit here doing nothing at all, which reads
+       as a broken page rather than as "there is nothing left to do": send them
+       to the acknowledgement they already have instead of filing twice. */
+    if (draft.status === "submitted") {
+      goTo(RECEIPT_STEP);
+      return;
+    }
+    if (draft.status === "submitting") return;
     if (!draft.declaration) {
-      setFormError(page.review.declarationError);
+      stopAt("review-declare", page.review.declarationError);
       return;
     }
-    if (draft.status === "submitting" || draft.status === "submitted") return;
     if (!window.navigator.onLine) {
       updateDraft({ status: "queued" });
       setIsOnline(false);
@@ -269,29 +757,51 @@ export function SahiReturnApp() {
       return;
     }
 
-    const submittedAt = new Intl.DateTimeFormat(
-      language === "hi" ? "hi-IN" : "en-IN",
-      { dateStyle: "medium", timeStyle: "short" },
-    ).format(new Date());
+    const filedAt = new Date();
     updateDraft({
       status: "submitted",
-      reference: DEMO_REFERENCE,
-      submittedAt,
-      step: 6,
+      reference: DEMO_ACKNOWLEDGEMENT,
+      submittedAt: formatDateTime(filedAt, language),
+      submittedIso: filedAt.toISOString(),
+      step: RECEIPT_STEP,
+      reached: RECEIPT_STEP,
     });
   };
 
-  const downloadReceipt = () => {
-    const blob = new Blob([createDownload(draft, language)], {
-      type: "text/plain;charset=utf-8",
+  /* Verification, simulated. One act, no OTP theatre: the prototype has said
+     all along that it sends no OTP, and staging a fake one here would be the
+     first place it stopped telling the truth. */
+  const verifyReturn = () => {
+    if (draft.verifiedAt) return;
+    const at = new Date();
+    updateDraft({
+      verifiedAt: formatDateTime(at, language),
+      verifiedIso: at.toISOString(),
+      verificationRoute: DEMO_VERIFY_ROUTE,
     });
+  };
+
+  const saveTextFile = (name: string, body: string) => {
+    const blob = new Blob([body], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${draft.reference ?? "sahi-return-demo"}.txt`;
+    anchor.download = name;
     anchor.click();
     URL.revokeObjectURL(url);
   };
+
+  const downloadReceipt = () =>
+    saveTextFile(
+      `${draft.reference ?? "sahi-return-demo"}.txt`,
+      createDownload(draft, language, computation),
+    );
+
+  const downloadSummary = () =>
+    saveTextFile(
+      "demo-return-summary.txt",
+      createDownload(draft, language, computation),
+    );
 
   const clearDraft = () => {
     window.localStorage.removeItem(DRAFT_KEY);
@@ -317,714 +827,2446 @@ export function SahiReturnApp() {
   const createSupportRequest = (event: FormEvent) => {
     event.preventDefault();
     if (!supportIssue || supportDetails.trim().length < 10) return;
-    setSupportReference("SUPPORT-DEMO-0264");
+    setSupportReference(SUPPORT_REFERENCE);
   };
 
-  const openHelp = () => {
+  const openHelp = useCallback(() => {
     setSupportMode(false);
     setSupportReference("");
     setHelpOpen(true);
+  }, []);
+
+  const openSupport = useCallback(() => {
+    setSupportReference("");
+    setSupportMode(true);
+    setHelpOpen(true);
+  }, []);
+
+  const raiseFeedback = () => {
+    updateDraft({ feedbackReference: FEEDBACK_REFERENCE });
   };
 
-  const renderStart = () => (
-    <section className="start-layout" aria-labelledby="start-title">
-      <div className="start-copy">
-        <p className="eyebrow">{page.start.eyebrow}</p>
-        <h1 id="start-title">{page.start.title}</h1>
-        <p className="lede">{page.start.intro}</p>
-        <div className="quick-facts" aria-label="Service details">
-          <span>{page.start.time}</span>
-          <span>{page.start.fee}</span>
-          <span>{page.start.proof}</span>
-        </div>
-        {hasSavedDraft && draft.step > 0 ? (
-          <div className="resume-card">
-            <p>{common.resume}</p>
-            <div className="button-row">
-              <button className="button primary" onClick={() => goTo(draft.step)}>
-                {common.continueDraft}
-              </button>
-              <button className="button secondary" onClick={resetDemo}>
-                {common.startAgain}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button className="button primary large" onClick={() => goTo(1)}>
-            {page.start.action}
-          </button>
-        )}
-      </div>
+  /* ----------------------------------------------------------- commands */
 
-      <aside className="scope-card" aria-label={page.start.supportsTitle}>
-        <div className="scope-section good">
-          <p className="scope-kicker">{page.start.supportsTitle}</p>
-          <p>{page.start.supports}</p>
-        </div>
-        <div className="scope-section">
-          <p className="scope-kicker">{page.start.notSupportTitle}</p>
-          <p>{page.start.notSupport}</p>
-        </div>
-        <div className="scope-section">
-          <p className="scope-kicker">{page.start.needTitle}</p>
-          <ul>
-            {page.start.needs.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-        <p className="privacy-note">{page.start.privacy}</p>
-      </aside>
-    </section>
-  );
+  const commands = useMemo<Command[]>(() => {
+    const stepCommands: Command[] = [];
+    const add = (
+      id: string,
+      title: string,
+      subtitle: string,
+      run: () => void,
+      keywords = "",
+    ) =>
+      stepCommands.push({
+        id,
+        group: common.commandGroupStep,
+        title,
+        subtitle,
+        keywords,
+        run,
+      });
 
-  const renderNotice = () => (
-    <section className="journey-panel" aria-labelledby="step-title">
-      <div className="content-column">
-        <p className="eyebrow">{page.notice.eyebrow}</p>
-        <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-          {page.notice.title}
-        </h1>
-        <p className="lede">{page.notice.plain}</p>
+    if (draft.step === 0) {
+      add("start", page.home.start, common.steps[1], () => goTo(1), "begin shuru");
+    }
+    if (draft.step === 1) {
+      add("to-salary", page.check.continue, common.steps[2], () => goTo(2), "salary form16");
+    }
+    if (draft.step === 2) {
+      add("load", page.salary.load, common.steps[2], loadDemoDocuments, "upload file document");
+      add("to-income", common.continue, common.steps[3], continueFromSalary, "income ais");
+    }
+    if (draft.step === 3) {
+      add("to-regime", common.continue, common.steps[4], continueFromIncome, "regime tax");
+    }
+    if (draft.step === 4) {
+      add("pick-new", page.regime.chooseNew, page.regime.newRegime, () => updateDraft({ regime: "new" }), "new regime");
+      add("pick-old", page.regime.chooseOld, page.regime.oldRegime, () => updateDraft({ regime: "old" }), "old regime");
+      add("to-checks", common.continue, common.steps[5], continueFromRegime, "checks");
+    }
+    if (draft.step === 5) {
+      add("to-review", page.checks.continue, common.steps[6], () => goTo(6), "review");
+    }
+    if (draft.step === 6) {
+      add("submit", page.review.submit, common.steps[7], submitReturn, "file send");
+    }
+    if (draft.step === RECEIPT_STEP) {
+      add("print", page.receipt.print, common.steps[7], () => window.print(), "print");
+      add("save", page.receipt.download, common.steps[7], downloadReceipt, "download");
+      add("again", page.receipt.restart, common.steps[0], resetDemo, "restart");
+    }
+    if (draft.step > 0 && draft.step < RECEIPT_STEP) {
+      add(
+        "feedback",
+        common.extensionAction,
+        common.extensionTitle,
+        () => setFeedbackOpen(true),
+        "ais feedback wrong entry",
+      );
+    }
 
-        <div className="notice-document">
-          <div className="document-topline">
-            <span>{common.synthetic}</span>
-            <span>{language === "hi" ? "ई-कार्यवाही" : "e-Proceedings"}</span>
-          </div>
-          <dl className="fact-grid">
-            <Field label={page.notice.taxpayer} value={demoCase.taxpayer} />
-            <Field label={page.notice.pan} value={demoCase.maskedPan} />
-            <Field
-              label={page.notice.assessmentYear}
-              value={demoCase.assessmentYear}
-            />
-            <Field label={page.notice.section} value={demoCase.noticeSection} />
-            <Field label={page.notice.noticeDate} value={demoCase.noticeDate} />
-            <Field label={page.notice.due} value={demoCase.responseDue} />
-          </dl>
-        </div>
+    /* Not a step action, so not in the step group: the archive is a place. */
+    const pageCommands: Command[] = [
+      {
+        id: "notices",
+        group: common.commandGroupPages,
+        title: common.noticesTitle,
+        subtitle: common.noticesSeeAll,
+        keywords: "notices announcements suchna updates archive",
+        run: () => setScreen("notices"),
+      },
+    ];
 
-        <div className="explain-card">
-          <h2>{page.notice.whatMeans}</h2>
-          <p>{page.notice.explanation}</p>
-          <p className="warning-text">{page.notice.consequence}</p>
-        </div>
-      </div>
-      <StepActions
-        back={() => goTo(0)}
-        next={() => goTo(2)}
-        backLabel={common.back}
-        nextLabel={page.notice.action}
-      />
-    </section>
-  );
+    const goCommands: Command[] = common.steps
+      .slice(0, Math.max(1, draft.step + 1))
+      .map((label, index) => ({
+        id: `go-${index}`,
+        group: common.commandGroupGo,
+        title: label,
+        subtitle: common.stepOf(index, TOTAL_STEPS - 1),
+        run: () => goTo(index),
+      }));
 
-  const renderDocuments = () => (
-    <section className="journey-panel" aria-labelledby="step-title">
-      <div className="content-column">
-        <p className="eyebrow">{page.documents.eyebrow}</p>
-        <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-          {page.documents.title}
-        </h1>
-        <p className="lede">{page.documents.intro}</p>
-        <p className="requirements">{page.documents.requirements}</p>
+    const themeNames: Record<Theme, string> = {
+      dark: common.settingsDark,
+      light: common.settingsLight,
+      paper: common.settingsPaper,
+      system: common.settingsSystem,
+    };
 
-        <button className="button primary" onClick={loadDemoDocuments}>
-          {page.documents.load}
-        </button>
+    const settingsCommands: Command[] = [
+      {
+        id: "lang",
+        group: common.commandGroupSettings,
+        title: language === "en" ? "हिन्दी में देखें" : "View in English",
+        subtitle: common.settingsLanguage,
+        keywords: "language bhasha hindi english",
+        run: () => switchLanguage(language === "en" ? "hi" : "en"),
+      },
+      {
+        id: "theme",
+        group: common.commandGroupSettings,
+        /* Three appearances cycle rather than toggle, and the command names
+           the one it is about to give you rather than the one you are on. */
+        title: themeNames[nextTheme(prefs.theme)],
+        subtitle: common.settingsAppearance,
+        keywords: "dark light paper theme night appearance",
+        run: () =>
+          setPrefs((current) => ({ ...current, theme: nextTheme(current.theme) })),
+      },
+      {
+        id: "text",
+        group: common.commandGroupSettings,
+        title: common.settingsTextLarge,
+        subtitle: common.settingsTextSize,
+        keywords: "zoom bigger text size",
+        run: () =>
+          setPrefs((current) => ({
+            ...current,
+            textScale: current.textScale === "larger" ? "base" : "larger",
+          })),
+      },
+      {
+        id: "data",
+        group: common.commandGroupSettings,
+        title: common.settingsData,
+        subtitle: common.settingsDataHint,
+        keywords: "data lite slow network",
+        run: () => updateDraft({ lowData: !draft.lowData }),
+      },
+      {
+        id: "clear",
+        group: common.commandGroupSettings,
+        title: common.clearData,
+        subtitle: common.clearExplanation,
+        keywords: "delete clear shared device",
+        run: () => setClearOpen(true),
+      },
+    ];
 
-        <div className="document-list">
-          {draft.documents.map((document) => (
-            <article className="document-card" key={document.kind}>
-              <div className="file-mark" aria-hidden="true">
-                {document.kind === "return" ? "JSON" : "PDF"}
-              </div>
-              <div className="document-info">
-                <h2>{document.name}</h2>
-                <p>
-                  {document.size} · {document.source}
-                </p>
-                <p className={document.loaded ? "file-ready" : "file-missing"}>
-                  {document.loaded ? page.documents.loaded : page.documents.missing}
-                </p>
-              </div>
-              <label className="file-button" htmlFor={`file-${document.kind}`}>
-                {page.documents.choose}
-                <input
-                  id={`file-${document.kind}`}
-                  type="file"
-                  accept=".pdf,.json,.txt,application/pdf,application/json,text/plain"
-                  onChange={(event) => replaceDocument(event, document.kind)}
-                />
-              </label>
-            </article>
-          ))}
-        </div>
+    const helpCommands: Command[] = [
+      {
+        id: "help",
+        group: common.commandGroupHelp,
+        title: common.help,
+        subtitle: helpByStep[language][draft.step],
+        keywords: "help madad",
+        run: openHelp,
+      },
+      {
+        id: "support",
+        group: common.commandGroupHelp,
+        title: common.support,
+        subtitle: common.supportOwnerValue,
+        keywords: "person human support ticket",
+        run: openSupport,
+      },
+      {
+        id: "guide",
+        group: common.commandGroupHelp,
+        title: common.officialSource,
+        subtitle: common.reviewed,
+        keywords: "official itr1 guide",
+        run: () => window.open(OFFICIAL_FILING_HELP, "_blank", "noopener"),
+      },
+      {
+        id: "ais",
+        group: common.commandGroupHelp,
+        title: common.officialManual,
+        subtitle: common.reviewed,
+        keywords: "ais annual information statement",
+        run: () => window.open(OFFICIAL_AIS_HELP, "_blank", "noopener"),
+      },
+      {
+        id: "portal",
+        group: common.commandGroupHelp,
+        title: common.officialPortalLink,
+        subtitle: OFFICIAL_PORTAL,
+        keywords: "portal incometax gov",
+        run: () => window.open(OFFICIAL_PORTAL, "_blank", "noopener"),
+      },
+    ];
 
-        <p className="warning-banner">{page.documents.realWarning}</p>
-        {formError && <ErrorSummary message={formError} />}
-      </div>
-      <StepActions
-        back={() => goTo(1)}
-        next={continueFromDocuments}
-        backLabel={common.back}
-        nextLabel={page.documents.action}
-      />
-    </section>
-  );
+    return [
+      ...stepCommands,
+      ...goCommands,
+      ...pageCommands,
+      ...settingsCommands,
+      ...helpCommands,
+    ];
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [common, draft, language, page, prefs.theme]);
 
-  const renderCompare = () => (
-    <section className="journey-panel wide" aria-labelledby="step-title">
-      <div className="content-column">
-        <p className="eyebrow">{page.compare.eyebrow}</p>
-        <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-          {page.compare.title}
-        </h1>
-        <p className="lede">{page.compare.intro}</p>
+  /* ------------------------------------------------------------ renders */
 
-        <div className="comparison-table" role="table" aria-label={page.compare.title}>
-          <div className="comparison-row header" role="row">
-            <div role="columnheader">{page.compare.field}</div>
-            <div role="columnheader">{page.compare.form26as}</div>
-            <div role="columnheader">{page.compare.filedReturn}</div>
-            <div role="columnheader">{page.compare.result}</div>
-          </div>
-          <div className="comparison-row" role="row">
-            <div role="rowheader" data-label={page.compare.field}>
-              {page.compare.interest}
-            </div>
-            <div role="cell" data-label={page.compare.form26as}>
-              {formatRupees(demoCase.interestIncome, language)}
-            </div>
-            <div role="cell" data-label={page.compare.filedReturn}>
-              {formatRupees(0, language)}
-            </div>
-            <div role="cell" data-label={page.compare.result}>
-              <span className="status-pill issue">{page.compare.mismatch}</span>
-            </div>
-          </div>
-          <div className="comparison-row" role="row">
-            <div role="rowheader" data-label={page.compare.field}>
-              {page.compare.tds}
-            </div>
-            <div role="cell" data-label={page.compare.form26as}>
-              {formatRupees(demoCase.bankTds, language)}
-            </div>
-            <div role="cell" data-label={page.compare.filedReturn}>
-              {formatRupees(demoCase.bankTds, language)}
-            </div>
-            <div role="cell" data-label={page.compare.result}>
-              <span className="status-pill okay">{page.compare.match}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="source-card">
-          <p>{page.compare.sourceNote}</p>
-          <dl>
-            <Field
-              label={common.source}
-              value="Demo Form 26AS, Part I, row 04"
-            />
-            <Field label={common.reviewed} value="SYNTHETIC-FIXTURE-v1" />
-          </dl>
-        </div>
-      </div>
-      <StepActions
-        back={() => goTo(2)}
-        next={() => goTo(4)}
-        backLabel={common.back}
-        nextLabel={page.compare.action}
-      />
-    </section>
-  );
-
-  const renderConfirm = () => (
-    <section className="journey-panel" aria-labelledby="step-title">
-      <div className="content-column">
-        <p className="eyebrow">{page.confirm.eyebrow}</p>
-        <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-          {page.confirm.title}
-        </h1>
-        <p className="lede">{page.confirm.intro}</p>
-
-        <fieldset className="choice-group">
-          <legend className="sr-only">{page.confirm.title}</legend>
-          {(
-            [
-              ["yes", page.confirm.yes, page.confirm.yesHelp],
-              ["no", page.confirm.no, page.confirm.noHelp],
-              ["unsure", page.confirm.unsure, page.confirm.unsureHelp],
-            ] as const
-          ).map(([value, label, help]) => (
-            <label
-              aria-label={label}
-              className="choice-card"
-              htmlFor={`ownership-${value}`}
-              key={value}
-            >
-              <input
-                id={`ownership-${value}`}
-                type="radio"
-                name="ownership"
-                value={value}
-                checked={draft.ownership === value}
-                onChange={() => updateDraft({ ownership: value })}
-              />
-              <span>
-                <strong>{label}</strong>
-                <small>{help}</small>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-
-        {draft.ownership && draft.ownership !== "yes" && (
-          <div className="stop-card" role="status">
-            <h2>{page.confirm.disputedTitle}</h2>
-            <p>{page.confirm.disputedText}</p>
-            <a href={OFFICIAL_PORTAL} target="_blank" rel="noreferrer">
-              {language === "hi"
-                ? "आधिकारिक ई-फाइलिंग पोर्टल खोलें"
-                : "Open the official e-Filing portal"}
-              <span className="sr-only">
-                {language === "hi" ? ", नई विंडो" : ", opens in a new window"}
-              </span>
-            </a>
-          </div>
-        )}
-
-        {formError && <ErrorSummary message={formError} />}
-      </div>
-      <div className="step-actions">
-        <button className="button secondary" onClick={() => goTo(3)}>
-          {common.back}
-        </button>
-        {draft.ownership && draft.ownership !== "yes" ? (
-          <button className="button primary" onClick={finishDisputedRoute}>
-            {page.confirm.disputedAction}
-          </button>
-        ) : (
-          <button className="button primary" onClick={continueFromConfirm}>
-            {page.confirm.action}
-          </button>
-        )}
-      </div>
-    </section>
-  );
-
-  const renderReview = () => (
-    <section className="journey-panel" aria-labelledby="step-title">
-      <div className="content-column">
-        <p className="eyebrow">{page.review.eyebrow}</p>
-        <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-          {page.review.title}
-        </h1>
-
-        <div className="change-card">
-          <h2>{page.review.changeTitle}</h2>
-          <p>{page.review.change}</p>
-          <dl className="amount-grid">
-            <Field
-              label={page.review.before}
-              value={formatRupees(demoCase.originalTotalIncome, language)}
-            />
-            <Field
-              label={page.review.after}
-              value={formatRupees(demoCase.correctedTotalIncome, language)}
-            />
-            <Field
-              label={page.review.taxBefore}
-              value={formatRupees(demoCase.originalTax, language)}
-            />
-            <Field
-              label={page.review.taxAfter}
-              value={formatRupees(demoCase.correctedTax, language)}
-            />
-            <Field
-              label={page.review.tds}
-              value={formatRupees(demoCase.totalTds, language)}
-            />
-            <Field
-              label={page.review.balance}
-              value={formatRupees(demoCase.balanceTax, language)}
-            />
-          </dl>
-          <p className="calculation-note">{page.review.calculation}</p>
-        </div>
-
-        <label className="declaration">
-          <input
-            type="checkbox"
-            checked={draft.declaration}
-            onChange={(event) => updateDraft({ declaration: event.target.checked })}
-          />
-          <span>{page.review.declaration}</span>
-        </label>
-
-        {draft.status === "queued" && (
-          <div className="queue-card" role="status">
-            <h2>{page.review.queuedTitle}</h2>
-            <p>{page.review.queued}</p>
-          </div>
-        )}
-        {formError && <ErrorSummary message={formError} />}
-      </div>
-      <div className="step-actions">
-        <button className="button secondary" onClick={() => goTo(4)}>
-          {common.back}
-        </button>
-        <button
-          className="button primary"
-          onClick={submitResponse}
-          disabled={draft.status === "submitting" || draft.status === "submitted"}
-          aria-describedby="submission-disclosure"
-        >
-          {draft.status === "submitting"
-            ? page.review.submitting
-            : draft.status === "queued"
-              ? page.review.retry
-              : page.review.submit}
-        </button>
-      </div>
-      <p id="submission-disclosure" className="submission-disclosure">
-        {common.officialWarning}
-      </p>
-    </section>
-  );
-
-  const renderReceipt = () => {
-    const disputed = draft.status === "disputed";
+  /* The one thing a citizen must not discover late. It leads the start screen
+     whenever the date has actually passed, and disappears when it has not. */
+  const renderDeadlineAlert = () => {
+    if (filing.state === "on-time") return null;
     return (
-      <section className="journey-panel receipt-panel" aria-labelledby="step-title">
-        <div className="content-column">
-          <p className="eyebrow">{page.receipt.eyebrow}</p>
-          <h1 id="step-title" tabIndex={-1} ref={headingRef}>
-            {disputed ? page.receipt.disputedTitle : page.receipt.title}
-          </h1>
+      <div className="alarm" role="status">
+        <p className="alarm-head">
+          <AlertIcon />
+          {filing.state === "closed"
+            ? common.deadlineClosedLabel
+            : common.deadlinePassedLabel}
+        </p>
+        {filing.state === "closed" ? (
+          <p>{common.deadlineClosed(formatDate(filing.belated, language))}</p>
+        ) : (
+          <>
+            <p className="alarm-lede">
+              {common.deadlinePassed(formatDate(filing.due, language))}
+            </p>
+            <p className="alarm-count">
+              <strong>{filing.daysLeft}</strong> {common.daysLeftBelated}
+            </p>
+            <details className="alarm-more">
+              <summary>{common.deadlineCostLabel}</summary>
+              <p>{common.deadlineFee(money(filing.lateFee))}</p>
+              <p>
+                {common.deadlineBelatedBy(
+                  formatDate(filing.belated, language),
+                )}
+              </p>
+            </details>
+          </>
+        )}
+      </div>
+    );
+  };
 
-          <div className="receipt-card">
-            <div className="receipt-stamp">{common.synthetic}</div>
-            <dl className="receipt-grid">
-              <Field
-                label={page.receipt.status}
-                value={
-                  disputed
-                    ? page.receipt.disputedStatus
-                    : page.receipt.statusValue
-                }
-              />
-              <Field
-                label={page.receipt.reference}
-                value={draft.reference ?? DEMO_REFERENCE}
-              />
-              <Field
-                label={page.receipt.time}
-                value={draft.submittedAt ?? "Not recorded"}
-              />
-              <Field
-                label={page.receipt.owner}
-                value={page.receipt.ownerValue}
-              />
-            </dl>
-            <div className="receipt-next">
-              <h2>{page.receipt.next}</h2>
-              <p>{page.receipt.nextText}</p>
+  const renderQuickLinks = () => {
+    const groups: Array<QuickLink["group"]> = [
+      "before",
+      "after",
+      "problem",
+      "pay",
+    ];
+    return (
+      <section className="section">
+        <h2>{common.homeLinksTitle}</h2>
+        <p className="prose">{common.homeLinksIntro}</p>
+        <div className="link-groups">
+          {groups.map((group) => (
+            <div key={group}>
+              <p className="label">{common.homeGroups[group]}</p>
+              <ul className="link-list">
+                {quickLinks
+                  .filter((link) => link.group === group)
+                  .map((link) => (
+                    <li key={link.id}>
+                      {link.kind === "in-demo" ? (
+                        <button
+                          className="link-tile"
+                          onClick={() => goTo(link.step ?? 1)}
+                          type="button"
+                        >
+                          <span>{common.homeLinkNames[link.id]}</span>
+                          <span className="tile-kind is-demo">
+                            {common.homeInDemo}
+                          </span>
+                        </button>
+                      ) : (
+                        <a
+                          className="link-tile"
+                          href={link.href}
+                          rel="noreferrer noopener"
+                          target="_blank"
+                        >
+                          <span>
+                            {common.homeLinkNames[link.id]}
+                            <ExternalIcon />
+                            <span className="sr-only">{common.newWindow}</span>
+                          </span>
+                          <span className="tile-kind">
+                            {common.homeOfficial}
+                          </span>
+                        </a>
+                      )}
+                    </li>
+                  ))}
+              </ul>
             </div>
-            <p className="no-transaction">{page.receipt.noTransaction}</p>
-          </div>
-
-          <div className="button-row no-print">
-            <button className="button primary" onClick={() => window.print()}>
-              {page.receipt.print}
-            </button>
-            <button className="button secondary" onClick={downloadReceipt}>
-              {page.receipt.download}
-            </button>
-          </div>
-          <button className="text-button no-print" onClick={resetDemo}>
-            {page.receipt.restart}
-          </button>
+          ))}
         </div>
       </section>
     );
   };
 
+  const renderHelplines = () => (
+    <section className="section">
+      <h2>{common.homeHelpTitle}</h2>
+      <p className="prose">{common.homeHelpIntro}</p>
+      <ul className="help-list">
+        {helplines.map((line) => {
+          const open = isHelplineOpen(line, now);
+          return (
+            <li key={line.id}>
+              <p className="help-for">{common.homeHelpNames[line.id]}</p>
+              {line.numbers.map((number) => (
+                <a
+                  className="helpline"
+                  href={`tel:${number.replace(/[\s+]/g, "")}`}
+                  key={number}
+                >
+                  {number}
+                </a>
+              ))}
+              <p className="help-hours">
+                <span className={open ? "pill is-open" : "pill"}>
+                  {open ? common.homeOpenNow : common.homeClosedNow}
+                </span>
+                {common.homeHours(
+                  formatHour(line.openHour, language),
+                  formatHour(line.closeHour, language),
+                )}
+                {" · "}
+                {line.days.length === 7 ? common.homeDaysAll : common.homeDaysWeek}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="consequence">{common.homeHelpNote}</p>
+    </section>
+  );
+
+  const renderHome = () => (
+    <>
+      {/* The deadline still leads, but as one line rather than a 274-pixel
+          block. On a 390-pixel phone the full alert pushed "Start the return"
+          to y=1169 — the citizen had to scroll past a warning to reach the
+          thing the warning was telling them to do. The detail follows the
+          action instead. */}
+      {filing.state !== "on-time" && (
+        <p className="home-deadline no-print">
+          <DeadlineInline common={common} window={filing} />
+        </p>
+      )}
+
+      {/* The one thing a citizen came here to do, before anything else. */}
+      <div className="home-top">
+        <div className="hero hero-home">
+          <p className="label">{page.home.eyebrow}</p>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {page.home.title}
+          </h1>
+          <Prose className="lede">{page.home.intro}</Prose>
+        </div>
+
+        <div className="start-card">
+          <p className="label">{common.homeStartTitle}</p>
+          <ul className="start-facts">
+            {page.home.need.map((item) => (
+              <li key={item}>
+                <CheckIcon />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="actions no-print">
+            <button className="btn btn-lg" onClick={() => goTo(1)} type="button">
+              {page.home.start}
+            </button>
+          </div>
+          {hasSavedDraft && (
+            <div className="actions no-print">
+              <button
+                className="btn btn-secondary"
+                onClick={() => goTo(Math.max(1, draft.step))}
+                type="button"
+              >
+                {common.continueDraft}
+              </button>
+              <button className="link-btn" onClick={resetDemo} type="button">
+                {common.startAgain}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {renderDeadlineAlert()}
+
+      {/* The services a person can actually be here for.
+
+          The prototype builds one of them. Showing only that one made the whole
+          site look like a single form; showing all of them without marking
+          which work would be a lie. So they are all named, and the seven that
+          are not built say so on their face. */}
+      <section className="section">
+        <h2>{common.homeServicesTitle}</h2>
+        <p className="prose">{common.navScopeNote}</p>
+        <ul className="servicegrid">
+          {services
+            .filter((service) => service.section === "individual")
+            .map((service) => {
+              const name = common.serviceNames[service.id];
+              const note = common.serviceNotes[service.id];
+              if (service.state === "live") {
+                return (
+                  <li key={service.id}>
+                    <button
+                      className="servicecard"
+                      onClick={() => openService(service.id)}
+                      type="button"
+                    >
+                      <span className="servicecard-name">{name}</span>
+                      <span className="servicecard-note">{note}</span>
+                      <span className="servicecard-flag is-live">
+                        <CheckIcon />
+                        {common.navLive}
+                      </span>
+                    </button>
+                  </li>
+                );
+              }
+              return (
+                <li key={service.id}>
+                  <span className="servicecard is-off">
+                    <span className="servicecard-name">{name}</span>
+                    <span className="servicecard-note">{note}</span>
+                    <span className="servicecard-flag">
+                      <LockIcon />
+                      {common.navPlanned}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+        </ul>
+      </section>
+
+      {/* Notices. The home page carries the four newest, in the order they
+          were published — an earlier version sorted the ones that affect you
+          to the top, which quietly rewrote the chronology of a feed whose
+          whole value is its dates. The rest are a page away rather than
+          gone. */}
+      <section className="section">
+        <h2>{common.homeAnnouncementsTitle}</h2>
+        <ul className="notice-list">
+          {newestFirst(notices[language])
+            .slice(0, HOME_NOTICES)
+            .map((item) => (
+              <li key={item.id}>
+                <p className="notice-meta">
+                  <span
+                    className={
+                      item.affectsYou ? "pill is-alert" : "pill is-quiet"
+                    }
+                  >
+                    {item.affectsYou ? common.homeAffectsYou : common.homeGeneral}
+                  </span>
+                  <span className="notice-date">
+                    {formatLongDate(
+                      new Date(`${item.on}T00:00:00+05:30`),
+                      language,
+                    )}
+                  </span>
+                </p>
+                <p>{item.title}</p>
+              </li>
+            ))}
+        </ul>
+        <p className="notices-more no-print">
+          <button
+            className="link-btn"
+            onClick={() => setScreen("notices")}
+            type="button"
+          >
+            {common.noticesSeeAll}
+            <ArrowIcon />
+          </button>
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>{page.home.meansTitle}</h2>
+        <Prose className="lede">{page.home.introMore}</Prose>
+        <Prose className="prose">{page.home.means}</Prose>
+      </section>
+
+      {/* The portal names three documents on the way in and explains none of
+          them. A citizen who does not already know what Form 26AS is cannot
+          act on being told to fetch it, so the explanation goes here, before
+          the return starts, rather than in a help page nobody opens. */}
+      <section className="section">
+        <DocumentsPanel
+          crossChecksTitle={common.docsCrossChecksTitle}
+          detailSummary={common.docsDetailSummary}
+          explainedLabel={common.docsExplained}
+          fromLabel={common.docsFrom}
+          ifItDoesNotLabel={common.docsIfNot}
+          language={language}
+          neededLabel={common.docsNeeded}
+          shouldMatchLabel={common.docsShouldMatch}
+          title={common.docsTitle}
+          usedForLabel={common.docsUsedFor}
+          whereLabel={common.docsWhere}
+        />
+      </section>
+
+      <section className="section">
+        <h2>{page.home.noSurpriseTitle}</h2>
+        <ul className="rules-list">
+          {page.home.noSurprise.map((item) => (
+            <li key={item}>
+              <CheckIcon />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {renderQuickLinks()}
+      {renderHelplines()}
+
+      <section className="section">
+        <p className="label">{page.home.scopeTitle}</p>
+        <ul className="sequence">
+          {page.home.scope.map((item) => (
+            <li key={item}>
+              <h3>{item}</h3>
+            </li>
+          ))}
+        </ul>
+        <p className="consequence">
+          <strong>{page.home.outOfScopeTitle}.</strong> {page.home.outOfScope}
+        </p>
+        <p className="caution">{page.home.privacy}</p>
+      </section>
+    </>
+  );
+
+  const renderCheck = () => (
+    <>
+      <div className="page-head">
+        <p className="label">{page.check.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {page.check.title}
+        </h1>
+        <Prose className="lede">{page.check.intro}</Prose>
+      </div>
+
+      <section className="section">
+        <h2>{page.check.decidedTitle}</h2>
+        <ul className="sequence">
+          {page.check.decided.map((item, index) => (
+            <li key={item.label}>
+              <h3>
+                {item.label}: {index === 0 ? decidedForm : item.value}
+              </h3>
+              <p>
+                <span className="label-ink">{page.check.whyLabel}</span>{" "}
+                {index === 0 && !decision.eligible
+                  ? common.eligOutOfScope(decision.form)
+                  : markUp(item.why)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* The portal makes you answer all eighteen before it will let you begin.
+          We answer them and show the working, so the same ground is covered
+          without the citizen having to already know the vocabulary. */}
+      <section className="section">
+        <EligibilityPanel
+          answers={{ ...demoAnswers, ...draft.eligibilityAnswers }}
+          labels={{
+            causesLabel: common.eligCausesLabel,
+            changedFrom: common.eligChangedFrom,
+            changedLabel: common.eligChangedLabel,
+            disclaimer: common.eligDisclaimer,
+            intro: common.eligIntro,
+            decidedLabel: common.eligDecidedLabel,
+            officialSummary: common.eligOfficialSummary,
+            outOfScope: common.eligOutOfScope,
+            outcomeBlocked: common.eligOutcomeBlocked,
+            outcomeLabel: common.eligOutcomeLabel,
+            outcomeSettled: common.eligOutcomeSettled,
+            prototypeNote: common.eligPrototypeNote,
+            sectionCount: common.eligSectionCount,
+            stateBlocking: common.eligStateBlocking,
+            stateChanged: common.eligStateChanged,
+            stateSettled: common.eligStateSettled,
+            summary: common.eligSummary,
+            title: common.eligTitle,
+            whyLabel: common.eligWhyLabel,
+          }}
+          language={language}
+          onChange={(questionId, value) =>
+            updateDraft({
+              eligibilityAnswers: {
+                ...draft.eligibilityAnswers,
+                [questionId]: value,
+              },
+            })
+          }
+        />
+      </section>
+
+      {/* The portal's Personal Information section: which section you file
+          under, who is filing, and where a refund would go. The last of those
+          matters most — until now this prototype promised a refund and never
+          asked where to send it. */}
+      <section className="section">
+        <PersonalSection
+          labels={{
+            accountNumberLabel: common.persAccountNumberLabel,
+            accountTypeLabel: common.persAccountTypeLabel,
+            addAnotherNote: common.persAddAnotherNote,
+            answerLabel: common.persAnswerLabel,
+            appliesLabel: common.persAppliesLabel,
+            filingIntro: common.persFilingIntro,
+            filingReason: common.persFilingReason,
+            filingTitle: common.persFilingTitle,
+            ifscLabel: common.persIfscLabel,
+            noticeNote: common.persNoticeNote,
+            noticeOptionsSummary: common.persNoticeOptionsSummary,
+            noticeStateLabel: common.persNoticeStateLabel,
+            officialLabel: common.persOfficialLabel,
+            otherOptionsLabel: common.persOtherOptionsLabel,
+            otherOptionsNote: common.persOtherOptionsNote,
+            portalAsksLabel: common.persPortalAsksLabel,
+            profileTitle: common.persProfileTitle,
+            profileIntro: common.persProfileIntro,
+            contactTitle: common.persContactTitle,
+            contactIntro: common.persContactIntro,
+            portalCallsLabel: common.persPortalCallsLabel,
+            separateFlowNote: common.persSeparateFlowNote,
+            mandatoryNote: common.persMandatoryNote,
+            editLabel: common.persEditLabel,
+            saveLabel: common.persSaveLabel,
+            cancelLabel: common.persCancelLabel,
+            undoLabel: common.persUndoLabel,
+            changedBadge: common.persChangedBadge,
+            lockedBadge: common.persLockedBadge,
+            emptyValue: common.persEmptyValue,
+            refundLegend: common.persRefundLegend,
+            representativeTitle: common.persRepresentativeTitle,
+            rulesLabel: common.persRulesLabel,
+            whenLabel: common.persWhenLabel,
+          }}
+          details={draft.personalDetails}
+          language={language}
+          nominatedId={draft.nominatedAccount || defaultNominatedAccount}
+          onDetails={(next) => updateDraft({ personalDetails: next })}
+          onNominate={(accountId) =>
+            updateDraft({ nominatedAccount: accountId })
+          }
+          today={now}
+        />
+      </section>
+
+      <section className="section">
+        <h2>{page.check.datesTitle}</h2>
+        <p className="prose">{page.check.datesIntro}</p>
+        <dl className="rows">
+          <Row label={page.check.dateDue} value={demoCase.dueDateOriginal} />
+          <Row
+            label={page.check.dateBelated}
+            value={demoCase.dueDateBelated}
+          />
+          <Row label={page.check.dateFee} value={page.check.dateFeeValue} />
+        </dl>
+        <p className="consequence">{page.check.reviseNote}</p>
+      </section>
+
+      {formError && <ErrorSummary message={formError} />}
+
+      <StepActions
+        back={() => goTo(0)}
+        backLabel={common.back}
+        next={() => goTo(2)}
+        nextLabel={page.check.continue}
+      />
+    </>
+  );
+
+  const renderSalary = () => (
+    <>
+      <div className="page-head">
+        <p className="label">{page.salary.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {page.salary.title}
+        </h1>
+        <Prose className="lede">{page.salary.intro}</Prose>
+      </div>
+
+      <section
+        className={`section${spotlightClass("documents-in-use")}`}
+        id="documents-in-use"
+        tabIndex={-1}
+      >
+        <h2>{page.salary.documentsTitle}</h2>
+        <p className="prose">{page.salary.documentsIntro}</p>
+
+        {/* Stated before the control, not after a rejected upload. */}
+        <ul className="rules-list">
+          <li>
+            <FileIcon />
+            {page.salary.ruleFormats}
+          </li>
+          <li>
+            <FileIcon />
+            {page.salary.ruleSize(`${MAX_FILE_MB} MB`)}
+          </li>
+          <li>
+            <CheckIcon />
+            {page.salary.rulePhoto}
+          </li>
+        </ul>
+
+        <ul className="files">
+          {draft.documents.map((document) => (
+            <li key={document.kind}>
+              <div>
+                <span className="file-name">
+                  {page.salary.kinds[document.kind]}
+                </span>
+                <span className="file-meta">
+                  {document.loaded
+                    ? `${document.name} · ${document.size} · ${document.source}`
+                    : document.source}
+                  <span className="file-state">
+                    {document.loaded ? (
+                      <span className="label-ok">{page.salary.loaded}</span>
+                    ) : (
+                      <span className="label-alert">
+                        {page.salary.notLoaded}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </div>
+              <label className="file-pick">
+                {preparing === document.kind
+                  ? page.salary.preparing
+                  : page.salary.replace}
+                <span className="sr-only">
+                  {" "}
+                  {page.salary.kinds[document.kind]}, {page.salary.replaceHint}
+                </span>
+                <input
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.json,.txt"
+                  disabled={preparing !== null}
+                  onChange={(event) => replaceDocument(event, document.kind)}
+                  type="file"
+                />
+              </label>
+
+              {preparedNote?.kind === document.kind && (
+                <p className="file-done" role="status">
+                  <CheckIcon />
+                  <span>
+                    {preparedNote.converted
+                      ? page.salary.convertedNote(
+                          preparedNote.name,
+                          preparedNote.from,
+                          preparedNote.to,
+                        )
+                      : page.salary.compressedNote(
+                          preparedNote.from,
+                          preparedNote.to,
+                        )}
+                  </span>
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+        {!hasAllDocuments(draft.documents) && (
+          <div className="load-row no-print">
+            <button
+              className="btn btn-secondary"
+              onClick={loadDemoDocuments}
+              type="button"
+            >
+              {page.salary.load}
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="section">
+        <h2>{page.salary.figuresTitle}</h2>
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">
+                {page.salary.grossSalary}
+                <span className="source-line">
+                  {common.source}: {page.salary.grossSalarySource}
+                </span>
+                <span className="portal-line">
+                  {page.salary.portalLabel}{" "}
+                  <code>{page.salary.grossSalaryPortal}</code>
+                </span>
+              </th>
+              <td className="col-num">{money(demoCase.grossSalary)}</td>
+            </tr>
+            <tr>
+              <th scope="row">
+                {page.salary.standardDeduction}
+                <span className="source-line">
+                  {common.source}: {page.salary.standardDeductionSource}
+                </span>
+                <span className="portal-line">
+                  {page.salary.portalLabel}{" "}
+                  <code>{page.salary.standardDeductionPortal}</code>
+                </span>
+              </th>
+              <td className="col-num">
+                −{money(computation.standardDeduction)}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                {page.salary.salaryTds}
+                <span className="source-line">
+                  {common.source}: {page.salary.salaryTdsSource}
+                </span>
+                <span className="portal-line">
+                  {page.salary.portalLabel}{" "}
+                  <code>{page.salary.salaryTdsPortal}</code>
+                </span>
+              </th>
+              <td className="col-num">{money(demoCase.salaryTds)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="finding-note">{page.salary.standardDeductionWhy}</p>
+        <p className="finding-note">{page.salary.salaryTdsWhy}</p>
+      </section>
+
+      <section className="section">
+        <h2>{page.salary.allowanceTitle}</h2>
+        <p className="prose">{page.salary.allowanceNote}</p>
+      </section>
+
+      <label
+        className={`declare${spotlightClass("salary-confirm")}`}
+        id="salary-confirm"
+      >
+        <input
+          checked={draft.salaryConfirmed}
+          onChange={(event) =>
+            updateDraft({ salaryConfirmed: event.target.checked })
+          }
+          type="checkbox"
+        />
+        <span>{page.salary.confirm}</span>
+      </label>
+
+      {formError && <ErrorSummary message={formError} />}
+
+      <StepActions
+        back={() => goTo(1)}
+        backLabel={common.back}
+        next={continueFromSalary}
+        nextLabel={common.continue}
+      />
+    </>
+  );
+
+  const renderIncome = () => {
+    const answered = answeredCount(draft);
+    return (
+      <>
+        <div className="page-head">
+          <p className="label">{page.income.eyebrow}</p>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {page.income.title}
+          </h1>
+          <Prose className="lede">{page.income.intro}</Prose>
+        </div>
+
+        <section className="section">
+          <h2>{page.income.whyTitle}</h2>
+          <Prose className="prose">{page.income.why}</Prose>
+        </section>
+
+        <section className="section">
+          <h2>{page.income.entriesTitle}</h2>
+          <p className="label" aria-live="polite">
+            {page.income.progress(answered, incomeEntries.length)}
+          </p>
+          <p className="portal-line">
+            {page.income.portalLabel} <code>{page.income.portalSection}</code>,{" "}
+            <code>{page.income.portalTds}</code>
+          </p>
+
+          {incomeEntries.map((entry) => {
+            const answer = draft.incomeAnswers[entry.id] ?? null;
+            /* The block, which an error points at, and the label the radio
+               group is named by. Two ids, because they are two elements. */
+            const groupId = `entry-${entry.id}`;
+            const choicesLabelId = `${groupId}-choices`;
+            return (
+              <fieldset
+                className={`finding${spotlightClass(groupId)}`}
+                id={groupId}
+                key={entry.id}
+              >
+                <legend className="subhead">
+                  {page.income.kinds[entry.kind]} — {entry.payer}
+                </legend>
+
+                {/* Three facts, one band. Stacked as table rows they cost two
+                    hundred pixels an entry and made four entries a page you
+                    had to scroll rather than compare; side by side the columns
+                    line up down the whole step, so the figures can be read
+                    against each other as well as against the statement.
+
+                    Saying the figure is wrong makes the figure editable where
+                    it is stated. It used to open a labelled field at the foot
+                    of the entry, which asked the citizen to read a second
+                    explanation of a number they were looking at, and to
+                    correct it somewhere other than where it was wrong. */}
+                <dl className="entry-facts">
+                  <div
+                    className={
+                      answer === "amended"
+                        ? "entry-fact is-lead is-amended"
+                        : "entry-fact is-lead"
+                    }
+                  >
+                    <dt className="label">
+                      {answer === "amended" ? (
+                        <label htmlFor={`${entry.id}-amount`}>
+                          {page.income.amount}
+                        </label>
+                      ) : (
+                        page.income.amount
+                      )}
+                    </dt>
+                    <dd>
+                      {answer === "amended" ? (
+                        <span className="amend-cell">
+                          <span aria-hidden="true" className="amend-unit">
+                            ₹
+                          </span>
+                          <input
+                            className={`amend-input${spotlightClass(`${entry.id}-amount`)}`}
+                            id={`${entry.id}-amount`}
+                            inputMode="numeric"
+                            min={0}
+                            onChange={(event) =>
+                              amendEntry(entry.id, event.target.value)
+                            }
+                            step={1}
+                            type="number"
+                            value={draft.incomeAmounts[entry.id] ?? entry.amount}
+                          />
+                        </span>
+                      ) : (
+                        money(entry.amount)
+                      )}
+                    </dd>
+                  </div>
+                  <div className="entry-fact">
+                    <dt className="label">{page.income.tds}</dt>
+                    <dd>{entry.tds > 0 ? money(entry.tds) : page.income.noTds}</dd>
+                  </div>
+                  <div className="entry-fact">
+                    <dt className="label">{page.income.tan}</dt>
+                    <dd>{entry.payerTan}</dd>
+                  </div>
+                </dl>
+                <p className="source-line">
+                  {common.source}: {entry.sourceRow}
+                  {answer === "amended" && (
+                    <span className="amend-was">
+                      {page.income.amendReported(money(entry.amount))}
+                    </span>
+                  )}
+                </p>
+
+                <div
+                  className="choices"
+                  role="group"
+                  aria-labelledby={choicesLabelId}
+                >
+                  <p className="label" id={choicesLabelId}>
+                    {page.income.question}
+                  </p>
+                  <label
+                    aria-label={page.income.mine}
+                    className="choice"
+                    htmlFor={`${entry.id}-mine`}
+                  >
+                    <input
+                      checked={answer === "mine"}
+                      id={`${entry.id}-mine`}
+                      name={entry.id}
+                      onChange={() => answerEntry(entry.id, "mine")}
+                      type="radio"
+                    />
+                    <span>
+                      <span className="choice-title">{page.income.mine}</span>
+                      <span className="choice-help">
+                        {page.income.answeredMine}
+                      </span>
+                    </span>
+                  </label>
+                  <label
+                    aria-label={page.income.amended}
+                    className="choice"
+                    htmlFor={`${entry.id}-amended`}
+                  >
+                    <input
+                      checked={answer === "amended"}
+                      id={`${entry.id}-amended`}
+                      name={entry.id}
+                      onChange={() => answerEntry(entry.id, "amended")}
+                      type="radio"
+                    />
+                    <span>
+                      <span className="choice-title">
+                        {page.income.amended}
+                      </span>
+                      <span className="choice-help">
+                        {page.income.answeredAmended}
+                      </span>
+                    </span>
+                  </label>
+                  <label
+                    aria-label={page.income.notMine}
+                    className="choice"
+                    htmlFor={`${entry.id}-not-mine`}
+                  >
+                    <input
+                      checked={answer === "not-mine"}
+                      id={`${entry.id}-not-mine`}
+                      name={entry.id}
+                      onChange={() => answerEntry(entry.id, "not-mine")}
+                      type="radio"
+                    />
+                    <span>
+                      <span className="choice-title">{page.income.notMine}</span>
+                      <span className="choice-help">
+                        {page.income.answeredNotMine}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+
+                {answer === "amended" && (
+                  <div className="amend">
+                    <p className="finding-note">{page.income.amendNote}</p>
+                    <button
+                      className="link-btn no-print"
+                      onClick={() => setFeedbackOpen(true)}
+                      type="button"
+                    >
+                      {page.income.disputeAction}
+                    </button>
+                  </div>
+                )}
+
+                {answer === "not-mine" && (
+                  <div className="caution">
+                    <p className="subhead">{page.income.disputeTitle}</p>
+                    <p className="finding-note">{page.income.disputeNote}</p>
+                    <button
+                      className="link-btn no-print"
+                      onClick={() => setFeedbackOpen(true)}
+                      type="button"
+                    >
+                      {page.income.disputeAction}
+                    </button>
+                  </div>
+                )}
+              </fieldset>
+            );
+          })}
+        </section>
+
+        <section className="section">
+          <dl className="rows">
+            <Row
+              label={page.income.runningTotal}
+              value={money(otherIncomeTotal(draft))}
+            />
+            <Row
+              label={page.income.runningTds}
+              value={money(claimableTds(draft))}
+            />
+          </dl>
+        </section>
+
+        {formError && <ErrorSummary message={formError} />}
+
+        <StepActions
+          back={() => goTo(2)}
+          backLabel={common.back}
+          next={continueFromIncome}
+          nextLabel={common.continue}
+        />
+      </>
+    );
+  };
+
+  const renderRegimeColumn = (regime: Regime) => {
+    const c = regime === "new" ? comparison.newRegime : comparison.oldRegime;
+    const isChosen = draft.regime === regime;
+    return (
+      <div>
+        <p className="label">
+          {regime === "new" ? page.regime.newRegime : page.regime.oldRegime}
+          {isChosen && <> · {page.regime.chosen}</>}
+        </p>
+        <p className="statement">
+          <span className="num">{money(c.totalTax)}</span>
+        </p>
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">{page.regime.grossTotal}</th>
+              <td className="col-num">{money(c.grossTotalIncome)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.deductionsLabel}</th>
+              <td className="col-num">
+                {c.chapterViaDeductions > 0
+                  ? `−${money(c.chapterViaDeductions)}`
+                  : money(0)}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.totalIncome}</th>
+              <td className="col-num">{money(c.totalIncome)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.taxBefore}</th>
+              <td className="col-num">{money(c.taxBeforeRebate)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.rebate}</th>
+              <td className="col-num">
+                {c.rebate > 0 ? `−${money(c.rebate)}` : money(0)}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.cess}</th>
+              <td className="col-num">{money(c.cess)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.totalTax}</th>
+              <td className="col-num">{money(c.totalTax)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="ledger-table">
+          <caption>{page.regime.workingTitle}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{page.regime.bandRange}</th>
+              <th scope="col">{page.regime.bandRate}</th>
+              <th className="col-num" scope="col">
+                {page.regime.bandTaxable}
+              </th>
+              <th className="col-num" scope="col">
+                {page.regime.bandTax}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {c.bands.map((band) => (
+              <tr key={`${regime}-${band.from}`}>
+                <th scope="row">
+                  {money(band.from)} – {money(band.to)}
+                </th>
+                <td data-label={page.regime.bandRate}>
+                  {formatPercent(band.rate, language)}
+                </td>
+                <td className="col-num" data-label={page.regime.bandTaxable}>
+                  {money(band.taxable)}
+                </td>
+                <td className="col-num" data-label={page.regime.bandTax}>
+                  {money(Math.round(band.tax))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p className="finding-note">
+          {regime === "new"
+            ? page.regime.newDeductionsNote
+            : page.regime.oldDeductionsNote}
+        </p>
+
+        {/* The same three figures that head the card, repeated where the
+            decision is actually taken. By the time a reader has worked down
+            through two tables and a paragraph, the number they are choosing
+            between is a screen and a half above the button that chooses it. */}
+        <div className="regime-recap">
+          <p className="label">{page.regime.recapTitle}</p>
+          <p className="statement">
+            <span className="num">{money(c.totalTax)}</span>
+          </p>
+          <dl className="rows">
+            <Row
+              label={page.regime.grossTotal}
+              value={money(c.grossTotalIncome)}
+            />
+            <Row
+              label={page.regime.deductionsLabel}
+              value={
+                c.chapterViaDeductions > 0
+                  ? `−${money(c.chapterViaDeductions)}`
+                  : money(0)
+              }
+            />
+          </dl>
+        </div>
+
+        <div className="actions no-print">
+          <button
+            className={isChosen ? "btn" : "btn btn-secondary"}
+            onClick={() => updateDraft({ regime })}
+            type="button"
+          >
+            {regime === "new" ? page.regime.chooseNew : page.regime.chooseOld}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRegime = () => (
+    <>
+      <div className="page-head">
+        <p className="label">{page.regime.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {page.regime.title}
+        </h1>
+        <Prose className="lede">{page.regime.intro}</Prose>
+      </div>
+
+      <section className="section">
+        <p className="label">{page.regime.recommendTitle}</p>
+        <p className="statement">
+          {comparison.better === "new"
+            ? page.regime.recommendNew
+            : page.regime.recommendOld}
+        </p>
+        <p className="lede">
+          {page.regime.saving} <span className="num">{money(comparison.saving)}</span>{" "}
+          {page.regime.savingNote}
+        </p>
+        <p className="portal-line">
+          {page.regime.portalLabel} <code>{page.regime.portalQuestion}</code>
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>{page.regime.workingTitle}</h2>
+        <p className="prose">{page.regime.workingIntro}</p>
+        <p className="consequence">
+          {page.regime.rebateNote(money(REBATE_NEW_LIMIT))}
+        </p>
+      </section>
+
+      <div
+        className={`swap${spotlightClass("regime-choice")}`}
+        id="regime-choice"
+        tabIndex={-1}
+      >
+        {renderRegimeColumn("new")}
+        {renderRegimeColumn("old")}
+      </div>
+
+      {/* Deductions belong beside the regime choice, because the regime is
+          what decides whether they are worth anything. The tax already paid
+          sits with them because together they are the two halves of the refund
+          figure that arrives at step 6. */}
+      <section className="section">
+        <TaxPaidSection
+          labels={{
+            amountAwaitingRegime: common.tpAmountAwaitingRegime,
+            deductionsIntro: common.tpDeductionsIntro,
+            deductionsTitle: common.tpDeductionsTitle,
+            deductionsTotal: common.tpDeductionsTotal,
+            entriesCount: common.tpEntriesCount,
+            entriesNone: common.tpEntriesNone,
+            headAmount: common.tpHeadAmount,
+            headSection: common.tpHeadSection,
+            headStatus: common.tpHeadStatus,
+            headWhat: common.tpHeadWhat,
+            officialSummary: common.tpOfficialSummary,
+            regimeNew: common.tpRegimeNew,
+            regimeOld: common.tpRegimeOld,
+            regimeUnchosen: common.tpRegimeUnchosen,
+            schedulesIntro: common.tpSchedulesIntro,
+            schedulesSummary: common.tpSchedulesSummary,
+            schedulesTitle: common.tpSchedulesTitle,
+            sourceLabel: common.tpSourceLabel,
+            statusAwaitingRegime: common.tpStatusAwaitingRegime,
+            statusClaimed: common.tpStatusClaimed,
+            statusNone: common.tpStatusNone,
+            statusNotInRegime: common.tpStatusNotInRegime,
+            taxPaidTotal: common.tpTaxPaidTotal,
+            whyLabel: common.tpWhyLabel,
+          }}
+          language={language}
+          regime={draft.regime}
+        />
+      </section>
+
+      {formError && <ErrorSummary message={formError} />}
+
+      <StepActions
+        back={() => goTo(3)}
+        backLabel={common.back}
+        next={continueFromRegime}
+        nextLabel={common.continue}
+      />
+    </>
+  );
+
+  const renderChecks = () => {
+    const passed = checks.filter((check) => check.state === "pass").length;
+    const attention = checksNeedingAttention(draft);
+    const stranded = strandedTds(draft);
+
+    return (
+      <>
+        <div className="page-head">
+          <p className="label">{page.checks.eyebrow}</p>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {page.checks.title}
+          </h1>
+          <Prose className="lede">{page.checks.intro}</Prose>
+        </div>
+
+        <section className="section">
+          <p className="statement">
+            {page.checks.passed(passed, checks.length)}
+          </p>
+          <p className="consequence">{page.checks.idea}</p>
+          <p className="no-print">
+            <OutLink
+              href={OFFICIAL_DEFECTIVE_FAQ}
+              newWindow={common.newWindow}
+            >
+              {language === "hi"
+                ? "धारा 139(9) पर आधिकारिक जानकारी"
+                : "Official guidance on section 139(9)"}
+            </OutLink>
+          </p>
+        </section>
+
+        <section className="section">
+          <ul className="sequence">
+            {checks.map((check) => {
+              const id = check.id as CheckId;
+              return (
+                <li key={check.id}>
+                  <h3>
+                    <span
+                      className={
+                        check.state === "pass" ? "verdict-ok" : "verdict-missing"
+                      }
+                    >
+                      {page.checks.labels[id]}
+                    </span>
+                  </h3>
+                  <p>{page.checks.detail[id]}</p>
+                  {check.state !== "pass" && page.checks.fix[id] && (
+                    <p>
+                      <span className="label-alert">{page.checks.fix[id]}</span>
+                    </p>
+                  )}
+                  {check.id === "disputed-tds-dropped" &&
+                    (check.amount ?? 0) > 0 && (
+                      <p>
+                        <span className="label-ink">
+                          {page.checks.strandedLabel}
+                        </span>{" "}
+                        <span className="num">{money(stranded)}</span>
+                      </p>
+                    )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section className="section">
+          {attention.length === 0 ? (
+            <>
+              <h2 className="verdict-ok">{page.checks.allClearTitle}</h2>
+              <p className="prose">{page.checks.allClear}</p>
+            </>
+          ) : (
+            <>
+              <h2>{page.checks.attentionTitle}</h2>
+              <div className="actions no-print">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => goTo(3)}
+                  type="button"
+                >
+                  {page.checks.goToStep}
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+
+        {formError && <ErrorSummary message={formError} />}
+
+        <StepActions
+          back={() => goTo(4)}
+          backLabel={common.back}
+          next={() => goTo(6)}
+          nextLabel={page.checks.continue}
+        />
+      </>
+    );
+  };
+
+  const renderReview = () => (
+    <>
+      <div className="page-head">
+        <p className="label">{page.review.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {page.review.title}
+        </h1>
+        <Prose className="lede">{page.review.intro}</Prose>
+      </div>
+
+      <section className="section">
+        <h2>{page.review.incomeTitle}</h2>
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">{page.review.salaryLine}</th>
+              <td className="col-num">{money(computation.salaryAfterStandard)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.review.otherLine}</th>
+              <td className="col-num">{money(computation.otherIncome)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.totalIncome}</th>
+              <td className="col-num">{money(computation.totalIncome)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="actions no-print">
+          <button className="link-btn" onClick={() => goTo(3)} type="button">
+            {page.review.editLabel}
+          </button>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{page.review.taxTitle}</h2>
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">{page.regime.totalTax}</th>
+              <td className="col-num">{money(computation.totalTax)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.review.creditTitle}</th>
+              <td className="col-num">{money(computation.tdsPaid)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="actions no-print">
+          <button className="link-btn" onClick={() => goTo(4)} type="button">
+            {page.review.editLabel}
+          </button>
+        </div>
+      </section>
+
+      <section className="section">
+        {computation.refundDue > 0 ? (
+          <>
+            <h2 className="verdict-ok">{page.review.refundTitle}</h2>
+            <p className="statement">
+              <span className="num">{money(computation.refundDue)}</span>
+            </p>
+            <p className="prose">{page.review.refundNote}</p>
+
+            {/* A refund figure with no account named beside it is half an
+                answer. The one account it can reach is named here, on the
+                screen where the money is promised, rather than left three
+                blocks up the previous step. */}
+            {refundAccount ? (
+              <div className="refund-account">
+                <p className="label">{page.review.refundAccountLabel}</p>
+                <p className="refund-account-name">
+                  {page.review.refundAccountLine(
+                    refundAccount.bank,
+                    refundAccount.masked,
+                    refundAccount.kind,
+                  )}
+                </p>
+                <p className="prose">{page.review.refundAccountNote}</p>
+                <div className="actions no-print">
+                  <button
+                    className="link-btn"
+                    onClick={() => goTo(1)}
+                    type="button"
+                  >
+                    {page.review.refundAccountEdit}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="refund-account is-missing">
+                <p className="prose">{page.review.refundNoAccountNote}</p>
+                <div className="actions no-print">
+                  <button
+                    className="link-btn"
+                    onClick={() => goTo(1)}
+                    type="button"
+                  >
+                    {page.review.refundAccountEdit}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <h2>{page.review.payableTitle}</h2>
+            <p className="statement">
+              <span className="num">{money(computation.balancePayable)}</span>
+            </p>
+            <p className="prose">{page.review.payableNote}</p>
+          </>
+        )}
+      </section>
+
+      <section className="section">
+        <h2>{page.review.verifyTitle}</h2>
+        <p className="prose">{page.review.verifyNote}</p>
+      </section>
+
+      <label
+        className={`declare${spotlightClass("review-declare")}`}
+        id="review-declare"
+      >
+        <input
+          checked={draft.declaration}
+          onChange={(event) =>
+            updateDraft({ declaration: event.target.checked })
+          }
+          type="checkbox"
+        />
+        <span>{page.review.declaration}</span>
+      </label>
+
+      {formError && <ErrorSummary message={formError} />}
+
+      {draft.status === "queued" && (
+        <div className="stop" role="status">
+          <p className="subhead">{page.review.offlineTitle}</p>
+          <p className="finding-note">{page.review.offlineNote}</p>
+          <button className="btn btn-secondary" onClick={submitReturn} type="button">
+            {page.review.retry}
+          </button>
+        </div>
+      )}
+
+      <div className="actions no-print">
+        <button
+          className="btn"
+          disabled={draft.status === "submitting"}
+          onClick={submitReturn}
+          type="button"
+        >
+          {draft.status === "submitting"
+            ? page.review.submitting
+            : page.review.submit}
+        </button>
+        <button className="link-btn" onClick={() => goTo(5)} type="button">
+          {common.back}
+        </button>
+      </div>
+    </>
+  );
+
+  const renderReceipt = () => (
+    <div className="receipt">
+      <div className="receipt-head">
+        <p className="label">{page.receipt.eyebrow}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {page.receipt.title}
+        </h1>
+        <Prose className="lede">{page.receipt.intro}</Prose>
+      </div>
+
+      <div className="receipt-body">
+        <dl className="rows receipt-refs">
+          <Row
+            label={page.receipt.ackLabel}
+            value={draft.reference ?? DEMO_ACKNOWLEDGEMENT}
+          />
+          <Row label={page.receipt.txnLabel} value={DEMO_TRANSACTION} />
+          <Row
+            label={page.receipt.statusLabel}
+            value={
+              draft.verifiedAt
+                ? page.receipt.statusValue
+                : page.receipt.statusUnverified
+            }
+          />
+          <Row
+            label={page.receipt.timeLabel}
+            value={draft.submittedAt ?? formatDateTime(new Date(), language)}
+          />
+          <Row label={page.receipt.formLabel} value={demoCase.form} />
+          <Row
+            label={page.receipt.regimeLabel}
+            value={
+              draft.regime === "old"
+                ? page.receipt.regimeOld
+                : page.receipt.regimeNew
+            }
+          />
+          <Row
+            label={page.receipt.totalIncomeLabel}
+            value={money(computation.totalIncome)}
+          />
+          <Row
+            label={page.receipt.totalTaxLabel}
+            value={money(computation.totalTax)}
+          />
+          {computation.refundDue > 0 ? (
+            <Row
+              label={page.receipt.refundLabel}
+              value={money(computation.refundDue)}
+            />
+          ) : (
+            <Row
+              label={page.receipt.payableLabel}
+              value={money(computation.balancePayable)}
+            />
+          )}
+          <Row
+            label={page.receipt.versionLabel}
+            value={demoCase.calculationVersion}
+          />
+        </dl>
+      </div>
+
+      {/* Before "what happens next", because until this is done none of what
+          happens next happens. */}
+      <VerifySection
+        dateFormat={(date) => formatDate(date, language)}
+        filedAt={draft.submittedIso ? new Date(draft.submittedIso) : null}
+        language={language}
+        now={now}
+        onVerify={verifyReturn}
+        reference={draft.verifiedAt ? DEMO_VERIFY_REFERENCE : null}
+        verifiedAt={draft.verifiedAt}
+      />
+
+      <div className="receipt-next">
+        <h2>{page.receipt.nextTitle}</h2>
+        <ul className="sequence">
+          {page.receipt.next.map((item) => (
+            <li key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="caution">{page.receipt.warning}</p>
+
+      <div className="actions no-print">
+        <button className="btn" onClick={() => window.print()} type="button">
+          {page.receipt.print}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={downloadReceipt}
+          type="button"
+        >
+          {page.receipt.download}
+        </button>
+        <button className="link-btn" onClick={resetDemo} type="button">
+          {page.receipt.restart}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderScreen = () => {
+    if (screen === "login") {
+      return (
+        <LoginScreen
+          common={common}
+          onAskAssistant={askAssistant}
+          onDone={signIn}
+          onRegister={() => setScreen("register")}
+        />
+      );
+    }
+
+    if (screen === "register") {
+      return (
+        <RegisterScreen
+          common={common}
+          onAskAssistant={askAssistant}
+          onDone={signIn}
+          onSignIn={() => setScreen("login")}
+        />
+      );
+    }
+
+    if (screen === "notices") {
+      return (
+        <NoticesPage
+          common={common}
+          language={language}
+          onBack={() => setScreen("home")}
+        />
+      );
+    }
+
+    if (screen === "dashboard" && session) {
+      return (
+        <Dashboard
+          common={common}
+          draft={draft}
+          language={language}
+          now={now}
+          onResume={() => goTo(Math.max(1, draft.step))}
+          onService={openService}
+          session={session}
+          totalSteps={TOTAL_STEPS - 1}
+        />
+      );
+    }
+
+    /* A journey step only renders inside the journey, and only for somebody who
+       is through the door. Anything else — a stale draft, a restored screen, a
+       signed-out session — falls back to the home page rather than showing a
+       step out of its shell. */
+    if (screen === "journey" && session && draft.step > 0) return renderStep();
+
+    return renderHome();
+  };
+
   const renderStep = () => {
-    if (draft.step === 0) return renderStart();
-    if (draft.step === 1) return renderNotice();
-    if (draft.step === 2) return renderDocuments();
-    if (draft.step === 3) return renderCompare();
-    if (draft.step === 4) return renderConfirm();
-    if (draft.step === 5) return renderReview();
+    if (draft.step === 0) return renderHome();
+    if (draft.step === 1) return renderCheck();
+    if (draft.step === 2) return renderSalary();
+    if (draft.step === 3) return renderIncome();
+    if (draft.step === 4) return renderRegime();
+    if (draft.step === 5) return renderChecks();
+    if (draft.step === 6) return renderReview();
     return renderReceipt();
   };
 
+  /* ------------------------------------------------------------ margins */
+
+  const renderMargin = () => (
+    <>
+      {draft.step > 0 && draft.step < RECEIPT_STEP && (
+        <DeadlineMargin common={common} language={language} window={filing} />
+      )}
+
+      <section className="margin-block">
+        <p className="label">{common.railCase}</p>
+        <dl className="margin-list">
+          <div>
+            <dt>{page.check.decided[0].label}</dt>
+            <dd>{decidedForm}</dd>
+          </div>
+          <div>
+            <dt>PAN</dt>
+            <dd>{demoCase.maskedPan}</dd>
+          </div>
+          {/* Figures appear once the citizen has actually supplied something.
+              Showing a refund on the start screen would be a number they had
+              no part in, and the amount changes as they answer. */}
+          {draft.step >= 3 && (
+            <>
+              <div>
+                <dt>{page.receipt.totalIncomeLabel}</dt>
+                <dd>{money(computation.totalIncome)}</dd>
+              </div>
+              <div>
+                <dt>{page.receipt.totalTaxLabel}</dt>
+                <dd>{money(computation.totalTax)}</dd>
+              </div>
+              <div>
+                <dt>
+                  {computation.refundDue > 0
+                    ? page.receipt.refundLabel
+                    : page.receipt.payableLabel}
+                </dt>
+                <dd>
+                  {money(
+                    computation.refundDue > 0
+                      ? computation.refundDue
+                      : computation.balancePayable,
+                  )}
+                </dd>
+              </div>
+            </>
+          )}
+        </dl>
+      </section>
+
+      <section className="margin-block no-print">
+        <p className="label">{common.railActions}</p>
+        <ul className="margin-links">
+          {draft.step !== 1 && (
+            <li>
+              <button className="link-btn" onClick={() => goTo(1)} type="button">
+                {common.viewNotice}
+              </button>
+            </li>
+          )}
+          <li>
+            <button className="link-btn" onClick={downloadSummary} type="button">
+              {common.downloadNotice}
+            </button>
+          </li>
+          {draft.step > 0 && draft.step < RECEIPT_STEP && (
+            <li>
+              <button
+                className="link-btn"
+                onClick={() => setFeedbackOpen(true)}
+                type="button"
+              >
+                {common.extensionAction}
+              </button>
+            </li>
+          )}
+          <li>
+            <OutLink href={OFFICIAL_PORTAL} newWindow={common.newWindow}>
+              {common.officialPortalLink}
+            </OutLink>
+          </li>
+        </ul>
+      </section>
+
+      <section className="margin-block no-print">
+        <p className="label">{common.helpline}</p>
+        {OFFICIAL_HELPLINES.map((number) => (
+          <a
+            className="helpline"
+            href={`tel:${number.replace(/\s/g, "")}`}
+            key={number}
+          >
+            {number}
+          </a>
+        ))}
+        <p className="margin-note">{common.helplineNote}</p>
+      </section>
+    </>
+  );
+
+  /* -------------------------------------------------------------- shell */
+
+  /* Three shapes, not one. The journey needs its steps on the left and the case
+     details on the right; the dashboard needs the case details only; the home,
+     sign-in and registration screens need the full measure to themselves. */
+  const inJourney = screen === "journey" && session != null && draft.step > 0;
+  const hasMargin = inJourney || screen === "dashboard";
+  const layoutShape = inJourney
+    ? "is-journey"
+    : hasMargin
+      ? "is-two"
+      : "is-plain";
+
+  const stepLabel =
+    inJourney && draft.step < TOTAL_STEPS ? common.steps[draft.step] : null;
+
+  const snapshot = useCallback(
+    (attachment: string | null) =>
+      buildContext({
+        draft,
+        session,
+        screen: inJourney ? "journey" : screen,
+        attachment,
+      }),
+    [draft, inJourney, screen, session],
+  );
+
   return (
-    <div className={draft.lowData ? "app-shell low-data" : "app-shell"}>
+    /* Set once here so a jargon term can be written as `<Term id="tds" />`
+       anywhere below without every call site threading the language. */
+    <TermLanguage value={language}>
+    <div className={draft.lowData ? "app lite" : "app"}>
       <a className="skip-link" href="#main-content">
         {common.skip}
       </a>
 
-      <div className="prototype-bar">
-        <span>{common.prototype}</span>
-        <span aria-hidden="true">·</span>
-        <span>{common.synthetic}</span>
-      </div>
+      <TrustBanner common={common} />
 
-      <header className="site-header">
-        <a className="brand" href="#main-content" onClick={() => goTo(0)}>
-          <span className="brand-mark" aria-hidden="true">
-            SR
-          </span>
-          <span>
-            <strong>{common.brand}</strong>
-            <small>{common.strapline}</small>
-          </span>
-        </a>
+      <header className="masthead no-print">
+        <div className="shell masthead-inner">
+          <button className="brand" onClick={() => goTo(0)} type="button">
+            <span className="brand-name">{common.brand}</span>
+            <span className="brand-sub">{common.strapline}</span>
+          </button>
 
-        <div className="header-tools">
-          <div className="language-switch" aria-label="Language">
-            <button
-              onClick={() => switchLanguage("en")}
-              aria-pressed={language === "en"}
-              lang="en"
-            >
-              {common.english}
-            </button>
-            <button
-              onClick={() => switchLanguage("hi")}
-              aria-pressed={language === "hi"}
-              lang="hi"
-            >
-              {common.hindi}
-            </button>
-          </div>
-          <label className="data-toggle">
-            <input
-              type="checkbox"
-              checked={draft.lowData}
-              onChange={(event) => updateDraft({ lowData: event.target.checked })}
+          {/* The masthead used to spell out six controls in words — search,
+              help, the account, dashboard, logout, settings — and read as a
+              sentence competing with the page. They are icons now, each with
+              its name as the accessible name and on a hovercard, so nothing is
+              lost to anyone who cannot guess a glyph. */}
+          <div className="masthead-tools">
+            {/* Was an icon with the shortcut hidden on a hovercard, which
+                nobody found: a reader has to already suspect the panel exists
+                before hovering to learn it does. The control now says what it
+                is and what opens it, at rest. */}
+            <SearchTrigger
+              label={common.commandTrigger}
+              onOpen={() => setPaletteOpen(true)}
+              placeholder={common.searchPlaceholder}
             />
-            <span>{common.lowData}</span>
-          </label>
+
+            <Hovercard
+              className="tool"
+              label={common.help}
+              onClick={openHelp}
+              panel={<p className="hc-tool">{common.help}</p>}
+              panelClassName="hc-tip"
+              triggerClassName="tool-btn"
+            >
+              <HelpIcon />
+            </Hovercard>
+
+            {session ? (
+              <div className="account">
+                <span className="account-name">
+                  {session.name}
+                  <span className="account-id">
+                    {maskUserId(session.userId, session.kind)}
+                  </span>
+                </span>
+                <Hovercard
+                  className="tool"
+                  label={common.dashboard}
+                  onClick={() => setScreen("dashboard")}
+                  panel={<p className="hc-tool">{common.dashboard}</p>}
+                  panelClassName="hc-tip"
+                  triggerClassName="tool-btn"
+                >
+                  <GridIcon />
+                </Hovercard>
+                <Hovercard
+                  className="tool"
+                  label={common.signOut}
+                  onClick={signOut}
+                  panel={<p className="hc-tool">{common.signOut}</p>}
+                  panelClassName="hc-tip"
+                  triggerClassName="tool-btn"
+                >
+                  <SignOutIcon />
+                </Hovercard>
+              </div>
+            ) : (
+              <div className="account">
+                <Hovercard
+                  className="tool"
+                  label={common.signIn}
+                  onClick={() => setScreen("login")}
+                  panel={<p className="hc-tool">{common.signIn}</p>}
+                  panelClassName="hc-tip"
+                  triggerClassName="tool-btn"
+                >
+                  <SignInIcon />
+                </Hovercard>
+                <Hovercard
+                  className="tool"
+                  label={common.register}
+                  onClick={() => setScreen("register")}
+                  panel={<p className="hc-tool">{common.register}</p>}
+                  panelClassName="hc-tip"
+                  triggerClassName="tool-btn"
+                >
+                  <UserPlusIcon />
+                </Hovercard>
+              </div>
+            )}
+            <SettingsMenu
+              common={common}
+              language={language}
+              lowData={draft.lowData}
+              onClose={() => setSettingsOpen(false)}
+              onLanguage={switchLanguage}
+              onLowData={(value) => updateDraft({ lowData: value })}
+              onTextScale={(textScale: TextScale) =>
+                setPrefs((current) => ({ ...current, textScale }))
+              }
+              onTheme={(theme: Theme) =>
+                setPrefs((current) => ({ ...current, theme }))
+              }
+              onToggle={() => setSettingsOpen((open) => !open)}
+              open={settingsOpen}
+              textScale={prefs.textScale}
+              theme={prefs.theme}
+            />
+          </div>
         </div>
       </header>
 
-      {draft.step > 0 && (
-        <nav className="progress-wrap" aria-label="Journey progress">
-          <div className="progress-summary">
-            <span>{common.stepOf(draft.step, TOTAL_STEPS - 1)}</span>
-            <strong>{common.steps[draft.step]}</strong>
+      <PortalNav
+        common={common}
+        onHelp={openHelp}
+        onHome={() => goTo(0)}
+        onService={openService}
+        open={navOpen}
+        setOpen={setNavOpen}
+      />
+
+      {screen === "journey" && draft.step > 0 && (
+        <div className="stepstrip no-print">
+          <div className="shell stepstrip-inner">
+            <span className="label">
+              {common.stepOf(draft.step, TOTAL_STEPS - 1)}
+            </span>
+            <span className="stepstrip-name">{common.steps[draft.step]}</span>
+            {draft.step < RECEIPT_STEP && (
+              <DeadlineInline common={common} window={filing} />
+            )}
           </div>
-          <ol className="progress-list">
-            {common.steps.slice(1).map((step, index) => {
-              const number = index + 1;
-              const state =
-                number < draft.step
-                  ? "complete"
-                  : number === draft.step
-                    ? "current"
-                    : "upcoming";
-              return (
-                <li className={state} key={step} aria-current={state === "current" ? "step" : undefined}>
-                  <span>{number}</span>
-                  <small>{step}</small>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
+        </div>
       )}
 
-      <div className="network-status" aria-live="polite" aria-atomic="true">
-        {notice || (isOnline ? common.saved : common.offline)}
-      </div>
+      <main className="main" id="main-content">
+        <div className={`shell layout ${layoutShape}`}>
+          {/* The journey's table of contents belongs to the journey. On the home
+              page it was seven locked steps and "0 of 7 done" beside a screen
+              nobody had started — a progress bar for work not yet begun. */}
+          {inJourney && (
+            <StepRail
+              complete={draft.status === "submitted"}
+              current={draft.step}
+              language={language}
+              names={common.steps}
+              onGo={goTo}
+              reached={draft.reached}
+              words={{
+                /* Counted from how far the return has got, not from where the
+                   citizen happens to be standing in it — and once it is filed,
+                   from the fact that it is filed. The acknowledgement used to
+                   read "6 of 7 steps done" while showing a filed return, which
+                   is the one screen where nothing is left to do. */
+                count: common.stepsDone(
+                  draft.status === "submitted"
+                    ? TOTAL_STEPS - 1
+                    : Math.max(0, Math.max(draft.step, draft.reached) - 1),
+                  TOTAL_STEPS - 1,
+                ),
+                done: common.stepDone,
+                here: common.stepCurrent,
+                label: common.journeyLabel,
+                locked: common.stepLocked,
+                open: common.stepOpen,
+              }}
+            />
+          )}
 
-      <main id="main-content">{renderStep()}</main>
+          <div className="work">
+            {/* "Saved on this device" is about a draft. On a screen where
+                nothing has been started there is no draft to have saved, and
+                the line was the same false reassurance the step list used to
+                give before it was moved inside the journey. A notice — going
+                offline, a file converted — still shows anywhere. */}
+            {(inJourney || hasSavedDraft || notice) && (
+              <p aria-atomic="true" aria-live="polite" className="savebar">
+                <span
+                  aria-hidden="true"
+                  className={isOnline ? "savebar-dot" : "savebar-dot is-off"}
+                />
+                {notice || (isOnline ? common.saved : common.offline)}
+              </p>
+            )}
+            {renderScreen()}
+          </div>
 
-      <aside className="help-strip no-print">
-        <div>
-          <strong>{common.help}</strong>
-          <span>{helpByStep[language][draft.step]}</span>
+          {hasMargin && (
+            <aside aria-label={common.railCase} className="margin-col">
+              {renderMargin()}
+            </aside>
+          )}
         </div>
-        <button className="button secondary" onClick={openHelp}>
-          {common.help}
+      </main>
+
+      {/* The assistant sits over the page rather than inside the column, so it
+          can stay open while the citizen works through a step. */}
+      <Assistant
+        buildSnapshot={snapshot}
+        canCheck={inJourney}
+        common={common}
+        language={language}
+        onClose={() => setAssistantOpen(false)}
+        open={assistantOpen}
+        pendingQuestion={assistantQuestion}
+        questionToken={questionToken}
+        signedIn={session != null}
+        stepLabel={stepLabel}
+      />
+
+      {!assistantOpen && (
+        <button
+          className="assistant-launch no-print"
+          onClick={() => setAssistantOpen(true)}
+          type="button"
+        >
+          <HelpIcon />
+          <span>{common.assistantOpen}</span>
         </button>
-      </aside>
+      )}
 
-      <footer className="site-footer">
-        <div>
-          <strong>{common.footerTitle}</strong>
-          <p>{common.footerText}</p>
-        </div>
-        <div className="footer-links no-print">
-          <a href={OFFICIAL_FAQ} target="_blank" rel="noreferrer">
-            {common.officialSource}
-            <span className="sr-only">
-              {language === "hi" ? ", नई विंडो" : ", opens in a new window"}
-            </span>
-          </a>
-          <button className="text-button" onClick={() => setClearOpen(true)}>
-            {common.clearData}
-          </button>
+      <footer className="site-footer no-print">
+        <div className="shell footer-inner">
+          <div>
+            <p className="footer-mark">{common.brand}</p>
+            <p>{common.officialWarning}</p>
+          </div>
+          <div className="footer-col">
+            <p className="label">{common.commandGroupHelp}</p>
+            <ul>
+              <li>
+                <OutLink href={OFFICIAL_FILING_HELP} newWindow={common.newWindow}>
+                  {common.officialSource}
+                </OutLink>
+              </li>
+              <li>
+                <OutLink href={OFFICIAL_AIS_HELP} newWindow={common.newWindow}>
+                  {common.officialManual}
+                </OutLink>
+              </li>
+              <li>
+                <button className="link-btn" onClick={openSupport} type="button">
+                  {common.support}
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div className="footer-col">
+            <p className="label">{common.settings}</p>
+            <ul>
+              <li>
+                <button
+                  className="link-btn"
+                  onClick={() => setClearOpen(true)}
+                  type="button"
+                >
+                  {common.clearData}
+                </button>
+              </li>
+              <li>
+                <button
+                  className="link-btn"
+                  onClick={() => setPaletteOpen(true)}
+                  type="button"
+                >
+                  {common.commandTrigger}
+                </button>
+              </li>
+            </ul>
+            <p className="fine">{demoCase.calculationVersion}</p>
+          </div>
         </div>
       </footer>
 
+      {paletteOpen && (
+        <CommandPalette
+          commands={commands}
+          common={common}
+          currentStep={common.steps[draft.step]}
+          onClose={() => setPaletteOpen(false)}
+        />
+      )}
+
       {helpOpen && (
-        <div className="dialog-backdrop" role="presentation">
-          <dialog
-            open
-            className="dialog"
-            aria-modal="true"
-            aria-labelledby="help-title"
-            tabIndex={-1}
-            ref={helpDialogRef}
-            onKeyDown={(event) =>
-              keepFocusInDialog(event, helpDialogRef.current, () => setHelpOpen(false))
-            }
-          >
+        <Modal
+          className="modal"
+          labelledBy="help-title"
+          onClose={() => setHelpOpen(false)}
+        >
+          <div className="modal-head">
+            <div>
+              <p className="label">{common.steps[draft.step]}</p>
+              <h2 id="help-title">
+                {supportMode
+                  ? supportReference
+                    ? common.supportCreated
+                    : common.supportTitle
+                  : common.helpTitle}
+              </h2>
+            </div>
             <button
-              className="dialog-close"
-              onClick={() => setHelpOpen(false)}
-              ref={helpCloseRef}
               aria-label={common.close}
+              className="modal-close"
+              onClick={() => setHelpOpen(false)}
+              type="button"
             >
               ×
             </button>
-            {!supportMode ? (
-              <>
-                <p className="eyebrow">{common.steps[draft.step]}</p>
-                <h2 id="help-title">{common.help}</h2>
-                <p className="dialog-lede">{helpByStep[language][draft.step]}</p>
-                <div className="help-source">
-                  <strong>{common.source}</strong>
-                  <a href={OFFICIAL_FAQ} target="_blank" rel="noreferrer">
-                    {common.officialSource}
-                  </a>
-                  <span>{common.reviewed}</span>
-                </div>
-                <button
-                  className="button secondary full"
-                  onClick={() => setSupportMode(true)}
+          </div>
+
+          {!supportMode ? (
+            <div className="stack">
+              <p>{helpByStep[language][draft.step]}</p>
+              <dl className="rows">
+                <Row label={common.source} value={common.officialSource} />
+                <Row label={common.reviewedLabel} value={common.reviewedDate} />
+                <Row label={common.nextReviewLabel} value={common.nextReviewDate} />
+                <Row label={common.supportOwner} value={common.supportOwnerValue} />
+              </dl>
+              <p>
+                <OutLink href={OFFICIAL_FILING_HELP} newWindow={common.newWindow}>
+                  {common.officialSource}
+                </OutLink>
+              </p>
+              <button
+                className="btn btn-secondary btn-block"
+                onClick={() => setSupportMode(true)}
+                type="button"
+              >
+                {common.support}
+              </button>
+            </div>
+          ) : supportReference ? (
+            <div className="stack">
+              <p className="big-ref">{supportReference}</p>
+              <p>{common.supportResponse}</p>
+              <dl className="rows">
+                <Row label={common.supportStage} value={common.steps[draft.step]} />
+                <Row label={common.supportOwner} value={common.supportOwnerValue} />
+              </dl>
+              <button
+                className="btn btn-block"
+                onClick={() => setHelpOpen(false)}
+                type="button"
+              >
+                {common.close}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={createSupportRequest}>
+              <p className="fine">{common.supportIntro}</p>
+              <label className="field">
+                <span>{common.supportIssue}</span>
+                <select
+                  onChange={(event) => setSupportIssue(event.target.value)}
+                  required
+                  value={supportIssue}
                 >
-                  {common.support}
-                </button>
-              </>
-            ) : supportReference ? (
-              <>
-                <p className="eyebrow">{common.synthetic}</p>
-                <h2 id="help-title">{common.supportCreated}</h2>
-                <p className="support-reference">{supportReference}</p>
-                <p>{common.supportResponse}</p>
-                <button className="button primary full" onClick={() => setHelpOpen(false)}>
-                  {common.close}
-                </button>
-              </>
-            ) : (
-              <form onSubmit={createSupportRequest}>
-                <p className="eyebrow">{common.synthetic}</p>
-                <h2 id="help-title">{common.supportTitle}</h2>
-                <p>{common.supportIntro}</p>
-                <label className="form-field">
-                  <span>{common.supportIssue}</span>
-                  <select
-                    required
-                    value={supportIssue}
-                    onChange={(event) => setSupportIssue(event.target.value)}
-                  >
-                    <option value="">{language === "hi" ? "चुनें" : "Select one"}</option>
-                    {common.supportOptions.map((option) => (
-                      <option value={option} key={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="form-field">
-                  <span>{common.supportDetails}</span>
-                  <textarea
-                    required
-                    minLength={10}
-                    rows={4}
-                    value={supportDetails}
-                    onChange={(event) => setSupportDetails(event.target.value)}
-                    placeholder={common.supportExample}
-                  />
-                </label>
-                <button className="button primary full" type="submit">
+                  <option value="">
+                    {language === "hi" ? "चुनें" : "Select one"}
+                  </option>
+                  {common.supportOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field" htmlFor="support-details">
+                <span>{common.supportDetails}</span>
+                <textarea
+                  aria-describedby="support-stage"
+                  id="support-details"
+                  minLength={10}
+                  onChange={(event) => setSupportDetails(event.target.value)}
+                  placeholder={common.supportExample}
+                  required
+                  rows={4}
+                  value={supportDetails}
+                />
+              </label>
+              <p className="field-hint" id="support-stage">
+                {common.supportStage}: {common.steps[draft.step]}
+              </p>
+              <div className="actions">
+                <button className="btn btn-block" type="submit">
                   {common.createSupport}
                 </button>
-              </form>
-            )}
-          </dialog>
-        </div>
+              </div>
+            </form>
+          )}
+        </Modal>
+      )}
+
+      {feedbackOpen && (
+        <Modal
+          className="modal modal-sm"
+          labelledBy="feedback-title"
+          onClose={() => setFeedbackOpen(false)}
+        >
+          <div className="modal-head">
+            <div>
+              <p className="label">{common.synthetic}</p>
+              <h2 id="feedback-title">
+                {draft.feedbackReference
+                  ? common.extensionCreated
+                  : common.extensionTitle}
+              </h2>
+            </div>
+            <button
+              aria-label={common.close}
+              className="modal-close"
+              onClick={() => setFeedbackOpen(false)}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+
+          {draft.feedbackReference ? (
+            <div className="stack">
+              <p className="big-ref">{draft.feedbackReference}</p>
+              <p>{common.extensionNext}</p>
+              <button
+                className="btn btn-block"
+                onClick={() => setFeedbackOpen(false)}
+                type="button"
+              >
+                {common.close}
+              </button>
+            </div>
+          ) : (
+            <div className="stack">
+              <p>{common.extensionIntro}</p>
+              <p className="fine">{common.extensionNote}</p>
+              {disputedEntries(draft).length > 0 && (
+                <dl className="rows">
+                  {disputedEntries(draft).map((entry) => (
+                    <Row
+                      key={entry.id}
+                      label={`${page.income.kinds[entry.kind]} — ${entry.payer}`}
+                      value={money(entry.amount)}
+                    />
+                  ))}
+                </dl>
+              )}
+              <button
+                className="btn btn-block"
+                onClick={raiseFeedback}
+                type="button"
+              >
+                {common.extensionCreate}
+              </button>
+            </div>
+          )}
+        </Modal>
       )}
 
       {clearOpen && (
-        <div className="dialog-backdrop" role="presentation">
-          <dialog
-            open
-            className="dialog small"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="clear-title"
-            aria-describedby="clear-description"
-            tabIndex={-1}
-            ref={clearDialogRef}
-            onKeyDown={(event) =>
-              keepFocusInDialog(event, clearDialogRef.current, () => setClearOpen(false))
-            }
-          >
-            <h2 id="clear-title">{common.clearConfirm}</h2>
-            <p id="clear-description">{common.clearExplanation}</p>
-            <div className="button-row">
-              <button
-                className="button secondary"
-                onClick={() => setClearOpen(false)}
-                ref={clearCancelRef}
-              >
-                {common.cancel}
-              </button>
-              <button className="button danger" onClick={clearDraft}>
-                {common.confirmClear}
-              </button>
-            </div>
-          </dialog>
-        </div>
+        <Modal
+          className="modal modal-sm"
+          describedBy="clear-description"
+          labelledBy="clear-title"
+          onClose={() => setClearOpen(false)}
+          role="alertdialog"
+        >
+          <h2 id="clear-title">{common.clearConfirm}</h2>
+          <p className="fine" id="clear-description">
+            {common.clearExplanation}
+          </p>
+          <div className="actions">
+            <button className="btn btn-danger" onClick={clearDraft} type="button">
+              {common.confirmClear}
+            </button>
+            <button
+              className="link-btn"
+              onClick={() => setClearOpen(false)}
+              type="button"
+            >
+              {common.cancel}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
+    </TermLanguage>
   );
 }
 
 function StepActions({
   back,
-  next,
   backLabel,
+  next,
   nextLabel,
 }: {
   back: () => void;
-  next: () => void;
   backLabel: string;
+  next: () => void;
   nextLabel: string;
 }) {
   return (
-    <div className="step-actions">
-      <button className="button secondary" onClick={back}>
-        {backLabel}
-      </button>
-      <button className="button primary" onClick={next}>
+    <div className="actions no-print">
+      <button className="btn" onClick={next} type="button">
         {nextLabel}
+      </button>
+      <button className="link-btn" onClick={back} type="button">
+        {backLabel}
       </button>
     </div>
   );
 }
 
 function ErrorSummary({ message }: { message: string }) {
+  const [code, ...rest] = message.split(": ");
+  const hasCode = rest.length > 0;
   return (
-    <div className="error-summary" role="alert" tabIndex={-1}>
-      <strong>{message}</strong>
+    <div className="alert" role="alert" tabIndex={-1}>
+      <strong>{hasCode ? rest.join(": ") : message}</strong>
+      {hasCode && <span className="alert-code">{code}</span>}
     </div>
   );
 }
