@@ -115,6 +115,7 @@ export function Hovercard({
   placement = "stacked",
   triggerClassName = "",
   onClick,
+  openOnHover = true,
   unavailable = false,
   current = false,
 }: {
@@ -134,6 +135,9 @@ export function Hovercard({
   /** Set when the trigger is also a control, as the step rail's buttons are. */
   triggerClassName?: string;
   onClick?: () => void;
+  /** A dense navigation rail can use its own hover treatment while keeping
+      the richer preview for deliberate keyboard focus. */
+  openOnHover?: boolean;
   /* Marked with aria-disabled rather than disabled, because a disabled button
      takes neither hover nor focus — and a step you cannot reach yet is exactly
      the one whose preview is worth reading. It stays reachable and says it
@@ -171,13 +175,16 @@ export function Hovercard({
 
   const show = useCallback(() => {
     stopTimer();
+    /* The current step already has its name and status in view. Reopening its
+       preview after navigation only covers the content someone just chose. */
+    if (current) return;
     /* Closing the incumbent first also deregisters it, so there is never a
        moment with two panels on screen. */
     if (closeOpenCard) closeOpenCard();
     closeOpenCard = close;
     holdsFloor.current = true;
     setOpen(true);
-  }, [close]);
+  }, [close, current]);
 
   const openAfterDelay = () => {
     stopTimer();
@@ -255,7 +262,7 @@ export function Hovercard({
   return (
     <span
       className={`hc ${className}`}
-      onMouseEnter={openAfterDelay}
+      onMouseEnter={openOnHover ? openAfterDelay : undefined}
       onMouseLeave={closeAfterDelay}
     >
       <button
@@ -271,6 +278,10 @@ export function Hovercard({
         onClick={() => {
           if (unavailable) return;
           if (onClick) {
+            /* Navigation can reuse this same DOM node for the newly-current
+               step. Close before changing screens so its old preview cannot
+               remain over the new content. */
+            close();
             onClick();
             return;
           }

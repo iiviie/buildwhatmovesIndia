@@ -125,10 +125,10 @@ export function StepRail({
                 ? words.open
                 : words.locked;
 
-          const state = done
-            ? "is-done"
-            : here
-              ? "is-current"
+          const state = here
+            ? `is-current${done ? " is-complete" : ""}`
+            : done
+              ? "is-done"
               : open
                 ? "is-open"
                 : "is-locked";
@@ -149,6 +149,10 @@ export function StepRail({
                 current={here}
                 label={`${preview.ask(name)}. ${status}.`}
                 onClick={() => onGo(number)}
+                /* Hover itself now marks the whole row clearly. The detailed
+                   preview remains available on keyboard focus without
+                   covering the form whenever a pointer crosses the rail. */
+                openOnHover={false}
                 panel={
                   <>
                     <p className="hc-term">{name}</p>
@@ -180,9 +184,7 @@ export function StepRail({
                     the whole row to hang from. */}
                 <span aria-hidden="true" className="toc-node">
                   <span className="toc-mark">
-                    {done && <CheckIcon />}
-                    {(here || open) && number}
-                    {locked && <LockIcon />}
+                    {done ? <CheckIcon /> : (here || open) ? number : locked ? <LockIcon /> : null}
                   </span>
                 </span>
                 <span className="toc-label">

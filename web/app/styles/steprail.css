@@ -18,6 +18,7 @@
   --rail-mark: 20px;
   --rail-run: var(--s2);
   --rail-track: 2px;
+  --rail-gap: 4px;
 
   display: block;
   min-width: 0;
@@ -104,11 +105,11 @@
   transition: width var(--dur) var(--ease);
 }
 
-/* A task list, not a rule-separated index. The rows sit flush against each
-   other so the connector runs from one to the next without a break. */
+/* A task list, not a rule-separated index. A narrow gap keeps the hover and
+   current surfaces from visually merging; the connector bridges it. */
 .toc ol {
   display: none;
-  gap: 0;
+  gap: var(--rail-gap);
 }
 
 .toc ol.is-expanded {
@@ -131,7 +132,7 @@
   align-items: start;
   gap: var(--s3);
   padding: var(--rail-run) var(--s2);
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 8px;
   background: none;
   color: var(--ink-3);
@@ -139,6 +140,9 @@
   font-size: var(--t-small);
   line-height: 1.35;
   text-align: left;
+  transition: background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 
 /* The mark's column, stretched to the full height of the row. The connector is
@@ -165,13 +169,13 @@
 }
 
 .toc-node::before {
-  top: calc(-1 * var(--rail-run));
-  height: var(--rail-run);
+  top: calc(-1 * var(--rail-run) - var(--rail-gap));
+  height: calc(var(--rail-run) + var(--rail-gap));
 }
 
 .toc-node::after {
   top: var(--rail-mark);
-  bottom: calc(-1 * var(--rail-run));
+  bottom: calc(-1 * var(--rail-run) - var(--rail-gap));
 }
 
 /* The blanket reduced-motion rule in journey.css is written against `*`, which
@@ -232,7 +236,9 @@
    exactly the one whose preview is worth reading — which is why this asks the
    attribute and not :disabled. */
 .toc ol button:hover:not([aria-disabled="true"]) {
-  background: var(--sheet);
+  border-color: var(--rule-2);
+  background: var(--paper-2);
+  box-shadow: inset 3px 0 0 var(--accent);
   color: var(--accent);
 }
 
@@ -257,9 +263,15 @@
    the halo is the row's own background, so the track parts around it and the
    bead reads as the head of the walked length rather than another link in it. */
 .toc .is-current button {
+  border-color: var(--rule-2);
   background: var(--sheet);
+  box-shadow: inset 3px 0 0 var(--accent);
   color: var(--ink);
   font-weight: 600;
+}
+
+.toc .is-current .hc-trigger {
+  cursor: default;
 }
 
 .toc .is-current .toc-mark {
@@ -272,6 +284,10 @@
 .toc .is-current .toc-status {
   margin-top: 1px;
   color: var(--accent);
+}
+
+.toc .is-current.is-complete .toc-mark {
+  background: var(--accent);
 }
 
 /* A step already opened and stepped back from. It is not behind you, so it

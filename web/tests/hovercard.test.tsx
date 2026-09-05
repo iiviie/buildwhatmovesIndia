@@ -223,6 +223,44 @@ describe("a trigger that is also a control", () => {
     fireEvent.mouseEnter(trigger);
     tick(COLD);
     expect(screen.getByRole("tooltip")).toHaveTextContent("What step 3 asks");
+
+    fireEvent.click(trigger);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("can reserve rich previews for keyboard focus", () => {
+    render(
+      <Hovercard
+        label="Step 2"
+        onClick={() => undefined}
+        openOnHover={false}
+        panel={<p>What step 2 asks</p>}
+      >
+        Your salary
+      </Hovercard>,
+    );
+    const trigger = screen.getByRole("button");
+
+    fireEvent.mouseEnter(trigger);
+    tick(COLD);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    fireEvent.focus(trigger);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("What step 2 asks");
+  });
+
+  it("does not cover the current step with its own preview", () => {
+    render(
+      <Hovercard current label="Current step" panel={<p>Current preview</p>}>
+        Verify and finish
+      </Hovercard>,
+    );
+    const trigger = screen.getByRole("button");
+
+    fireEvent.focus(trigger);
+    fireEvent.mouseEnter(trigger);
+    tick(COLD);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
   it("previews a step it will not let you open yet", () => {
