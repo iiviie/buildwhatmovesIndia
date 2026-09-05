@@ -233,6 +233,128 @@
   font-weight: 700;
 }
 
+.guided-subhead {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s6);
+}
+
+.guided-subhead h2 {
+  font-family: var(--serif);
+  font-size: var(--t-h1);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.guided-subhead > p:last-child {
+  max-width: 50ch;
+  color: var(--ink-2);
+}
+
+.benefit-check {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--rule));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.benefit-check-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.benefit-check-head h2 {
+  max-width: 28ch;
+  margin: var(--s1) 0 0;
+}
+
+.benefit-count {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--sheet));
+  color: var(--accent-strong);
+  font-size: var(--t-label);
+  font-weight: 750;
+}
+
+.benefit-list {
+  display: grid;
+  margin-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.benefit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 150px);
+  align-items: center;
+  gap: var(--s4);
+  min-height: 112px;
+  padding-block: var(--s4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.benefit-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.benefit-copy strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.benefit-source {
+  margin-top: var(--s1);
+  color: var(--ink-3);
+  font-size: var(--t-label);
+}
+
+.money-input {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ink-2);
+  font-size: 1.05rem;
+}
+
+.money-input input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.benefit-auto {
+  justify-self: end;
+  color: var(--accent-strong);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.benefit-confirm {
+  margin-top: var(--s4);
+}
+
+.benefit-plain-note {
+  max-width: 58ch;
+  margin-top: var(--s4);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.benefit-official-link {
+  margin-top: var(--s3);
+  font-size: var(--t-small);
+}
+
 .guided-fact-grid,
 .guided-money-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -605,6 +727,24 @@
 
   .guided-income-top {
     display: grid;
+  }
+
+  .benefit-check-head {
+    display: grid;
+  }
+
+  .benefit-count {
+    justify-self: start;
+  }
+
+  .benefit-row {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
+    min-height: 0;
+  }
+
+  .benefit-auto {
+    justify-self: start;
   }
 
   .guided-choice-grid:not(.regimes) {

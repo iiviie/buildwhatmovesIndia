@@ -47,6 +47,7 @@ const draftAt = (step: number, extra: Record<string, unknown> = {}) =>
     salaryConfirmed: true,
     incomeAnswers: demoAnswers,
     regime: "new",
+    benefitsReviewed: true,
     ...extra,
   });
 
@@ -134,6 +135,16 @@ describe("Sahi Return salaried filing journey", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText(/₹84,489/).length).toBeGreaterThan(0);
 
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      screen.getByText("Confirm the tax-saving amounts before continuing."),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        name: "Yes, these amounts match my documents",
+      }),
+    );
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Choose a regime before continuing.")).toBeInTheDocument();
 
@@ -298,6 +309,33 @@ describe("Sahi Return salaried filing journey", () => {
     expect(
       screen.getByRole("heading", { name: "क्या आप इन पैसों को पहचानते हैं?" }),
     ).toBeInTheDocument();
+  });
+
+  it("finds common tax benefits before comparing regimes", async () => {
+    const user = userEvent.setup();
+    signedIn();
+    window.localStorage.setItem(
+      DRAFT_KEY,
+      draftAt(4, { benefitsReviewed: false, regime: null }),
+    );
+    render(<SahiReturnApp />);
+
+    await screen.findByRole("heading", { name: "First, check your tax savings" });
+    expect(screen.getByText("₹1,85,000 of deductions under the old regime")).toBeInTheDocument();
+    expect(screen.getByText("Savings and family payments")).toBeInTheDocument();
+    expect(screen.getByText("Health insurance")).toBeInTheDocument();
+    expect(screen.getByText("Savings-account interest")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Official ITR-1 deduction requirements/ }),
+    ).toHaveAttribute("href", expect.stringContaining("ITR1-FAQ"));
+
+    await user.clear(screen.getByLabelText("Health insurance amount"));
+    expect(screen.getByText("₹1,60,000 of deductions under the old regime")).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", {
+        name: "Yes, these amounts match my documents",
+      }),
+    ).not.toBeChecked();
   });
 
   it("creates a trackable synthetic support request", async () => {

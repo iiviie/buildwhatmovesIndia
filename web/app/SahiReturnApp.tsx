@@ -46,6 +46,7 @@ import {
   OFFICIAL_DEFECTIVE_FAQ,
   OFFICIAL_FILING_HELP,
   OFFICIAL_HELPLINES,
+  OFFICIAL_ITR1_FAQ,
   OFFICIAL_PORTAL,
   otherIncomeTotal,
   PREFS_KEY,
@@ -177,6 +178,14 @@ const parseDraft = (value: string | null): DraftState | null => {
         parsed.personalDetails && typeof parsed.personalDetails === "object"
           ? parsed.personalDetails
           : {},
+      deductions:
+        parsed.deductions && typeof parsed.deductions === "object"
+          ? { ...defaultDraft.deductions, ...parsed.deductions }
+          : defaultDraft.deductions,
+      benefitsReviewed:
+        typeof parsed.benefitsReviewed === "boolean"
+          ? parsed.benefitsReviewed
+          : false,
     };
   } catch {
     return null;
@@ -732,11 +741,29 @@ export function SahiReturnApp() {
   };
 
   const continueFromRegime = () => {
+    if (!draft.benefitsReviewed) {
+      stopAt(
+        "benefit-confirm",
+        language === "hi"
+          ? "आगे बढ़ने से पहले पुष्टि करें कि कर बचत की रकम सही है।"
+          : "Confirm the tax-saving amounts before continuing.",
+      );
+      return;
+    }
     if (!draft.regime) {
       stopAt("regime-choice", page.regime.error);
       return;
     }
     goTo(5);
+  };
+
+  const updateDeduction = (key: "s80C" | "s80D", raw: string) => {
+    const cap = key === "s80C" ? 150_000 : 25_000;
+    const value = Math.min(cap, Math.max(0, Number(raw) || 0));
+    updateDraft({
+      deductions: { ...draft.deductions, [key]: value },
+      benefitsReviewed: false,
+    });
   };
 
   const submitReturn = async () => {
@@ -1862,11 +1889,117 @@ export function SahiReturnApp() {
       <div className="guided-head">
         <p className="guided-kicker">{page.regime.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {language === "hi" ? "कौन सा विकल्प आपका कर कम करता है?" : "Which option leaves you with less tax?"}
+          {language === "hi" ? "पहले आपकी कर बचत जाँच लेते हैं" : "First, check your tax savings"}
         </h1>
         <p className="lede">
-          {language === "hi" ? "हमने दोनों की गणना कर दी है। आपको नियम समझने की जरूरत नहीं।" : "We calculated both. You do not need to decode the rules."}
+          {language === "hi" ? "हमने रोज़मर्रा के भुगतान को सही कर कटौती से मिलाया है। आपको धाराएँ याद रखने की ज़रूरत नहीं।" : "We matched everyday payments to the right deductions. You do not need to know the section numbers."}
         </p>
+      </div>
+
+      <section className="guided-panel benefit-check" aria-labelledby="benefit-title">
+        <div className="benefit-check-head">
+          <div>
+            <p className="label">{language === "hi" ? "आपके कागज़ों में मिला" : "Found in your documents"}</p>
+            <h2 id="benefit-title">
+              {language === "hi"
+                ? `${money(comparison.oldRegime.chapterViaDeductions)} की कटौती पुरानी व्यवस्था में`
+                : `${money(comparison.oldRegime.chapterViaDeductions)} of deductions under the old regime`}
+            </h2>
+          </div>
+          <span className="benefit-count">{language === "hi" ? "3 फायदे" : "3 benefits"}</span>
+        </div>
+
+        <div className="benefit-list">
+          <label className="benefit-row" htmlFor="benefit-80c">
+            <span className="benefit-copy">
+              <strong>{language === "hi" ? "बचत और परिवार के भुगतान" : "Savings and family payments"}</strong>
+              <span>{language === "hi" ? "EPF, PPF, जीवन बीमा, स्कूल फीस या गृह ऋण का मूलधन" : "EPF, PPF, life insurance, school fees or home-loan principal"}</span>
+              <span className="benefit-source">{language === "hi" ? "डेमो फॉर्म 16 से · धारा 80C" : "From demo Form 16 · Section 80C"}</span>
+            </span>
+            <span className="money-input">
+              <span aria-hidden="true">₹</span>
+              <input
+                aria-label={language === "hi" ? "बचत और परिवार के भुगतान की रकम" : "Savings and family payments amount"}
+                aria-describedby="benefit-80c-cap"
+                id="benefit-80c"
+                inputMode="numeric"
+                max={150000}
+                min={0}
+                onChange={(event) => updateDeduction("s80C", event.target.value)}
+                type="number"
+                value={draft.deductions.s80C}
+              />
+              <span className="sr-only" id="benefit-80c-cap">{language === "hi" ? "इस डेमो में अधिकतम डेढ़ लाख रुपये" : "Maximum counted in this demo is one lakh fifty thousand rupees"}</span>
+            </span>
+          </label>
+
+          <label className="benefit-row" htmlFor="benefit-80d">
+            <span className="benefit-copy">
+              <strong>{language === "hi" ? "स्वास्थ्य बीमा" : "Health insurance"}</strong>
+              <span>{language === "hi" ? "अपने या परिवार के लिए दिया प्रीमियम" : "Premium paid for you or your family"}</span>
+              <span className="benefit-source">{language === "hi" ? "डेमो फॉर्म 16 से · धारा 80D" : "From demo Form 16 · Section 80D"}</span>
+            </span>
+            <span className="money-input">
+              <span aria-hidden="true">₹</span>
+              <input
+                aria-label={language === "hi" ? "स्वास्थ्य बीमा की रकम" : "Health insurance amount"}
+                aria-describedby="benefit-80d-cap"
+                id="benefit-80d"
+                inputMode="numeric"
+                max={25000}
+                min={0}
+                onChange={(event) => updateDeduction("s80D", event.target.value)}
+                type="number"
+                value={draft.deductions.s80D}
+              />
+              <span className="sr-only" id="benefit-80d-cap">{language === "hi" ? "इस डेमो में अधिकतम पच्चीस हजार रुपये" : "Maximum counted in this demo is twenty five thousand rupees"}</span>
+            </span>
+          </label>
+
+          <div className="benefit-row">
+            <span className="benefit-copy">
+              <strong>{language === "hi" ? "बचत खाते का ब्याज" : "Savings-account interest"}</strong>
+              <span>{language === "hi" ? "AIS में मिले ब्याज से अपने आप गिना" : "Calculated automatically from the interest in your AIS"}</span>
+              <span className="benefit-source">{language === "hi" ? "डेमो AIS से · धारा 80TTA" : "From demo AIS · Section 80TTA"}</span>
+            </span>
+            <strong className="benefit-auto">
+              {money(
+                Math.max(
+                  0,
+                  comparison.oldRegime.chapterViaDeductions -
+                    Math.min(draft.deductions.s80C, 150_000) -
+                    Math.min(draft.deductions.s80D, 25_000),
+                ),
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <label className={`guided-answer benefit-confirm${spotlightClass("benefit-confirm")}`} id="benefit-confirm">
+          <input
+            checked={draft.benefitsReviewed}
+            onChange={(event) => updateDraft({ benefitsReviewed: event.target.checked })}
+            type="checkbox"
+          />
+          <span>{language === "hi" ? "हाँ, ये रकम मेरे कागज़ों से मेल खाती है" : "Yes, these amounts match my documents"}</span>
+        </label>
+
+        <p className="benefit-plain-note">
+          {language === "hi"
+            ? "नई व्यवस्था में ये तीन कटौतियाँ नहीं मिलतीं। तुलना में हमने इन्हें पुरानी व्यवस्था में ही लगाया है।"
+            : "The new regime does not allow these three deductions. We apply them only to the old-regime side of the comparison."}
+        </p>
+        <p className="no-print benefit-official-link">
+          <OutLink href={OFFICIAL_ITR1_FAQ} newWindow={common.newWindow}>
+            {language === "hi" ? "ITR-1 कटौतियों की आधिकारिक जानकारी" : "Official ITR-1 deduction requirements"}
+          </OutLink>
+        </p>
+      </section>
+
+      <div className="guided-subhead">
+        <p className="label">{language === "hi" ? "आपकी तुलना" : "Your comparison"}</p>
+        <h2>{language === "hi" ? "कौन सा विकल्प आपका कर कम करता है?" : "Which option leaves you with less tax?"}</h2>
+        <p>{language === "hi" ? "हमने ऊपर की रकम समेत दोनों व्यवस्थाओं की गणना कर दी है।" : "Both totals now include the amounts checked above."}</p>
       </div>
 
       <div

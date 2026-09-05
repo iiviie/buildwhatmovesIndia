@@ -34,6 +34,11 @@ export type DemoDocument = {
   loaded: boolean;
 };
 
+export type DeductionAmounts = {
+  s80C: number;
+  s80D: number;
+};
+
 export type JourneyStatus =
   | "draft"
   | "queued"
@@ -67,6 +72,12 @@ export type DraftState = {
      id; a field absent here still holds what the department holds, so an empty
      map means "nothing corrected", not "nothing filled in". */
   personalDetails: Record<string, string>;
+  /* The amounts found in the synthetic salary records for the two common
+     deduction groups this prototype can calculate. They stay editable because
+     a prefilled amount is evidence to review, not a fact the citizen must
+     accept. Savings-interest relief is derived from the AIS separately. */
+  deductions: DeductionAmounts;
+  benefitsReviewed: boolean;
   regime: Regime | null;
   declaration: boolean;
   status: JourneyStatus;
@@ -122,6 +133,9 @@ export const OFFICIAL_AIS_HELP =
 
 export const OFFICIAL_DEFECTIVE_FAQ =
   "https://www.incometax.gov.in/iec/foportal/faqs/response-defective-notice-1399";
+
+export const OFFICIAL_ITR1_FAQ =
+  "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/ITR1-FAQ";
 
 /* Where a citizen goes when the answers point at a form this prototype does
    not build. The department publishes a step-by-step page for ITR-1, ITR-2 and
@@ -256,6 +270,11 @@ export const defaultDraft: DraftState = {
   eligibilityAnswers: {},
   nominatedAccount: "",
   personalDetails: {},
+  deductions: {
+    s80C: demoCase.demo80C,
+    s80D: demoCase.demo80D,
+  },
+  benefitsReviewed: false,
   regime: null,
   declaration: false,
   status: "draft",
@@ -316,8 +335,8 @@ export const buildComparison = (draft: DraftState): RegimeComparison =>
     grossSalary: demoCase.grossSalary,
     otherIncome: otherIncomeTotal(draft),
     deductions: {
-      s80C: demoCase.demo80C,
-      s80D: demoCase.demo80D,
+      s80C: draft.deductions.s80C,
+      s80D: draft.deductions.s80D,
       s80TTA: confirmedEntries(draft)
         .filter((entry) => entry.kind === "savings")
         .reduce((sum, entry) => sum + reportedAmount(draft, entry), 0),
@@ -331,8 +350,8 @@ export const buildComputation = (draft: DraftState): Computation =>
     grossSalary: demoCase.grossSalary,
     otherIncome: otherIncomeTotal(draft),
     deductions: {
-      s80C: demoCase.demo80C,
-      s80D: demoCase.demo80D,
+      s80C: draft.deductions.s80C,
+      s80D: draft.deductions.s80D,
       s80TTA: confirmedEntries(draft)
         .filter((entry) => entry.kind === "savings")
         .reduce((sum, entry) => sum + reportedAmount(draft, entry), 0),
@@ -397,6 +416,7 @@ export const checksNeedingAttention = (draft: DraftState) =>
 export const readyToSubmit = (draft: DraftState) =>
   allIncomeAnswered(draft) &&
   draft.regime !== null &&
+  draft.benefitsReviewed &&
   draft.salaryConfirmed &&
   draft.declaration;
 
