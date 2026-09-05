@@ -338,10 +338,26 @@
 
 @media (min-width: 680px) {
   .files li {
-    grid-template-columns: minmax(0, 24ch) minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: var(--s5);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s4);
   }
+}
+
+.file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+}
+
+.file-view {
+  min-height: 42px;
+  padding-inline: var(--s4);
+}
+
+.file-done {
+  grid-column: 1 / -1;
 }
 
 .file-name {

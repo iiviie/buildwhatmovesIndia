@@ -256,6 +256,10 @@ export function SahiReturnApp() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<DocumentKind | null>(null);
+  const [localPreviews, setLocalPreviews] = useState<
+    Partial<Record<DocumentKind, { url: string; type: string }>>
+  >({});
   const [incomeCursor, setIncomeCursor] = useState(0);
 
   /* Site-level state: which screen, who is signed in, and the two panels that
@@ -278,6 +282,14 @@ export function SahiReturnApp() {
     compressed: boolean;
   } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const previewUrls = useRef<string[]>([]);
+
+  useEffect(
+    () => () => {
+      previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    },
+    [],
+  );
 
   /* Carries out whatever the spotlight asked for. Focus lands on the control
      itself where the target is one, and on the block otherwise — a block is
@@ -653,6 +665,16 @@ export function SahiReturnApp() {
 
     const finalName = prepared ? prepared.name : file.name;
     const finalBytes = prepared ? prepared.bytes : file.size;
+    const finalBlob = prepared ? prepared.blob : file;
+
+    if (typeof URL.createObjectURL === "function") {
+      const url = URL.createObjectURL(finalBlob);
+      previewUrls.current.push(url);
+      setLocalPreviews((current) => ({
+        ...current,
+        [kind]: { url, type: finalBlob.type || file.type },
+      }));
+    }
 
     if (prepared) {
       setPreparedNote({
@@ -1425,21 +1447,33 @@ export function SahiReturnApp() {
                   </span>
                 </span>
               </div>
-              <label className="file-pick">
-                {preparing === document.kind
-                  ? page.salary.preparing
-                  : page.salary.replace}
-                <span className="sr-only">
-                  {" "}
-                  {page.salary.kinds[document.kind]}, {page.salary.replaceHint}
-                </span>
-                <input
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,.json,.txt"
-                  disabled={preparing !== null}
-                  onChange={(event) => replaceDocument(event, document.kind)}
-                  type="file"
-                />
-              </label>
+              <div className="file-actions no-print">
+                {document.loaded && (
+                  <button
+                    aria-label={`${language === "hi" ? "देखें" : "View"} ${page.salary.kinds[document.kind]}`}
+                    className="btn btn-secondary file-view"
+                    onClick={() => setViewingDocument(document.kind)}
+                    type="button"
+                  >
+                    {language === "hi" ? "देखें" : "View"}
+                  </button>
+                )}
+                <label className="file-pick">
+                  {preparing === document.kind
+                    ? page.salary.preparing
+                    : page.salary.replace}
+                  <span className="sr-only">
+                    {" "}
+                    {page.salary.kinds[document.kind]}, {page.salary.replaceHint}
+                  </span>
+                  <input
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.json,.txt"
+                    disabled={preparing !== null}
+                    onChange={(event) => replaceDocument(event, document.kind)}
+                    type="file"
+                  />
+                </label>
+              </div>
 
               {preparedNote?.kind === document.kind && (
                 <p className="file-done" role="status">
@@ -1744,8 +1778,8 @@ export function SahiReturnApp() {
             );
           })}
           <div className="guided-card-actions income-nav no-print">
-            {incomeCursor > 0 && <button className="link-btn" onClick={() => setIncomeCursor((current) => current - 1)} type="button">{language === "hi" ? "पिछली आय" : "Previous income"}</button>}
-            {incomeCursor < incomeEntries.length - 1 && <button className="btn btn-secondary" disabled={!draft.incomeAnswers[incomeEntries[incomeCursor].id]} onClick={() => setIncomeCursor((current) => current + 1)} type="button">{language === "hi" ? "अगली आय" : "Next income"}</button>}
+            {incomeCursor > 0 && <button className="btn btn-secondary" onClick={() => setIncomeCursor((current) => current - 1)} type="button">{language === "hi" ? "पिछली आय" : "Previous income"}</button>}
+            {incomeCursor < incomeEntries.length - 1 && <button className="btn" disabled={!draft.incomeAnswers[incomeEntries[incomeCursor].id]} onClick={() => setIncomeCursor((current) => current + 1)} type="button">{language === "hi" ? "अगली आय" : "Next income"}</button>}
           </div>
         </section>
 
@@ -2965,6 +2999,60 @@ export function SahiReturnApp() {
         </Modal>
       )}
 
+      {viewingDocument && (
+        <Modal
+          className="modal document-modal"
+          describedBy="document-preview-note"
+          labelledBy="document-preview-title"
+          onClose={() => setViewingDocument(null)}
+        >
+          <div className="modal-head">
+            <div>
+              <p className="label">{language === "hi" ? "दस्तावेज़ की झलक" : "Document preview"}</p>
+              <h2 id="document-preview-title">{page.salary.kinds[viewingDocument]}</h2>
+            </div>
+            <button
+              aria-label={common.close}
+              className="modal-close"
+              onClick={() => setViewingDocument(null)}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+          <p className="fine" id="document-preview-note">
+            {language === "hi"
+              ? "यह झलक इसी डिवाइस पर रहती है। इस डेमो से कोई फ़ाइल अपलोड नहीं होती।"
+              : "This preview stays on this device. The demo does not upload the file."}
+          </p>
+          {localPreviews[viewingDocument] ? (
+            localPreviews[viewingDocument]?.type.startsWith("image/") ? (
+              /* A local blob URL cannot go through an image optimizer. It has
+                 to stay in this browser, which is the privacy promise beside
+                 the preview. */
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={page.salary.kinds[viewingDocument]}
+                className="document-image"
+                src={localPreviews[viewingDocument]?.url}
+              />
+            ) : (
+              <iframe
+                className="document-frame"
+                src={localPreviews[viewingDocument]?.url}
+                title={page.salary.kinds[viewingDocument]}
+              />
+            )
+          ) : (
+            <DemoDocumentPreview
+              kind={viewingDocument}
+              language={language}
+              money={money}
+            />
+          )}
+        </Modal>
+      )}
+
       {clearOpen && (
         <Modal
           className="modal modal-sm"
@@ -3008,16 +3096,68 @@ function StepActions({
   nextLabel: string;
 }) {
   return (
-    <div className="actions no-print">
+    <div className="actions step-actions no-print">
+      <button className="btn btn-secondary" onClick={back} type="button">
+        {backLabel}
+      </button>
       <button className="btn" onClick={next} type="button">
         {nextLabel}
-      </button>
-      <button className="link-btn" onClick={back} type="button">
-        {backLabel}
       </button>
     </div>
   );
 }
+
+function DemoDocumentPreview({
+  kind,
+  language,
+  money,
+}: {
+  kind: DocumentKind;
+  language: Language;
+  money: (amount: number) => string;
+}) {
+  return (
+    <article className="demo-document">
+      <p className="demo-document-stamp">
+        {language === "hi" ? "काल्पनिक डेमो दस्तावेज़" : "Synthetic demo document"}
+      </p>
+      <h3>
+        {kind === "form16"
+          ? language === "hi" ? "फॉर्म 16" : "Form 16"
+          : language === "hi" ? "वार्षिक सूचना विवरण" : "Annual Information Statement"}
+      </h3>
+      <p className="fine">
+        {kind === "form16" ? demoCase.employer : demoCase.taxpayer} · {demoCase.financialYear}
+      </p>
+      {kind === "form16" ? (
+        <dl className="rows demo-document-rows">
+          <Row label={language === "hi" ? "कुल वेतन" : "Gross salary"} value={money(demoCase.grossSalary)} />
+          <Row label={language === "hi" ? "काटा गया कर" : "Tax deducted"} value={money(demoCase.salaryTds)} />
+          <Row label={language === "hi" ? "80C भुगतान" : "Section 80C payments"} value={money(demoCase.demo80C)} />
+          <Row label={language === "hi" ? "स्वास्थ्य बीमा" : "Health insurance"} value={money(demoCase.demo80D)} />
+        </dl>
+      ) : (
+        <table className="ledger-table demo-document-rows">
+          <thead><tr><th>{language === "hi" ? "भुगतानकर्ता" : "Payer"}</th><th>{language === "hi" ? "प्रकार" : "Type"}</th><th className="col-num">{language === "hi" ? "रकम" : "Amount"}</th></tr></thead>
+          <tbody>
+            {incomeEntries.map((entry) => (
+              <tr key={entry.id}>
+                <td>{entry.payer}</td>
+                <td>{entry.kind === "fd" ? (language === "hi" ? "सावधि जमा ब्याज" : "Deposit interest") : pageKind(entry.kind, language)}</td>
+                <td className="col-num">{money(entry.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </article>
+  );
+}
+
+const pageKind = (kind: "savings" | "dividend", language: Language) => {
+  if (kind === "savings") return language === "hi" ? "बचत ब्याज" : "Savings interest";
+  return language === "hi" ? "लाभांश" : "Dividend";
+};
 
 function ErrorSummary({ message }: { message: string }) {
   const [code, ...rest] = message.split(": ");

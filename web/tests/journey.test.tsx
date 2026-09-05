@@ -511,6 +511,24 @@ describe("Sahi Return salaried filing journey", () => {
     expect(screen.getByText(/Do not add real documents/)).toBeInTheDocument();
   });
 
+  it("opens a submitted document preview from step 2", async () => {
+    const user = userEvent.setup();
+    signedIn();
+    window.localStorage.setItem(DRAFT_KEY, draftAt(2));
+    render(<SahiReturnApp />);
+
+    await screen.findByRole("heading", { name: "Add your salary documents" });
+    await user.click(screen.getByRole("button", { name: "View Form 16 from your employer" }));
+
+    const preview = screen.getByRole("dialog", { name: "Form 16 from your employer" });
+    expect(within(preview).getByText("Synthetic demo document")).toBeInTheDocument();
+    expect(within(preview).getByText("Gross salary")).toBeInTheDocument();
+    expect(within(preview).getByText("₹13,20,000")).toBeInTheDocument();
+
+    await user.click(within(preview).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog", { name: "Form 16 from your employer" })).not.toBeInTheDocument();
+  });
+
   it("names the official portal field beside our plain-language one", async () => {
     signedIn();
     window.localStorage.setItem(DRAFT_KEY, draftAt(2));
