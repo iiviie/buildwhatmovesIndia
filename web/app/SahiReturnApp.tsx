@@ -2320,36 +2320,41 @@ export function SahiReturnApp() {
         verifiedAt={draft.verifiedAt}
       />
 
-      <section className="guided-outcome receipt-summary">
-        <div>
-          <span className="label">{page.receipt.statusLabel}</span>
-          <strong>{draft.verifiedAt ? page.receipt.statusValue : page.receipt.statusUnverified}</strong>
-        </div>
-        <div>
-          <span className="label">{computation.refundDue > 0 ? page.receipt.refundLabel : page.receipt.payableLabel}</span>
-          <strong className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</strong>
-        </div>
-        <div>
-          <span className="label">{page.receipt.ackLabel}</span>
-          <strong>{draft.reference ?? DEMO_ACKNOWLEDGEMENT}</strong>
+      <section
+        aria-label={language === "hi" ? "फाइलिंग रसीद का सार" : "Filing receipt summary"}
+        className="guided-panel receipt-card"
+      >
+        <dl className="receipt-summary">
+          <div>
+            <dt className="label">{page.receipt.statusLabel}</dt>
+            <dd>{draft.verifiedAt ? page.receipt.statusValue : page.receipt.statusUnverified}</dd>
+          </div>
+          <div>
+            <dt className="label">{computation.refundDue > 0 ? page.receipt.refundLabel : page.receipt.payableLabel}</dt>
+            <dd className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</dd>
+          </div>
+          <div>
+            <dt className="label">{page.receipt.ackLabel}</dt>
+            <dd>{draft.reference ?? DEMO_ACKNOWLEDGEMENT}</dd>
+          </div>
+        </dl>
+
+        <div className="actions no-print receipt-actions">
+          <button className="btn" onClick={() => window.print()} type="button">
+            {page.receipt.print}
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={downloadReceipt}
+            type="button"
+          >
+            {page.receipt.download}
+          </button>
+          <button className="link-btn receipt-restart" onClick={resetDemo} type="button">
+            {page.receipt.restart}
+          </button>
         </div>
       </section>
-
-      <div className="actions no-print receipt-actions">
-        <button className="btn" onClick={() => window.print()} type="button">
-          {page.receipt.print}
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={downloadReceipt}
-          type="button"
-        >
-          {page.receipt.download}
-        </button>
-        <button className="link-btn" onClick={resetDemo} type="button">
-          {page.receipt.restart}
-        </button>
-      </div>
 
       <details className="guided-details receipt-details">
         <summary>{language === "hi" ? "पूरी रसीद देखें" : "View full receipt"}</summary>

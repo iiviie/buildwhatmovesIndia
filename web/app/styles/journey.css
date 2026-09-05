@@ -897,21 +897,16 @@
   font-size: var(--t-small);
 }
 
-/* ---------- Acknowledgement, set as a certificate ---------- */
+/* ---------- Acknowledgement ---------- */
 
 .receipt {
-  border: 1px solid var(--ink);
-  background: var(--sheet);
+  display: grid;
+  gap: var(--s5);
+  min-width: 0;
 }
 
 .receipt-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s2) var(--s4);
-  padding: var(--s4) var(--s5);
-  border-bottom: 3px double var(--ink);
+  padding: 0;
 }
 
 .receipt-body {
@@ -2098,17 +2093,17 @@
    yet. Pending and done are a word and a heading before they are an edge. */
 .verify {
   padding: var(--s6);
+  border: 1px solid var(--rule-2);
   border-radius: 14px;
-  margin-top: var(--s7);
   background: var(--sheet);
 }
 
 .verify.is-pending {
-  box-shadow: inset 3px 0 0 var(--alert);
+  box-shadow: inset 0 4px 0 var(--alert);
 }
 
 .verify.is-done {
-  box-shadow: inset 3px 0 0 var(--ok);
+  box-shadow: inset 0 4px 0 var(--ok);
 }
 
 .verify-title {

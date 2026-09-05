@@ -798,6 +798,9 @@ it("does not let the acknowledgement claim the return is finished", async () => 
   expect(
     screen.getAllByText("Simulated filing complete, not verified")[0],
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("region", { name: "Filing receipt summary" }),
+  ).toBeInTheDocument();
 });
 
 it("verifies the demo return without pretending to send an OTP", async () => {
