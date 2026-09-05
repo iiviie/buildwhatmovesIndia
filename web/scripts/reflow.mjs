@@ -224,6 +224,26 @@ const steps = [0, 1, 2, 3, 4, 5, 6, 7];
    signed-in dashboard. */
 const screens = ["login", "register", "dashboard"];
 
+const readReport = () =>
+  evaluate(`(() => {
+    const de = document.documentElement;
+    const overflow = de.scrollWidth - de.clientWidth;
+    const wide = [...document.querySelectorAll("body *")]
+      .filter(el => {
+        const r = el.getBoundingClientRect();
+        return r.width > de.clientWidth + 1 && r.height > 0;
+      })
+      .slice(0, 5)
+      .map(el => el.tagName.toLowerCase() + "." + (el.className || "").toString().split(" ")[0]);
+    const h1 = document.querySelector("h1");
+    return {
+      overflow,
+      wide,
+      heading: h1 ? h1.textContent.slice(0, 60) : null,
+      lang: de.lang,
+    };
+  })()`);
+
 for (const { label, width, height } of widths) {
   for (const language of ["en", "hi"]) {
     for (const target of [...steps, ...screens]) {
@@ -242,27 +262,23 @@ for (const { label, width, height } of widths) {
       await goto(BASE);
       await sleep(500);
 
-      const report = await evaluate(`(() => {
-        const de = document.documentElement;
-        const overflow = de.scrollWidth - de.clientWidth;
-        const wide = [...document.querySelectorAll("body *")]
-          .filter(el => {
-            const r = el.getBoundingClientRect();
-            return r.width > de.clientWidth + 1 && r.height > 0;
-          })
-          .slice(0, 5)
-          .map(el => el.tagName.toLowerCase() + "." + (el.className || "").toString().split(" ")[0]);
-        const h1 = document.querySelector("h1");
-        return {
-          overflow,
-          wide,
-          heading: h1 ? h1.textContent.slice(0, 60) : null,
-          lang: de.lang,
-        };
-      })()`);
+      let report = await readReport();
+      const invalidPage = () =>
+        report.lang !== language ||
+        !report.heading ||
+        report.heading.toLowerCase().includes("couldn");
+
+      /* A hot development server can occasionally return its error boundary
+         while it is replacing a module. Retry that state once, but never let
+         an error page or a failed language switch count as a reflow pass. */
+      if (invalidPage()) {
+        await goto(BASE);
+        await sleep(750);
+        report = await readReport();
+      }
 
       const tag = `${label}-${language}-${step === null ? target : `step${step}`}`;
-      if (report.overflow > 0) {
+      if (report.overflow > 0 || invalidPage()) {
         failures.push({ tag, ...report });
       }
 
@@ -282,9 +298,9 @@ for (const { label, width, height } of widths) {
 
 console.log("\n=== RESULT ===");
 if (failures.length === 0) {
-  console.log("No horizontal overflow at 320 or 360 CSS pixels, in either language.");
+  console.log("Every page loaded in the requested language with no horizontal overflow at 320 or 360 CSS pixels.");
 } else {
-  console.log("HORIZONTAL OVERFLOW:");
+  console.log("REFLOW OR PAGE-LOAD FAILURE:");
   for (const f of failures) console.log(" ", f.tag, f.overflow, f.wide.join(", "));
 }
 
