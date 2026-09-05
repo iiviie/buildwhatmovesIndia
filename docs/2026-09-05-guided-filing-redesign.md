@@ -1,7 +1,7 @@
 # Guided filing redesign
 
 Created: 2026-09-05 01:21 IST (UTC+05:30)
-Last updated: 2026-09-06 02:28 IST (UTC+05:30)
+Last updated: 2026-09-06 02:41 IST (UTC+05:30)
 
 ## Why this changed
 
@@ -30,6 +30,14 @@ Sources checked on 2026-09-06:
 - [Official ITR-1 FAQ](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/ITR1-FAQ)
 - [Official new-versus-old regime FAQ](https://www.incometax.gov.in/iec/foportal/help/new-tax-vs-old-tax-regime-faqs)
 
+## Interaction and layout follow-up
+
+The full seven-step flow was checked again after the tax-saving change. Answer-dependent explanations now occupy a stable response area, so choosing a different answer does not move the question or its controls. Disclosures use a consistent bordered surface and visible chevron because they contain important review and correction paths, not footnotes.
+
+Uploaded demo documents have an in-product preview. Income review keeps its previous and next controls together. The final review gives the result, refund account, key totals, declaration, and filing action a clear reading order. The acknowledgement no longer uses nested certificate borders: verification is one card, the receipt is a second card, and the full receipt remains a separate disclosure.
+
+The desktop progress rail now separates adjacent interaction surfaces, gives available rows a visible hover edge, closes any preview before navigation, and keeps the current row from reopening a preview over its own content. Detailed step previews remain available on keyboard focus.
+
 ## Reference used
 
 We reviewed the public interaction at [Wapsi](https://wapsi-amber.vercel.app/) on 2026-09-05. We borrowed the general pattern of short setup questions, large answer choices, and progressive disclosure. We did not copy its visual identity, wording, refund-led positioning, page structure, or code. Sahi Return keeps its own paper-and-ink design, salaried ITR-1 scope, deterministic tax engine, defect checks, Hindi route, and mock-data boundaries.
@@ -56,3 +64,6 @@ The redesign removes tax jargon from the default path, not from the product. A c
 - The full fictional journey still reaches an acknowledgement.
 - English and Hindi use the same interaction structure.
 - The layout works at 390 CSS pixels without horizontal overflow.
+- Changing an answer does not replace or move its question container.
+- Every loaded demo document can be previewed without leaving the journey.
+- The progress rail has distinct current, hover, completed, and locked states.
