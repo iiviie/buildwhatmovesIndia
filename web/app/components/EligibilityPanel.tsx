@@ -168,20 +168,19 @@ export function EligibilityPanel({
           </p>
         </div>
 
-        {/* Outside the live region: a reviewer who changed an answer needs this
-            beside the verdict, but having it read out on every radio click
-            would bury the verdict it is qualifying. */}
-        {!decision.eligible && labels.outOfScope && (
-          <Prose className="elig-outcome-scope">
-            {labels.outOfScope(decision.form)}
-          </Prose>
-        )}
-
-        {decision.blockers.length > 0 && (
-          <>
-            <p className="label elig-causes-label">
-              {labels.causesLabel(decision.blockers.length)}
-            </p>
+        {/* This slot is always the same height. Changing a radio used to insert
+            the scope note and every reason above the question, moving the
+            control away from the pointer that had just used it. The reasons
+            now live behind one disclosure in a reserved row. */}
+        <div className="elig-outcome-more-slot">
+          {decision.blockers.length > 0 && (
+            <details className="elig-outcome-more">
+              <summary>{labels.causesLabel(decision.blockers.length)}</summary>
+              {!decision.eligible && labels.outOfScope && (
+                <Prose className="elig-outcome-scope">
+                  {labels.outOfScope(decision.form)}
+                </Prose>
+              )}
             <ul className="elig-causes">
               {decision.blockers.map((id) => {
                 const question = byId.get(id);
@@ -196,8 +195,9 @@ export function EligibilityPanel({
                 );
               })}
             </ul>
-          </>
-        )}
+            </details>
+          )}
+        </div>
       </div>
 
       <ol className="elig-sections">

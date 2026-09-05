@@ -1694,32 +1694,52 @@ export function SahiReturnApp() {
                   </label>
                 </div>
 
-                {answer === "amended" && (
-                  <div className="amend">
-                    <p className="finding-note">{page.income.amendNote}</p>
-                    <button
-                      className="link-btn no-print"
-                      onClick={() => setFeedbackOpen(true)}
-                      type="button"
-                    >
-                      {page.income.disputeAction}
-                    </button>
-                  </div>
-                )}
+                <div className="guided-income-response" role="status">
+                  {!answer && (
+                    <p className="guided-income-prompt">
+                      {language === "hi"
+                        ? "ऊपर एक जवाब चुनें। हम यहीं बताएँगे कि रिटर्न में क्या बदलेगा।"
+                        : "Choose an answer above. We will show what changes in the return here."}
+                    </p>
+                  )}
+                  {answer === "mine" && (
+                    <div className="guided-income-included">
+                      <p className="subhead">{page.income.answeredMine}</p>
+                      <p className="finding-note">
+                        {language === "hi"
+                          ? "यह रकम और इससे जुड़ा कर क्रेडिट, दोनों रिटर्न में रहेंगे।"
+                          : "The amount and any tax credit attached to it will stay in the return."}
+                      </p>
+                    </div>
+                  )}
+                  {answer === "amended" && (
+                    <div className="amend">
+                      <p className="subhead">{page.income.answeredAmended}</p>
+                      <p className="finding-note">{page.income.amendNote}</p>
+                      <button
+                        className="link-btn no-print"
+                        onClick={() => setFeedbackOpen(true)}
+                        type="button"
+                      >
+                        {page.income.disputeAction}
+                      </button>
+                    </div>
+                  )}
 
-                {answer === "not-mine" && (
-                  <div className="caution">
-                    <p className="subhead">{page.income.disputeTitle}</p>
-                    <p className="finding-note">{page.income.disputeNote}</p>
-                    <button
-                      className="link-btn no-print"
-                      onClick={() => setFeedbackOpen(true)}
-                      type="button"
-                    >
-                      {page.income.disputeAction}
-                    </button>
-                  </div>
-                )}
+                  {answer === "not-mine" && (
+                    <div className="caution">
+                      <p className="subhead">{page.income.disputeTitle}</p>
+                      <p className="finding-note">{page.income.disputeNote}</p>
+                      <button
+                        className="link-btn no-print"
+                        onClick={() => setFeedbackOpen(true)}
+                        type="button"
+                      >
+                        {page.income.disputeAction}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </fieldset>
             );
           })}

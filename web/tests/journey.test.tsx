@@ -233,6 +233,28 @@ describe("Sahi Return salaried filing journey", () => {
     expect(screen.getByText("₹3,150")).toBeInTheDocument();
   });
 
+  it("keeps one response region in place while an income answer changes", async () => {
+    const user = userEvent.setup();
+    signedIn();
+    window.localStorage.setItem(
+      DRAFT_KEY,
+      draftAt(3, { incomeAnswers: {}, regime: null }),
+    );
+    render(<SahiReturnApp />);
+
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
+    const response = screen.getByRole("status");
+    expect(response).toHaveTextContent("Choose an answer above");
+
+    await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.mine }));
+    expect(screen.getByRole("status")).toBe(response);
+    expect(response).toHaveTextContent("Included in your return");
+
+    await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.notMine }));
+    expect(screen.getByRole("status")).toBe(response);
+    expect(response).toHaveTextContent("We will leave this out");
+  });
+
   it("flags an unanswered entry as blocking before filing", async () => {
     signedIn();
     window.localStorage.setItem(

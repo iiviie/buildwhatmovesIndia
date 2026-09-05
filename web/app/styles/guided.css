@@ -403,11 +403,56 @@
 }
 
 .guided-details {
-  border-bottom: 1px solid var(--rule);
+  overflow: clip;
+  border: 1px solid var(--rule-2);
+  border-radius: 14px;
+  margin-top: var(--s3);
+  background: var(--sheet);
 }
 
 .guided-details[open] > summary {
   color: var(--accent);
+}
+
+.guided-details > summary {
+  position: relative;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  padding: var(--s3) calc(var(--s5) + 22px) var(--s3) var(--s5);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.guided-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.guided-details > summary::after {
+  position: absolute;
+  right: var(--s5);
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform var(--dur) var(--ease);
+}
+
+.guided-details > summary:hover {
+  background: var(--paper-2);
+  color: var(--accent-strong);
+}
+
+.guided-details[open] > summary::after {
+  transform: rotate(225deg) translate(-2px, -2px);
+}
+
+.guided-details-body {
+  padding: 0 var(--s5) var(--s5);
 }
 
 .guided-income-list {
@@ -443,6 +488,34 @@
 
 .guided-income-card .guided-choice {
   margin: 0;
+}
+
+.guided-income-response {
+  display: grid;
+  min-height: 132px;
+  align-items: start;
+  margin-top: var(--s4);
+}
+
+.guided-income-prompt,
+.guided-income-included {
+  min-height: 112px;
+  padding: var(--s4);
+  border-radius: 12px;
+  background: var(--paper-2);
+}
+
+.guided-income-prompt {
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.guided-income-included {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.guided-income-included .finding-note {
+  margin-top: var(--s2);
 }
 
 .guided-income-top {

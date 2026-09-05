@@ -52,6 +52,7 @@
   border-radius: 12px;
   margin-top: var(--s4);
   background: var(--sheet);
+  border: 1px solid var(--rule-2);
 }
 
 /* The accent, not the alert colour. A citizen who genuinely has to file ITR-2
@@ -106,6 +107,24 @@
   overflow-wrap: break-word;
 }
 
+.elig-outcome-more-slot {
+  min-height: 44px;
+  margin-top: var(--s3);
+}
+
+.elig-outcome-more > summary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-underline-offset: 0.22em;
+}
+
 .elig-causes-label {
   margin-top: var(--s5);
 }
@@ -148,8 +167,13 @@
 
 .elig-section {
   min-width: 0;
+  border: 1px solid var(--rule);
   border-radius: 10px;
   background: var(--sheet);
+}
+
+.elig-section:has(.elig-section-body:not([hidden])) {
+  border-color: var(--rule-2);
 }
 
 .elig-section-head {
@@ -255,6 +279,7 @@
 
 .elig-section-body {
   padding: 0 var(--s4) var(--s5);
+  border-top: 1px solid var(--rule);
 }
 
 .elig-questions {
@@ -288,9 +313,9 @@
 }
 
 .elig-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s5);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: var(--s2);
   margin-top: var(--s2);
 }
 
@@ -301,7 +326,11 @@
   align-items: flex-start;
   gap: var(--s2);
   min-width: 0;
-  padding-block: var(--s3);
+  min-height: 48px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  background: var(--paper);
   color: var(--ink-2);
   cursor: pointer;
   font-size: var(--t-small);
@@ -310,6 +339,8 @@
 /* The chosen answer is carried by the filled control and by the weight of the
    words next to it, so it survives a monochrome screen. */
 .elig-opt:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--sheet));
   color: var(--ink);
   font-weight: 600;
 }
