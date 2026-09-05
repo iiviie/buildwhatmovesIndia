@@ -735,6 +735,72 @@
   line-height: 1;
 }
 
+.review-outcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.9fr);
+  align-items: center;
+  gap: var(--s6);
+  text-align: left;
+}
+
+.review-outcome-main .amount {
+  margin-block: var(--s2) 0;
+}
+
+.review-refund-account {
+  padding: var(--s4);
+  border-radius: 12px;
+  background: var(--paper-2);
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.review-refund-account > p:last-child {
+  margin-top: var(--s2);
+  font-size: 1.05rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-key-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--rule-2);
+  border-radius: 14px;
+  margin-top: var(--s3);
+  background: var(--rule);
+}
+
+.review-key-totals > div {
+  display: grid;
+  gap: var(--s1);
+  padding: var(--s4);
+  background: var(--sheet);
+}
+
+.review-key-totals span {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.review-key-totals strong {
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-submit {
+  margin-top: var(--s3);
+}
+
+.review-submit .guided-answer {
+  margin-top: 0;
+}
+
+.review-actions {
+  margin-top: var(--s4);
+}
+
 .receipt-summary {
   display: grid;
   gap: var(--s4);
@@ -881,6 +947,15 @@
     grid-template-columns: 1fr;
     gap: var(--s3);
     min-height: 0;
+  }
+
+  .review-outcome,
+  .review-key-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .review-outcome {
+    gap: var(--s4);
   }
 
   .benefit-auto {

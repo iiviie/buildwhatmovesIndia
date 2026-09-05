@@ -2170,10 +2170,17 @@ export function SahiReturnApp() {
         <p className="lede">{language === "hi" ? "नतीजा पहले। जरूरत हो तो पूरी रकम नीचे देख सकते हैं।" : "The result comes first. Open the totals only if you want to check them."}</p>
       </div>
 
-      <section className="guided-outcome">
-        <p className="label">{computation.refundDue > 0 ? page.review.refundTitle : page.review.payableTitle}</p>
-        <strong className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</strong>
-        {computation.refundDue > 0 && refundAccount && <p className="consequence" style={{ marginInline: "auto" }}>{page.review.refundAccountLine(refundAccount.bank, refundAccount.masked, refundAccount.kind)}</p>}
+      <section className="guided-outcome review-outcome">
+        <div className="review-outcome-main">
+          <p className="label">{computation.refundDue > 0 ? page.review.refundTitle : page.review.payableTitle}</p>
+          <strong className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</strong>
+        </div>
+        {computation.refundDue > 0 && refundAccount && (
+          <div className="review-refund-account">
+            <p className="label">{language === "hi" ? "रिफ़ंड इस खाते में आएगा" : "Refund goes to"}</p>
+            <p>{page.review.refundAccountLine(refundAccount.bank, refundAccount.masked, refundAccount.kind)}</p>
+          </div>
+        )}
         {computation.refundDue > 0 && !refundAccount && (
           <div className="caution">
             <p>{language === "hi" ? "रिफ़ंड के लिए कोई सत्यापित खाता तैयार नहीं है।" : "No verified account is ready for the refund."}</p>
@@ -2184,19 +2191,11 @@ export function SahiReturnApp() {
         )}
       </section>
 
-      <label
-        className={`guided-answer${spotlightClass("review-declare")}`}
-        id="review-declare"
-      >
-        <input
-          checked={draft.declaration}
-          onChange={(event) =>
-            updateDraft({ declaration: event.target.checked })
-          }
-          type="checkbox"
-        />
-        <span>{page.review.declaration}</span>
-      </label>
+      <section className="review-key-totals" aria-label={language === "hi" ? "रिटर्न का सार" : "Return summary"}>
+        <div><span>{page.regime.totalIncome}</span><strong>{money(computation.totalIncome)}</strong></div>
+        <div><span>{page.regime.totalTax}</span><strong>{money(computation.totalTax)}</strong></div>
+        <div><span>{language === "hi" ? "पहले से जमा कर" : "Tax already paid"}</span><strong>{money(computation.tdsPaid)}</strong></div>
+      </section>
 
       {formError && <ErrorSummary message={formError} />}
 
@@ -2210,21 +2209,37 @@ export function SahiReturnApp() {
         </div>
       )}
 
-      <div className="actions no-print">
-        <button
-          className="btn"
-          disabled={draft.status === "submitting"}
-          onClick={submitReturn}
-          type="button"
+      <section className="guided-panel review-submit">
+        <h2>{language === "hi" ? "फाइल करने के लिए तैयार" : "Ready to file"}</h2>
+        <label
+          className={`guided-answer${spotlightClass("review-declare")}`}
+          id="review-declare"
         >
-          {draft.status === "submitting"
-            ? page.review.submitting
-            : page.review.submit}
-        </button>
-        <button className="link-btn" onClick={() => goTo(5)} type="button">
-          {common.back}
-        </button>
-      </div>
+          <input
+            checked={draft.declaration}
+            onChange={(event) =>
+              updateDraft({ declaration: event.target.checked })
+            }
+            type="checkbox"
+          />
+          <span>{page.review.declaration}</span>
+        </label>
+        <div className="actions step-actions review-actions no-print">
+          <button className="btn btn-secondary" onClick={() => goTo(5)} type="button">
+            {common.back}
+          </button>
+          <button
+            className="btn"
+            disabled={draft.status === "submitting"}
+            onClick={submitReturn}
+            type="button"
+          >
+            {draft.status === "submitting"
+              ? page.review.submitting
+              : page.review.submit}
+          </button>
+        </div>
+      </section>
 
       <details className="guided-details">
         <summary>{language === "hi" ? "आय का हिसाब देखें" : "See the income total"}</summary>

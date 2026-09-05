@@ -172,6 +172,11 @@ describe("Sahi Return salaried filing journey", () => {
     expect(screen.getByText("You are owed a refund")).toBeInTheDocument();
     /* The refund shows in the review body and again in the margin summary. */
     expect(screen.getAllByText("₹10,610").length).toBeGreaterThan(0);
+    const returnSummary = screen.getByRole("region", { name: "Return summary" });
+    expect(within(returnSummary).getByText("Total income")).toBeInTheDocument();
+    expect(within(returnSummary).getByText("Total tax")).toBeInTheDocument();
+    expect(within(returnSummary).getByText("Tax already paid")).toBeInTheDocument();
+    expect(screen.getByText("Refund goes to")).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: "File this demo return" }),
