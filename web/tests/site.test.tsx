@@ -18,7 +18,6 @@ import {
   demoDocuments,
 } from "../app/case-data";
 import { copy } from "../app/content";
-import { sections } from "../app/services";
 
 const en = copy.en;
 
@@ -54,55 +53,17 @@ describe("reading a user ID", () => {
   });
 });
 
-describe("the portal navigation", () => {
-  it("names every section the real portal has", () => {
+describe("the guided navigation", () => {
+  it("does not lead with the portal's section map", () => {
     render(<SahiReturnApp />);
-    const nav = screen.getByRole("navigation", { name: en.navLabel });
-    for (const section of sections) {
-      expect(
-        within(nav).getByText(en.navSections[section.id]),
-      ).toBeInTheDocument();
-    }
+    expect(screen.queryByRole("navigation", { name: en.navLabel })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start the guided demo" })).toBeInTheDocument();
   });
 
-  it("disables the sections this prototype does not build, and says why", () => {
+  it("keeps secondary tax tasks behind one disclosure", () => {
     render(<SahiReturnApp />);
-    const nav = screen.getByRole("navigation", { name: en.navLabel });
-
-    for (const section of sections) {
-      /* Matched by section rather than by label: "Company" is a substring of
-         "Non-Company", and both are real sections. */
-      const control = nav.querySelector<HTMLButtonElement>(
-        `[data-section="${section.id}"]`,
-      )!;
-      expect(control).toBeInTheDocument();
-      if (section.state === "live") {
-        expect(control).toBeEnabled();
-      } else {
-        /* Disabled, and the reason is carried in the accessible name rather
-           than in the colour of the text. */
-        expect(control).toBeDisabled();
-        expect(control).toHaveAccessibleName(
-          new RegExp(en.navPlanned),
-        );
-      }
-    }
-  });
-
-  it("opens the one section that has something behind it", async () => {
-    const user = userEvent.setup();
-    render(<SahiReturnApp />);
-
-    const individual = document.querySelector<HTMLButtonElement>(
-      '[data-section="individual"]',
-    )!;
-    expect(individual).toHaveAttribute("aria-expanded", "false");
-
-    await user.click(individual);
-    expect(individual).toHaveAttribute("aria-expanded", "true");
-    expect(
-      screen.getAllByText(en.serviceNames["file-return"]).length,
-    ).toBeGreaterThan(0);
+    const disclosure = screen.getByText("Other tax tasks, notices, and help").closest("details");
+    expect(disclosure).not.toHaveAttribute("open");
   });
 });
 
@@ -117,36 +78,35 @@ describe("the home page", () => {
     expect(screen.queryByText(en.stepsDone(0, 7))).not.toBeInTheDocument();
   });
 
-  it("shows the whole service map, with the built one marked apart", () => {
+  it("keeps the primary journey separate from secondary services", () => {
     render(<SahiReturnApp />);
-
-    const live = screen.getByRole("button", {
-      name: new RegExp(en.serviceNames["file-return"]),
-    });
-    expect(within(live).getByText(en.navLive)).toBeInTheDocument();
-
-    /* The unbuilt services are legible, present, and plainly out of service. */
-    for (const id of ["e-verify", "refund-status", "link-aadhaar"] as const) {
-      const name = screen.getAllByText(en.serviceNames[id])[0];
-      expect(name).toBeInTheDocument();
-      expect(
-        within(name.closest("span")!.parentElement!).getAllByText(en.navPlanned)
-          .length,
-      ).toBeGreaterThan(0);
-    }
+    expect(screen.getByRole("heading", { name: "Try a fictional salaried return" })).toBeInTheDocument();
+    expect(screen.getByText("Everything else you might need").closest("details")).not.toHaveAttribute("open");
   });
 
-  it("brings the journey's step list back once the journey starts", async () => {
+  it("shows all seven steps once the journey starts", async () => {
     const user = userEvent.setup();
     render(<SahiReturnApp />);
 
-    await user.click(screen.getByRole("button", { name: "Start the return" }));
+    await user.click(screen.getByRole("button", { name: "Start the guided demo" }));
     await user.click(
       screen.getByRole("button", { name: en.loginShortcut }),
     );
 
+    const journey = screen.getByRole("navigation", { name: en.journeyLabel });
+    expect(within(journey).getByText("Step 1 of 7")).toBeInTheDocument();
+    expect(within(journey).getAllByText("What applies to you").length).toBeGreaterThan(0);
+    expect(within(journey).getByText("Verify and finish")).toBeInTheDocument();
+    expect(within(journey).getByText("0 of 7 steps done")).toBeInTheDocument();
+
+    const journeyToggle = within(journey).getByRole("button", {
+      name: /Show all steps/,
+    });
+    expect(journeyToggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(journeyToggle);
+    expect(journeyToggle).toHaveAttribute("aria-expanded", "true");
     expect(
-      screen.getByRole("navigation", { name: en.journeyLabel }),
+      within(journey).getByRole("button", { name: /Hide all steps/ }),
     ).toBeInTheDocument();
   });
 });
@@ -156,10 +116,10 @@ describe("signing in", () => {
     const user = userEvent.setup();
     render(<SahiReturnApp />);
 
-    await user.click(screen.getByRole("button", { name: "Start the return" }));
+    await user.click(screen.getByRole("button", { name: "Start the guided demo" }));
     expect(screen.getByRole("heading", { name: en.loginTitle })).toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "What applies to you" }),
+      screen.queryByRole("heading", { name: "Does this sound like you?" }),
     ).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText(en.loginIdLabel), DEMO_USER_ID);
@@ -169,7 +129,7 @@ describe("signing in", () => {
 
     /* Back on the step they were heading for, not dropped at a dashboard. */
     expect(
-      screen.getByRole("heading", { name: "What applies to you" }),
+      screen.getByRole("heading", { name: "Does this sound like you?" }),
     ).toBeInTheDocument();
   });
 
@@ -215,7 +175,7 @@ describe("signing in", () => {
 
     await user.click(await screen.findByRole("button", { name: en.signOut }));
 
-    expect(screen.getByRole("button", { name: "Start the return" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start the guided demo" })).toBeInTheDocument();
     expect(window.localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 });
@@ -416,7 +376,7 @@ describe("the assistant panel", () => {
     /* The journey is untouched by the assistant being unavailable. */
     await user.click(screen.getByRole("button", { name: en.assistantClose }));
     expect(
-      screen.getByRole("button", { name: "Start the return" }),
+      screen.getByRole("button", { name: "Start the guided demo" }),
     ).toBeInTheDocument();
   });
 

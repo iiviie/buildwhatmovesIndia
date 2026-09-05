@@ -19,15 +19,57 @@
   --rail-run: var(--s2);
   --rail-track: 2px;
 
+  display: block;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .toc {
+    position: sticky;
+    top: var(--s4);
+  }
+}
+
+.toc-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) 0 var(--s3);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.toc-toggle strong {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--t-small);
+}
+
+.toc-toggle-action {
+  flex: none;
+  color: var(--accent);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.toc-summary {
   display: none;
 }
 
-@media (min-width: 1200px) {
-  .toc {
-    position: sticky;
-    top: var(--s5);
+@media (min-width: 900px) {
+  .toc-toggle {
+    display: none;
+  }
+
+  .toc-summary {
     display: block;
-    min-width: 0;
   }
 }
 
@@ -65,11 +107,24 @@
 /* A task list, not a rule-separated index. The rows sit flush against each
    other so the connector runs from one to the next without a break. */
 .toc ol {
-  display: grid;
+  display: none;
   gap: 0;
 }
 
-.toc button {
+.toc ol.is-expanded {
+  display: grid;
+  padding-block: var(--s2);
+}
+
+@media (min-width: 900px) {
+  .toc ol,
+  .toc ol.is-expanded {
+    display: grid;
+    padding-block: 0;
+  }
+}
+
+.toc ol button {
   display: grid;
   width: 100%;
   grid-template-columns: var(--rail-mark) minmax(0, 1fr);
@@ -176,7 +231,7 @@
    buttons are marked aria-disabled rather than disabled — a locked step is
    exactly the one whose preview is worth reading — which is why this asks the
    attribute and not :disabled. */
-.toc button:hover:not([aria-disabled="true"]) {
+.toc ol button:hover:not([aria-disabled="true"]) {
   background: var(--sheet);
   color: var(--accent);
 }

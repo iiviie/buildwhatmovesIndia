@@ -260,7 +260,7 @@ const en = {
     "Your tax regime",
     "Before you file",
     "Review and file",
-    "Acknowledgement",
+    "Verify and finish",
   ],
   stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
   stepsDone: (done: number, total: number) => `${done} of ${total} steps done`,
@@ -496,7 +496,7 @@ const en = {
     `Stage ${current} of ${total}`,
   registerWhoTitle: "What describes you best?",
   registerWhoIntro:
-    "The official form asks you to pick between “Taxpayer” and “Others”, and then hands you a list of departmental job titles. That only works if you already know the answer. Answer in your own terms instead, and the official category is filled in for you.",
+    "Choose what you are here to do. We will show the matching portal category.",
   registerOfficialLabel: "The portal calls this",
   registerNeedsLabel: "You will need",
   registerNotSure: "Still not sure which one you are?",
@@ -561,9 +561,11 @@ const en = {
   dashReturnInProgress: (done: number, total: number) =>
     `${done} of ${total} steps done`,
   dashReturnFiled: "Filed and acknowledged",
+  dashReturnNeedsVerification: "Submitted. Verification is still needed",
   dashStart: "Start the return",
   dashResume: "Continue the return",
   dashViewReceipt: "See the acknowledgement",
+  dashVerifyReturn: "Verify the return",
   dashHistoryTitle: "Earlier years",
   dashHistoryNote:
     "A real dashboard lists every year filed under the PAN. This prototype holds one synthetic year.",
@@ -873,7 +875,7 @@ const hi: CommonCopy = {
     "आपकी कर व्यवस्था",
     "फाइल करने से पहले",
     "जाँचें और फाइल करें",
-    "पावती",
+    "सत्यापन और समापन",
   ],
   stepOf: (current: number, total: number) => `चरण ${current} / ${total}`,
   stepsDone: (done: number, total: number) => `${total} में से ${done} चरण पूरे`,
@@ -1110,7 +1112,7 @@ const hi: CommonCopy = {
     `चरण ${current}, कुल ${total} में से`,
   registerWhoTitle: "आपके लिए इनमें से क्या सही है?",
   registerWhoIntro:
-    "आधिकारिक फ़ॉर्म पहले “करदाता” और “अन्य” में से चुनने को कहता है, फिर विभागीय पदनामों की सूची थमा देता है। यह तभी काम करता है जब जवाब आपको पहले से पता हो। इसके बजाय अपनी भाषा में जवाब दीजिए, आधिकारिक श्रेणी अपने आप भर जाएगी।",
+    "आप यहाँ क्या करने आए हैं, वह चुनें। पोर्टल की सही श्रेणी हम दिखाएँगे।",
   registerOfficialLabel: "पोर्टल इसे यह कहता है",
   registerNeedsLabel: "आपको चाहिए होगा",
   registerNotSure: "अब भी तय नहीं कर पा रहे कि आप कौन हैं?",
@@ -1175,9 +1177,11 @@ const hi: CommonCopy = {
   dashReturnInProgress: (done: number, total: number) =>
     `${total} में से ${done} चरण पूरे`,
   dashReturnFiled: "भरा और स्वीकृत",
+  dashReturnNeedsVerification: "जमा हुआ। सत्यापन अभी बाकी है",
   dashStart: "रिटर्न शुरू करें",
   dashResume: "रिटर्न जारी रखें",
   dashViewReceipt: "पावती देखें",
+  dashVerifyReturn: "रिटर्न सत्यापित करें",
   dashHistoryTitle: "पिछले वर्ष",
   dashHistoryNote:
     "असली डैशबोर्ड पैन पर भरा हर वर्ष दिखाता है। इस प्रोटोटाइप में एक काल्पनिक वर्ष है।",
@@ -1355,7 +1359,7 @@ const journeyEn = {
     allowanceTitle: "Exempt allowances",
     allowanceNote:
       "The portal shows an empty column here and leaves you to work out whether anything belongs in it. Under the new regime, house rent and most other allowances are not exempt, so this column stays empty. If you choose the old regime, this is where they would go.",
-    confirm: "These figures match my Form 16",
+    confirm: "Yes, these match my Form 16",
     confirmError: "Confirm the figures match your Form 16 before continuing.",
   },
 
@@ -1382,9 +1386,9 @@ const journeyEn = {
     tds: "Tax deducted",
     noTds: "None",
     question: "Is this yours?",
-    mine: "Yes, and the figure is right",
-    amended: "Yes, but the figure is wrong",
-    notMine: "No, I do not recognise this",
+    mine: "Yes, this is right",
+    amended: "The amount is wrong",
+    notMine: "I do not recognise this",
     answeredMine: "Included in your return",
     answeredAmended: "Included, at the figure you give",
     answeredNotMine: "Left out, and its tax credit dropped",
@@ -1392,10 +1396,10 @@ const journeyEn = {
     amendNote:
       "Your figure is what goes into the return. The tax already deducted is unchanged, because that is what the bank actually paid the department. Report the difference as AIS feedback so their record catches up with yours.",
     amendError: "Give the figure that should be reported, as a number.",
-    disputeTitle: "What happens to an entry you do not recognise",
+    disputeTitle: "We will leave this out",
     disputeNote:
-      "It stays out of your return, and the tax deducted against it is not claimed. Claiming a credit without reporting the matching income is the exact mismatch that produces a defective-return notice. You report the entry separately as AIS feedback.",
-    disputeAction: "Report this entry as not mine",
+      "Its income and tax credit will both stay out of the return. You can report the wrong record separately.",
+    disputeAction: "Report the wrong record",
     progress: (answered: number, total: number) =>
       `${answered} of ${total} entries answered`,
     runningTotal: "Other income to be reported",
@@ -1706,7 +1710,7 @@ const journeyHi: JourneyCopy = {
     allowanceTitle: "छूट वाले भत्ते",
     allowanceNote:
       "पोर्टल यहाँ एक खाली कॉलम दिखा देता है और आप पर छोड़ देता है कि इसमें कुछ आता है या नहीं। नई व्यवस्था में मकान किराया और ज़्यादातर भत्ते छूट में नहीं आते, इसलिए यह कॉलम खाली रहता है। पुरानी व्यवस्था चुनने पर वे यहाँ आते।",
-    confirm: "ये आँकड़े मेरे फ़ॉर्म 16 से मेल खाते हैं",
+    confirm: "हाँ, ये मेरे फ़ॉर्म 16 से मेल खाते हैं",
     confirmError: "आगे बढ़ने से पहले पुष्टि करें कि आँकड़े फ़ॉर्म 16 से मेल खाते हैं।",
   },
 
@@ -1733,9 +1737,9 @@ const journeyHi: JourneyCopy = {
     tds: "काटा गया कर",
     noTds: "कुछ नहीं",
     question: "क्या यह आपकी है?",
-    mine: "हाँ, यह मेरी है",
-    notMine: "नहीं, मैं इसे नहीं पहचानती",
-    amended: "हाँ, पर रकम ग़लत है",
+    mine: "हाँ, यह सही है",
+    notMine: "मैं इसे नहीं पहचानती",
+    amended: "रकम ग़लत है",
     answeredMine: "आपके रिटर्न में शामिल",
     answeredAmended: "शामिल, आपकी बताई रकम पर",
     amendReported: (reported: string) => `विवरण में ${reported} लिखा है`,
@@ -1743,10 +1747,10 @@ const journeyHi: JourneyCopy = {
       "रिटर्न में आपकी बताई रकम जाती है। काटा गया कर वही रहता है, क्योंकि बैंक ने विभाग को उतना ही भेजा है। अंतर की सूचना AIS फ़ीडबैक में दें ताकि उनका रिकॉर्ड आपके रिकॉर्ड से मिल जाए।",
     amendError: "जो रकम दर्ज होनी चाहिए, वह अंक में लिखें।",
     answeredNotMine: "बाहर रखा गया, और इसका कर क्रेडिट भी छोड़ा गया",
-    disputeTitle: "जिस प्रविष्टि को आप नहीं पहचानतीं, उसका क्या होता है",
+    disputeTitle: "हम इसे रिटर्न से बाहर रखेंगे",
     disputeNote:
-      "वह आपके रिटर्न से बाहर रहती है, और उस पर काटा गया कर भी नहीं माँगा जाता। आय दर्ज किए बिना क्रेडिट माँगना ठीक वही बेमेल है जिससे त्रुटिपूर्ण रिटर्न का नोटिस आता है। उस प्रविष्टि की सूचना अलग से AIS फ़ीडबैक में दी जाती है।",
-    disputeAction: "बताएँ कि यह प्रविष्टि मेरी नहीं है",
+      "इसकी आय और कर क्रेडिट दोनों रिटर्न से बाहर रहेंगे। गलत रिकॉर्ड की सूचना अलग से दी जा सकती है।",
+    disputeAction: "गलत रिकॉर्ड की सूचना दें",
     progress: (answered: number, total: number) =>
       `${total} में से ${answered} प्रविष्टियों का जवाब दिया`,
     runningTotal: "दर्ज की जाने वाली अन्य आय",

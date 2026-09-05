@@ -83,23 +83,20 @@ import { decideForm, demoAnswers } from "./eligibility";
 import { bankAccounts } from "./personal-section";
 import { DEMO_VERIFY_REFERENCE, DEMO_VERIFY_ROUTE } from "./verification";
 import { buildContext } from "./assistant";
-import { serviceById, services, type SectionId, type ServiceId } from "./services";
+import { serviceById, type ServiceId } from "./services";
 import { Assistant } from "./components/Assistant";
 import { Dashboard } from "./components/Dashboard";
-import { DocumentsPanel } from "./components/DocumentsPanel";
 import { EligibilityPanel } from "./components/EligibilityPanel";
 import { PersonalSection } from "./components/PersonalSection";
 import { VerifySection } from "./components/VerifySection";
 import { TaxPaidSection } from "./components/TaxPaidSection";
 import { LoginScreen } from "./components/LoginScreen";
-import { PortalNav } from "./components/PortalNav";
 import { RegisterScreen } from "./components/RegisterScreen";
 import { newestFirst, notices } from "./notices";
 import { NoticesPage } from "./components/NoticesPage";
 import { StepRail } from "./components/StepRail";
 import { SearchTrigger } from "./components/SearchTrigger";
 import { TermLanguage } from "./components/Term";
-import { markUp, Prose } from "./components/Prose";
 import { Hovercard } from "./components/Hovercard";
 import { CommandPalette, type Command } from "./components/CommandPalette";
 import { DeadlineInline, DeadlineMargin } from "./components/DeadlineMeter";
@@ -111,10 +108,8 @@ import {
   ArrowIcon,
   CheckIcon,
   ExternalIcon,
-  FileIcon,
   GridIcon,
   HelpIcon,
-  LockIcon,
   SignInIcon,
   SignOutIcon,
   UserPlusIcon,
@@ -252,6 +247,7 @@ export function SahiReturnApp() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [incomeCursor, setIncomeCursor] = useState(0);
 
   /* Site-level state: which screen, who is signed in, and the two panels that
      sit outside the journey. */
@@ -259,7 +255,6 @@ export function SahiReturnApp() {
   const [session, setSession] = useState<Session | null>(null);
   /* Where the citizen was heading when the sign-in wall stopped them. */
   const [intendedStep, setIntendedStep] = useState<number | null>(null);
-  const [navOpen, setNavOpen] = useState<SectionId | null>(null);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantQuestion, setAssistantQuestion] = useState<string | null>(null);
   /* Bumped on every hand-off so the same question asked twice still lands. */
@@ -458,8 +453,14 @@ export function SahiReturnApp() {
   }, [draft.language]);
 
   useEffect(() => {
-    if (hydrated && draft.step > 0) headingRef.current?.focus();
-  }, [draft.step, hydrated]);
+    if (!hydrated) return;
+
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    if (draft.step > 0) {
+      headingRef.current?.focus({ preventScroll: true });
+    }
+  }, [draft.step, draft.verifiedAt, hydrated, screen]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -565,11 +566,17 @@ export function SahiReturnApp() {
     setAssistantOpen(true);
   }, []);
 
-  const switchLanguage = (nextLanguage: Language) =>
+  const switchLanguage = (nextLanguage: Language) => {
+    /* Notices are short-lived feedback in the language that was active when
+       the action happened. Keeping one after a language switch produces a
+       mixed-language screen, so clear it rather than showing stale copy. */
+    setNotice("");
     updateDraft({ language: nextLanguage });
+  };
 
   const loadDemoDocuments = useCallback(() => {
     updateDraft({ documents: demoDocuments });
+    setSpotlight({ id: "salary-confirm", intent: "edit" });
     setNotice(
       language === "hi"
         ? "दोनों डेमो दस्तावेज़ लोड हो गए।"
@@ -714,6 +721,10 @@ export function SahiReturnApp() {
       const first = incomeEntries.find(
         (entry) => !draft.incomeAnswers[entry.id],
       );
+      const firstIndex = incomeEntries.findIndex(
+        (entry) => !draft.incomeAnswers[entry.id],
+      );
+      if (firstIndex >= 0) setIncomeCursor(firstIndex);
       stopAt(first ? `entry-${first.id}` : "income-entries", page.income.error);
       return;
     }
@@ -1172,346 +1183,134 @@ export function SahiReturnApp() {
     </section>
   );
 
-  const renderHome = () => (
-    <>
-      {/* The deadline still leads, but as one line rather than a 274-pixel
-          block. On a 390-pixel phone the full alert pushed "Start the return"
-          to y=1169 — the citizen had to scroll past a warning to reach the
-          thing the warning was telling them to do. The detail follows the
-          action instead. */}
-      {filing.state !== "on-time" && (
-        <p className="home-deadline no-print">
-          <DeadlineInline common={common} window={filing} />
-        </p>
-      )}
+  const renderHome = () => {
+    const homeText =
+      language === "hi"
+        ? {
+            eyebrow: "वेतनभोगी रिटर्न का निर्देशित डेमो",
+            title: "सवालों के जवाब दें। रिटर्न हम तैयार करेंगे।",
+            intro:
+              "आपको फॉर्म, धारा या कर व्यवस्था जानने की जरूरत नहीं। हम सिर्फ़ वही पूछेंगे जो आप बता सकते हैं।",
+            cardTitle: "काल्पनिक वेतनभोगी रिटर्न आज़माएँ",
+            person: "अनन्या राव",
+            time: "लगभग 5 मिनट",
+            data: "कोई असली डेटा नहीं",
+            start: "निर्देशित डेमो शुरू करें",
+            flow: ["विवरण की पुष्टि", "आय पहचानें", "कम कर चुनें", "जाँचकर फाइल करें"],
+            more: "अन्य कर सेवाएँ, नोटिस और मदद देखें",
+          }
+        : {
+            eyebrow: "Guided salaried return demo",
+            title: "Answer simple questions. We will build the return.",
+            intro:
+              "You do not need to know forms, sections, or tax regimes. We only ask what you can answer.",
+            cardTitle: "Try a fictional salaried return",
+            person: "Ananya Rao",
+            time: "About 5 minutes",
+            data: "No real data",
+            start: "Start the guided demo",
+            flow: ["Confirm details", "Recognise income", "Pick the lower tax", "Check and file"],
+            more: "Other tax tasks, notices, and help",
+          };
 
-      {/* The one thing a citizen came here to do, before anything else. */}
-      <div className="home-top">
-        <div className="hero hero-home">
-          <p className="label">{page.home.eyebrow}</p>
-          <h1 ref={headingRef} tabIndex={-1}>
-            {page.home.title}
-          </h1>
-          <Prose className="lede">{page.home.intro}</Prose>
+    return (
+      <div className="guided-home">
+        <div className="guided-hero">
+          <p className="guided-kicker">{homeText.eyebrow}</p>
+          <h1 ref={headingRef} tabIndex={-1}>{homeText.title}</h1>
+          <p className="lede">{homeText.intro}</p>
         </div>
 
-        <div className="start-card">
-          <p className="label">{common.homeStartTitle}</p>
-          <ul className="start-facts">
-            {page.home.need.map((item) => (
-              <li key={item}>
-                <CheckIcon />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <div className="actions no-print">
-            <button className="btn btn-lg" onClick={() => goTo(1)} type="button">
-              {page.home.start}
-            </button>
+        <section className="guided-start-card" aria-labelledby="guided-start-title">
+          <div>
+            <p className="label">{common.homeStartTitle}</p>
+            <h2 id="guided-start-title">{homeText.cardTitle}</h2>
           </div>
-          {hasSavedDraft && (
-            <div className="actions no-print">
-              <button
-                className="btn btn-secondary"
-                onClick={() => goTo(Math.max(1, draft.step))}
-                type="button"
-              >
-                {common.continueDraft}
-              </button>
-              <button className="link-btn" onClick={resetDemo} type="button">
-                {common.startAgain}
-              </button>
-            </div>
+          <div className="guided-start-meta">
+            <div><span className="label">{language === "hi" ? "डेमो व्यक्ति" : "Demo person"}</span><strong>{homeText.person}</strong></div>
+            <div><span className="label">{language === "hi" ? "समय" : "Time"}</span><strong>{homeText.time}</strong></div>
+            <div><span className="label">{language === "hi" ? "गोपनीयता" : "Privacy"}</span><strong>{homeText.data}</strong></div>
+          </div>
+          <div className="guided-card-actions no-print">
+            <button className="btn btn-lg" onClick={() => goTo(1)} type="button">
+              {homeText.start}
+            </button>
+            {hasSavedDraft && (
+              <>
+                <button className="btn btn-secondary" onClick={() => goTo(Math.max(1, draft.step))} type="button">
+                  {common.continueDraft}
+                </button>
+                <button className="link-btn" onClick={resetDemo} type="button">{common.startAgain}</button>
+              </>
+            )}
+          </div>
+          {filing.state !== "on-time" && (
+            <p className="home-deadline no-print"><DeadlineInline common={common} window={filing} /></p>
           )}
-        </div>
-      </div>
+        </section>
 
-      {renderDeadlineAlert()}
+        <ol className="guided-flow" aria-label={language === "hi" ? "डेमो के चार भाग" : "Four parts of the demo"}>
+          {homeText.flow.map((item) => <li key={item}>{item}</li>)}
+        </ol>
 
-      {/* The services a person can actually be here for.
-
-          The prototype builds one of them. Showing only that one made the whole
-          site look like a single form; showing all of them without marking
-          which work would be a lie. So they are all named, and the seven that
-          are not built say so on their face. */}
-      <section className="section">
-        <h2>{common.homeServicesTitle}</h2>
-        <p className="prose">{common.navScopeNote}</p>
-        <ul className="servicegrid">
-          {services
-            .filter((service) => service.section === "individual")
-            .map((service) => {
-              const name = common.serviceNames[service.id];
-              const note = common.serviceNotes[service.id];
-              if (service.state === "live") {
-                return (
-                  <li key={service.id}>
-                    <button
-                      className="servicecard"
-                      onClick={() => openService(service.id)}
-                      type="button"
-                    >
-                      <span className="servicecard-name">{name}</span>
-                      <span className="servicecard-note">{note}</span>
-                      <span className="servicecard-flag is-live">
-                        <CheckIcon />
-                        {common.navLive}
+        <details className="guided-more">
+          <summary>{homeText.more}</summary>
+          <div className="guided-more-body">
+            {renderDeadlineAlert()}
+            {renderQuickLinks()}
+            <section className="section">
+              <h2>{common.homeAnnouncementsTitle}</h2>
+              <ul className="notice-list">
+                {newestFirst(notices[language]).slice(0, HOME_NOTICES).map((item) => (
+                  <li key={item.id}>
+                    <p className="notice-meta">
+                      <span className={item.affectsYou ? "pill is-alert" : "pill is-quiet"}>
+                        {item.affectsYou ? common.homeAffectsYou : common.homeGeneral}
                       </span>
-                    </button>
+                      <span className="notice-date">{formatLongDate(new Date(`${item.on}T00:00:00+05:30`), language)}</span>
+                    </p>
+                    <p>{item.title}</p>
                   </li>
-                );
-              }
-              return (
-                <li key={service.id}>
-                  <span className="servicecard is-off">
-                    <span className="servicecard-name">{name}</span>
-                    <span className="servicecard-note">{note}</span>
-                    <span className="servicecard-flag">
-                      <LockIcon />
-                      {common.navPlanned}
-                    </span>
-                  </span>
-                </li>
-              );
-            })}
-        </ul>
-      </section>
-
-      {/* Notices. The home page carries the four newest, in the order they
-          were published — an earlier version sorted the ones that affect you
-          to the top, which quietly rewrote the chronology of a feed whose
-          whole value is its dates. The rest are a page away rather than
-          gone. */}
-      <section className="section">
-        <h2>{common.homeAnnouncementsTitle}</h2>
-        <ul className="notice-list">
-          {newestFirst(notices[language])
-            .slice(0, HOME_NOTICES)
-            .map((item) => (
-              <li key={item.id}>
-                <p className="notice-meta">
-                  <span
-                    className={
-                      item.affectsYou ? "pill is-alert" : "pill is-quiet"
-                    }
-                  >
-                    {item.affectsYou ? common.homeAffectsYou : common.homeGeneral}
-                  </span>
-                  <span className="notice-date">
-                    {formatLongDate(
-                      new Date(`${item.on}T00:00:00+05:30`),
-                      language,
-                    )}
-                  </span>
-                </p>
-                <p>{item.title}</p>
-              </li>
-            ))}
-        </ul>
-        <p className="notices-more no-print">
-          <button
-            className="link-btn"
-            onClick={() => setScreen("notices")}
-            type="button"
-          >
-            {common.noticesSeeAll}
-            <ArrowIcon />
-          </button>
-        </p>
-      </section>
-
-      <section className="section">
-        <h2>{page.home.meansTitle}</h2>
-        <Prose className="lede">{page.home.introMore}</Prose>
-        <Prose className="prose">{page.home.means}</Prose>
-      </section>
-
-      {/* The portal names three documents on the way in and explains none of
-          them. A citizen who does not already know what Form 26AS is cannot
-          act on being told to fetch it, so the explanation goes here, before
-          the return starts, rather than in a help page nobody opens. */}
-      <section className="section">
-        <DocumentsPanel
-          crossChecksTitle={common.docsCrossChecksTitle}
-          detailSummary={common.docsDetailSummary}
-          explainedLabel={common.docsExplained}
-          fromLabel={common.docsFrom}
-          ifItDoesNotLabel={common.docsIfNot}
-          language={language}
-          neededLabel={common.docsNeeded}
-          shouldMatchLabel={common.docsShouldMatch}
-          title={common.docsTitle}
-          usedForLabel={common.docsUsedFor}
-          whereLabel={common.docsWhere}
-        />
-      </section>
-
-      <section className="section">
-        <h2>{page.home.noSurpriseTitle}</h2>
-        <ul className="rules-list">
-          {page.home.noSurprise.map((item) => (
-            <li key={item}>
-              <CheckIcon />
-              {item}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {renderQuickLinks()}
-      {renderHelplines()}
-
-      <section className="section">
-        <p className="label">{page.home.scopeTitle}</p>
-        <ul className="sequence">
-          {page.home.scope.map((item) => (
-            <li key={item}>
-              <h3>{item}</h3>
-            </li>
-          ))}
-        </ul>
-        <p className="consequence">
-          <strong>{page.home.outOfScopeTitle}.</strong> {page.home.outOfScope}
-        </p>
-        <p className="caution">{page.home.privacy}</p>
-      </section>
-    </>
-  );
+                ))}
+              </ul>
+              <button className="link-btn" onClick={() => setScreen("notices")} type="button">
+                {common.noticesSeeAll}<ArrowIcon />
+              </button>
+            </section>
+            {renderHelplines()}
+          </div>
+        </details>
+      </div>
+    );
+  };
 
   const renderCheck = () => (
     <>
-      <div className="page-head">
-        <p className="label">{page.check.eyebrow}</p>
+      <div className="guided-head">
+        <p className="guided-kicker">{page.check.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {page.check.title}
+          {language === "hi" ? "क्या ये बातें आप पर लागू होती हैं?" : "Does this sound like you?"}
         </h1>
-        <Prose className="lede">{page.check.intro}</Prose>
+        <p className="lede">
+          {language === "hi"
+            ? "हमने विभाग के काल्पनिक रिकॉर्ड से ये बातें पहले ही पता कर ली हैं।"
+            : "We worked these out from the fictional records already on file."}
+        </p>
       </div>
 
-      <section className="section">
-        <h2>{page.check.decidedTitle}</h2>
-        <ul className="sequence">
-          {page.check.decided.map((item, index) => (
-            <li key={item.label}>
-              <h3>
-                {item.label}: {index === 0 ? decidedForm : item.value}
-              </h3>
-              <p>
-                <span className="label-ink">{page.check.whyLabel}</span>{" "}
-                {index === 0 && !decision.eligible
-                  ? common.eligOutOfScope(decision.form)
-                  : markUp(item.why)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* The portal makes you answer all eighteen before it will let you begin.
-          We answer them and show the working, so the same ground is covered
-          without the citizen having to already know the vocabulary. */}
-      <section className="section">
-        <EligibilityPanel
-          answers={{ ...demoAnswers, ...draft.eligibilityAnswers }}
-          labels={{
-            causesLabel: common.eligCausesLabel,
-            changedFrom: common.eligChangedFrom,
-            changedLabel: common.eligChangedLabel,
-            disclaimer: common.eligDisclaimer,
-            intro: common.eligIntro,
-            decidedLabel: common.eligDecidedLabel,
-            officialSummary: common.eligOfficialSummary,
-            outOfScope: common.eligOutOfScope,
-            outcomeBlocked: common.eligOutcomeBlocked,
-            outcomeLabel: common.eligOutcomeLabel,
-            outcomeSettled: common.eligOutcomeSettled,
-            prototypeNote: common.eligPrototypeNote,
-            sectionCount: common.eligSectionCount,
-            stateBlocking: common.eligStateBlocking,
-            stateChanged: common.eligStateChanged,
-            stateSettled: common.eligStateSettled,
-            summary: common.eligSummary,
-            title: common.eligTitle,
-            whyLabel: common.eligWhyLabel,
-          }}
-          language={language}
-          onChange={(questionId, value) =>
-            updateDraft({
-              eligibilityAnswers: {
-                ...draft.eligibilityAnswers,
-                [questionId]: value,
-              },
-            })
-          }
-        />
-      </section>
-
-      {/* The portal's Personal Information section: which section you file
-          under, who is filing, and where a refund would go. The last of those
-          matters most — until now this prototype promised a refund and never
-          asked where to send it. */}
-      <section className="section">
-        <PersonalSection
-          labels={{
-            accountNumberLabel: common.persAccountNumberLabel,
-            accountTypeLabel: common.persAccountTypeLabel,
-            addAnotherNote: common.persAddAnotherNote,
-            answerLabel: common.persAnswerLabel,
-            appliesLabel: common.persAppliesLabel,
-            filingIntro: common.persFilingIntro,
-            filingReason: common.persFilingReason,
-            filingTitle: common.persFilingTitle,
-            ifscLabel: common.persIfscLabel,
-            noticeNote: common.persNoticeNote,
-            noticeOptionsSummary: common.persNoticeOptionsSummary,
-            noticeStateLabel: common.persNoticeStateLabel,
-            officialLabel: common.persOfficialLabel,
-            otherOptionsLabel: common.persOtherOptionsLabel,
-            otherOptionsNote: common.persOtherOptionsNote,
-            portalAsksLabel: common.persPortalAsksLabel,
-            profileTitle: common.persProfileTitle,
-            profileIntro: common.persProfileIntro,
-            contactTitle: common.persContactTitle,
-            contactIntro: common.persContactIntro,
-            portalCallsLabel: common.persPortalCallsLabel,
-            separateFlowNote: common.persSeparateFlowNote,
-            mandatoryNote: common.persMandatoryNote,
-            editLabel: common.persEditLabel,
-            saveLabel: common.persSaveLabel,
-            cancelLabel: common.persCancelLabel,
-            undoLabel: common.persUndoLabel,
-            changedBadge: common.persChangedBadge,
-            lockedBadge: common.persLockedBadge,
-            emptyValue: common.persEmptyValue,
-            refundLegend: common.persRefundLegend,
-            representativeTitle: common.persRepresentativeTitle,
-            rulesLabel: common.persRulesLabel,
-            whenLabel: common.persWhenLabel,
-          }}
-          details={draft.personalDetails}
-          language={language}
-          nominatedId={draft.nominatedAccount || defaultNominatedAccount}
-          onDetails={(next) => updateDraft({ personalDetails: next })}
-          onNominate={(accountId) =>
-            updateDraft({ nominatedAccount: accountId })
-          }
-          today={now}
-        />
-      </section>
-
-      <section className="section">
-        <h2>{page.check.datesTitle}</h2>
-        <p className="prose">{page.check.datesIntro}</p>
-        <dl className="rows">
-          <Row label={page.check.dateDue} value={demoCase.dueDateOriginal} />
-          <Row
-            label={page.check.dateBelated}
-            value={demoCase.dueDateBelated}
-          />
-          <Row label={page.check.dateFee} value={page.check.dateFeeValue} />
-        </dl>
-        <p className="consequence">{page.check.reviseNote}</p>
+      <section className="guided-panel">
+        <h2>{language === "hi" ? "आपकी स्थिति" : "Your situation"}</h2>
+        <div className="guided-fact-grid">
+          <div className="guided-fact"><span>{language === "hi" ? "काम" : "Work"}</span><strong>{language === "hi" ? "निजी नौकरी" : "Private salaried job"}</strong></div>
+          <div className="guided-fact"><span>{language === "hi" ? "आय" : "Income"}</span><strong>{language === "hi" ? "₹50 लाख से कम" : "Under ₹50 lakh"}</strong></div>
+          <div className="guided-fact"><span>{language === "hi" ? "अन्य आय" : "Other income"}</span><strong>{language === "hi" ? "बैंक ब्याज और लाभांश" : "Bank interest and dividends"}</strong></div>
+          <div className="guided-fact"><span>{language === "hi" ? "शेयर या व्यापार" : "Shares or business"}</span><strong>{language === "hi" ? "कोई नहीं" : "None"}</strong></div>
+        </div>
+        <p className="guided-income-status">
+          <span>{language === "hi" ? "हमने आपके लिए चुना" : "Chosen for you"}</span>
+          <strong>{decidedForm}</strong>
+        </p>
+        {!decision.eligible && <p className="alert" role="alert">{common.eligOutOfScope(decision.form)}</p>}
       </section>
 
       {formError && <ErrorSummary message={formError} />}
@@ -1522,42 +1321,60 @@ export function SahiReturnApp() {
         next={() => goTo(2)}
         nextLabel={page.check.continue}
       />
+
+      <details className="guided-details">
+        <summary>{language === "hi" ? "कुछ गलत है? जवाब बदलें" : "Something is wrong? Change the answers"}</summary>
+        <div className="guided-details-body">
+          <EligibilityPanel
+            answers={{ ...demoAnswers, ...draft.eligibilityAnswers }}
+            labels={{ causesLabel: common.eligCausesLabel, changedFrom: common.eligChangedFrom, changedLabel: common.eligChangedLabel, disclaimer: common.eligDisclaimer, intro: common.eligIntro, decidedLabel: common.eligDecidedLabel, officialSummary: common.eligOfficialSummary, outOfScope: common.eligOutOfScope, outcomeBlocked: common.eligOutcomeBlocked, outcomeLabel: common.eligOutcomeLabel, outcomeSettled: common.eligOutcomeSettled, prototypeNote: common.eligPrototypeNote, sectionCount: common.eligSectionCount, stateBlocking: common.eligStateBlocking, stateChanged: common.eligStateChanged, stateSettled: common.eligStateSettled, summary: common.eligSummary, title: common.eligTitle, whyLabel: common.eligWhyLabel }}
+            language={language}
+            onChange={(questionId, value) => updateDraft({ eligibilityAnswers: { ...draft.eligibilityAnswers, [questionId]: value } })}
+          />
+        </div>
+      </details>
+
+      <details className="guided-details">
+        <summary>{language === "hi" ? "नाम, संपर्क और रिफ़ंड खाता देखें" : "Review name, contact, and refund account"}</summary>
+        <div className="guided-details-body">
+          <PersonalSection
+            labels={{ accountNumberLabel: common.persAccountNumberLabel, accountTypeLabel: common.persAccountTypeLabel, addAnotherNote: common.persAddAnotherNote, answerLabel: common.persAnswerLabel, appliesLabel: common.persAppliesLabel, filingIntro: common.persFilingIntro, filingReason: common.persFilingReason, filingTitle: common.persFilingTitle, ifscLabel: common.persIfscLabel, noticeNote: common.persNoticeNote, noticeOptionsSummary: common.persNoticeOptionsSummary, noticeStateLabel: common.persNoticeStateLabel, officialLabel: common.persOfficialLabel, otherOptionsLabel: common.persOtherOptionsLabel, otherOptionsNote: common.persOtherOptionsNote, portalAsksLabel: common.persPortalAsksLabel, profileTitle: common.persProfileTitle, profileIntro: common.persProfileIntro, contactTitle: common.persContactTitle, contactIntro: common.persContactIntro, portalCallsLabel: common.persPortalCallsLabel, separateFlowNote: common.persSeparateFlowNote, mandatoryNote: common.persMandatoryNote, editLabel: common.persEditLabel, saveLabel: common.persSaveLabel, cancelLabel: common.persCancelLabel, undoLabel: common.persUndoLabel, changedBadge: common.persChangedBadge, lockedBadge: common.persLockedBadge, emptyValue: common.persEmptyValue, refundLegend: common.persRefundLegend, representativeTitle: common.persRepresentativeTitle, rulesLabel: common.persRulesLabel, whenLabel: common.persWhenLabel }}
+            details={draft.personalDetails}
+            language={language}
+            nominatedId={draft.nominatedAccount || defaultNominatedAccount}
+            onDetails={(next) => updateDraft({ personalDetails: next })}
+            onNominate={(accountId) => updateDraft({ nominatedAccount: accountId })}
+            today={now}
+          />
+        </div>
+      </details>
+
     </>
   );
 
   const renderSalary = () => (
     <>
-      <div className="page-head">
-        <p className="label">{page.salary.eyebrow}</p>
+      <div className="guided-head">
+        <p className="guided-kicker">{page.salary.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {page.salary.title}
+          {language === "hi" ? "अपने वेतन के कागज़ जोड़ें" : "Add your salary documents"}
         </h1>
-        <Prose className="lede">{page.salary.intro}</Prose>
+        <p className="lede">
+          {language === "hi"
+            ? "डेमो कागज़ लोड करें। फिर काल्पनिक रकम की पुष्टि करें।"
+            : "Load the demo documents, then confirm the fictional amounts."}
+        </p>
       </div>
 
       <section
-        className={`section${spotlightClass("documents-in-use")}`}
+        className={`guided-panel${spotlightClass("documents-in-use")}`}
         id="documents-in-use"
         tabIndex={-1}
       >
-        <h2>{page.salary.documentsTitle}</h2>
-        <p className="prose">{page.salary.documentsIntro}</p>
-
-        {/* Stated before the control, not after a rejected upload. */}
-        <ul className="rules-list">
-          <li>
-            <FileIcon />
-            {page.salary.ruleFormats}
-          </li>
-          <li>
-            <FileIcon />
-            {page.salary.ruleSize(`${MAX_FILE_MB} MB`)}
-          </li>
-          <li>
-            <CheckIcon />
-            {page.salary.rulePhoto}
-          </li>
-        </ul>
+        <h2>{language === "hi" ? "दो कागज़ चाहिए" : "Two documents"}</h2>
+        <p className="consequence">
+          {language === "hi" ? `PDF या फोटो, हर फ़ाइल ${MAX_FILE_MB} MB तक। इस डेमो में असली कागज़ न डालें।` : `PDF or photo, up to ${MAX_FILE_MB} MB each. Do not add real documents to this demo.`}
+        </p>
 
         <ul className="files">
           {draft.documents.map((document) => (
@@ -1624,81 +1441,25 @@ export function SahiReturnApp() {
               onClick={loadDemoDocuments}
               type="button"
             >
-              {page.salary.load}
+              {language === "hi" ? "काल्पनिक कागज़ इस्तेमाल करें" : "Use fictional demo documents"}
             </button>
           </div>
         )}
       </section>
 
-      <section className="section">
-        <h2>{page.salary.figuresTitle}</h2>
-        <table className="ledger-table">
-          <tbody>
-            <tr>
-              <th scope="row">
-                {page.salary.grossSalary}
-                <span className="source-line">
-                  {common.source}: {page.salary.grossSalarySource}
-                </span>
-                <span className="portal-line">
-                  {page.salary.portalLabel}{" "}
-                  <code>{page.salary.grossSalaryPortal}</code>
-                </span>
-              </th>
-              <td className="col-num">{money(demoCase.grossSalary)}</td>
-            </tr>
-            <tr>
-              <th scope="row">
-                {page.salary.standardDeduction}
-                <span className="source-line">
-                  {common.source}: {page.salary.standardDeductionSource}
-                </span>
-                <span className="portal-line">
-                  {page.salary.portalLabel}{" "}
-                  <code>{page.salary.standardDeductionPortal}</code>
-                </span>
-              </th>
-              <td className="col-num">
-                −{money(computation.standardDeduction)}
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">
-                {page.salary.salaryTds}
-                <span className="source-line">
-                  {common.source}: {page.salary.salaryTdsSource}
-                </span>
-                <span className="portal-line">
-                  {page.salary.portalLabel}{" "}
-                  <code>{page.salary.salaryTdsPortal}</code>
-                </span>
-              </th>
-              <td className="col-num">{money(demoCase.salaryTds)}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="finding-note">{page.salary.standardDeductionWhy}</p>
-        <p className="finding-note">{page.salary.salaryTdsWhy}</p>
-      </section>
-
-      <section className="section">
-        <h2>{page.salary.allowanceTitle}</h2>
-        <p className="prose">{page.salary.allowanceNote}</p>
-      </section>
-
-      <label
-        className={`declare${spotlightClass("salary-confirm")}`}
-        id="salary-confirm"
-      >
-        <input
-          checked={draft.salaryConfirmed}
-          onChange={(event) =>
-            updateDraft({ salaryConfirmed: event.target.checked })
-          }
-          type="checkbox"
-        />
-        <span>{page.salary.confirm}</span>
-      </label>
+      {hasAllDocuments(draft.documents) && (
+        <section className="guided-panel">
+          <h2>{language === "hi" ? "हमें यह मिला" : "Here is what we found"}</h2>
+          <div className="guided-money-grid">
+            <div className="guided-money"><span>{language === "hi" ? "कुल वेतन" : "Salary"}</span><strong>{money(demoCase.grossSalary)}</strong></div>
+            <div className="guided-money"><span>{language === "hi" ? "नियोक्ता ने पहले ही कर दिया" : "Tax already paid by employer"}</span><strong>{money(demoCase.salaryTds)}</strong></div>
+          </div>
+          <label className={`guided-answer${spotlightClass("salary-confirm")}`} id="salary-confirm">
+            <input checked={draft.salaryConfirmed} onChange={(event) => updateDraft({ salaryConfirmed: event.target.checked })} type="checkbox" />
+            <span>{page.salary.confirm}</span>
+          </label>
+        </section>
+      )}
 
       {formError && <ErrorSummary message={formError} />}
 
@@ -1708,6 +1469,22 @@ export function SahiReturnApp() {
         next={continueFromSalary}
         nextLabel={common.continue}
       />
+
+      {hasAllDocuments(draft.documents) && (
+        <details className="guided-details">
+          <summary>{language === "hi" ? "रकम कहाँ से आई और पोर्टल उसे क्या कहता है" : "Where these amounts came from"}</summary>
+          <div className="guided-details-body">
+            <table className="ledger-table">
+              <tbody>
+                <tr><th scope="row">{page.salary.grossSalary}<span className="source-line">{common.source}: {page.salary.grossSalarySource}</span><span className="portal-line">{page.salary.portalLabel} <code>{page.salary.grossSalaryPortal}</code></span></th><td className="col-num">{money(demoCase.grossSalary)}</td></tr>
+                <tr><th scope="row">{page.salary.standardDeduction}<span className="source-line">{common.source}: {page.salary.standardDeductionSource}</span><span className="portal-line">{page.salary.portalLabel} <code>{page.salary.standardDeductionPortal}</code></span></th><td className="col-num">−{money(computation.standardDeduction)}</td></tr>
+                <tr><th scope="row">{page.salary.salaryTds}<span className="source-line">{common.source}: {page.salary.salaryTdsSource}</span><span className="portal-line">{page.salary.portalLabel} <code>{page.salary.salaryTdsPortal}</code></span></th><td className="col-num">{money(demoCase.salaryTds)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
     </>
   );
 
@@ -1715,30 +1492,27 @@ export function SahiReturnApp() {
     const answered = answeredCount(draft);
     return (
       <>
-        <div className="page-head">
-          <p className="label">{page.income.eyebrow}</p>
+        <div className="guided-head">
+          <p className="guided-kicker">{page.income.eyebrow}</p>
           <h1 ref={headingRef} tabIndex={-1}>
-            {page.income.title}
+            {language === "hi" ? "क्या आप इन पैसों को पहचानते हैं?" : "Do you recognise this income?"}
           </h1>
-          <Prose className="lede">{page.income.intro}</Prose>
+          <p className="lede">
+            {language === "hi" ? "हर लाइन पर बस हाँ, रकम गलत है, या नहीं चुनें।" : "For each payment, choose yes, wrong amount, or not mine."}
+          </p>
         </div>
 
-        <section className="section">
-          <h2>{page.income.whyTitle}</h2>
-          <Prose className="prose">{page.income.why}</Prose>
-        </section>
-
-        <section className="section">
-          <h2>{page.income.entriesTitle}</h2>
-          <p className="label" aria-live="polite">
-            {page.income.progress(answered, incomeEntries.length)}
+        <section id="income-entries">
+          <p className="guided-income-status" aria-live="polite">
+            <span>{language === "hi" ? `सवाल ${incomeCursor + 1}, कुल ${incomeEntries.length}` : `Question ${incomeCursor + 1} of ${incomeEntries.length}`}</span>
+            <strong>{page.income.progress(answered, incomeEntries.length)}</strong>
           </p>
           <p className="portal-line">
             {page.income.portalLabel} <code>{page.income.portalSection}</code>,{" "}
             <code>{page.income.portalTds}</code>
           </p>
 
-          {incomeEntries.map((entry) => {
+          {[incomeEntries[incomeCursor]].map((entry) => {
             const answer = draft.incomeAnswers[entry.id] ?? null;
             /* The block, which an error points at, and the label the radio
                group is named by. Two ids, because they are two elements. */
@@ -1746,7 +1520,7 @@ export function SahiReturnApp() {
             const choicesLabelId = `${groupId}-choices`;
             return (
               <fieldset
-                className={`finding${spotlightClass(groupId)}`}
+                className={`finding guided-income-card${spotlightClass(groupId)}`}
                 id={groupId}
                 key={entry.id}
               >
@@ -1825,7 +1599,7 @@ export function SahiReturnApp() {
                 </p>
 
                 <div
-                  className="choices"
+                  className="choices guided-choice-grid"
                   role="group"
                   aria-labelledby={choicesLabelId}
                 >
@@ -1834,7 +1608,7 @@ export function SahiReturnApp() {
                   </p>
                   <label
                     aria-label={page.income.mine}
-                    className="choice"
+                    className="choice guided-choice"
                     htmlFor={`${entry.id}-mine`}
                   >
                     <input
@@ -1853,7 +1627,7 @@ export function SahiReturnApp() {
                   </label>
                   <label
                     aria-label={page.income.amended}
-                    className="choice"
+                    className="choice guided-choice"
                     htmlFor={`${entry.id}-amended`}
                   >
                     <input
@@ -1874,7 +1648,7 @@ export function SahiReturnApp() {
                   </label>
                   <label
                     aria-label={page.income.notMine}
-                    className="choice"
+                    className="choice guided-choice"
                     htmlFor={`${entry.id}-not-mine`}
                   >
                     <input
@@ -1922,9 +1696,22 @@ export function SahiReturnApp() {
               </fieldset>
             );
           })}
+          <div className="guided-card-actions income-nav no-print">
+            {incomeCursor > 0 && <button className="link-btn" onClick={() => setIncomeCursor((current) => current - 1)} type="button">{language === "hi" ? "पिछली आय" : "Previous income"}</button>}
+            {incomeCursor < incomeEntries.length - 1 && <button className="btn btn-secondary" disabled={!draft.incomeAnswers[incomeEntries[incomeCursor].id]} onClick={() => setIncomeCursor((current) => current + 1)} type="button">{language === "hi" ? "अगली आय" : "Next income"}</button>}
+          </div>
         </section>
 
-        <section className="section">
+        {formError && <ErrorSummary message={formError} />}
+
+        <StepActions
+          back={() => goTo(2)}
+          backLabel={common.back}
+          next={continueFromIncome}
+          nextLabel={common.continue}
+        />
+
+        <section className="guided-panel">
           <dl className="rows">
             <Row
               label={page.income.runningTotal}
@@ -1937,14 +1724,6 @@ export function SahiReturnApp() {
           </dl>
         </section>
 
-        {formError && <ErrorSummary message={formError} />}
-
-        <StepActions
-          back={() => goTo(2)}
-          backLabel={common.back}
-          next={continueFromIncome}
-          nextLabel={common.continue}
-        />
       </>
     );
   };
@@ -2080,83 +1859,36 @@ export function SahiReturnApp() {
 
   const renderRegime = () => (
     <>
-      <div className="page-head">
-        <p className="label">{page.regime.eyebrow}</p>
+      <div className="guided-head">
+        <p className="guided-kicker">{page.regime.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {page.regime.title}
+          {language === "hi" ? "कौन सा विकल्प आपका कर कम करता है?" : "Which option leaves you with less tax?"}
         </h1>
-        <Prose className="lede">{page.regime.intro}</Prose>
+        <p className="lede">
+          {language === "hi" ? "हमने दोनों की गणना कर दी है। आपको नियम समझने की जरूरत नहीं।" : "We calculated both. You do not need to decode the rules."}
+        </p>
       </div>
 
-      <section className="section">
-        <p className="label">{page.regime.recommendTitle}</p>
-        <p className="statement">
-          {comparison.better === "new"
-            ? page.regime.recommendNew
-            : page.regime.recommendOld}
-        </p>
-        <p className="lede">
-          {page.regime.saving} <span className="num">{money(comparison.saving)}</span>{" "}
-          {page.regime.savingNote}
-        </p>
-        <p className="portal-line">
-          {page.regime.portalLabel} <code>{page.regime.portalQuestion}</code>
-        </p>
-      </section>
-
-      <section className="section">
-        <h2>{page.regime.workingTitle}</h2>
-        <p className="prose">{page.regime.workingIntro}</p>
-        <p className="consequence">
-          {page.regime.rebateNote(money(REBATE_NEW_LIMIT))}
-        </p>
-      </section>
-
       <div
-        className={`swap${spotlightClass("regime-choice")}`}
+        className={`guided-choice-grid regimes${spotlightClass("regime-choice")}`}
         id="regime-choice"
         tabIndex={-1}
       >
-        {renderRegimeColumn("new")}
-        {renderRegimeColumn("old")}
+        <div className={comparison.better === "new" ? "guided-choice-card is-recommended" : "guided-choice-card"}>
+          <span className="guided-saved">{comparison.better === "new" ? (language === "hi" ? `${money(comparison.saving)} बचते हैं` : `Saves ${money(comparison.saving)}`) : page.regime.newRegime}</span>
+          <h2>{page.regime.newRegime}</h2>
+          <p className="price">{money(comparison.newRegime.totalTax)}</p>
+          <p className="consequence">{language === "hi" ? "इस साल का कुल कर" : "Total tax for this year"}</p>
+          <button className={draft.regime === "new" ? "btn" : "btn btn-secondary"} onClick={() => updateDraft({ regime: "new" })} type="button">{draft.regime === "new" ? page.regime.chosen : page.regime.chooseNew}</button>
+        </div>
+        <div className={comparison.better === "old" ? "guided-choice-card is-recommended" : "guided-choice-card"}>
+          <span className="guided-saved">{comparison.better === "old" ? (language === "hi" ? `${money(comparison.saving)} बचते हैं` : `Saves ${money(comparison.saving)}`) : (language === "hi" ? "तुलना" : "For comparison")}</span>
+          <h2>{page.regime.oldRegime}</h2>
+          <p className="price">{money(comparison.oldRegime.totalTax)}</p>
+          <p className="consequence">{language === "hi" ? "इस साल का कुल कर" : "Total tax for this year"}</p>
+          <button className={draft.regime === "old" ? "btn" : "btn btn-secondary"} onClick={() => updateDraft({ regime: "old" })} type="button">{draft.regime === "old" ? page.regime.chosen : page.regime.chooseOld}</button>
+        </div>
       </div>
-
-      {/* Deductions belong beside the regime choice, because the regime is
-          what decides whether they are worth anything. The tax already paid
-          sits with them because together they are the two halves of the refund
-          figure that arrives at step 6. */}
-      <section className="section">
-        <TaxPaidSection
-          labels={{
-            amountAwaitingRegime: common.tpAmountAwaitingRegime,
-            deductionsIntro: common.tpDeductionsIntro,
-            deductionsTitle: common.tpDeductionsTitle,
-            deductionsTotal: common.tpDeductionsTotal,
-            entriesCount: common.tpEntriesCount,
-            entriesNone: common.tpEntriesNone,
-            headAmount: common.tpHeadAmount,
-            headSection: common.tpHeadSection,
-            headStatus: common.tpHeadStatus,
-            headWhat: common.tpHeadWhat,
-            officialSummary: common.tpOfficialSummary,
-            regimeNew: common.tpRegimeNew,
-            regimeOld: common.tpRegimeOld,
-            regimeUnchosen: common.tpRegimeUnchosen,
-            schedulesIntro: common.tpSchedulesIntro,
-            schedulesSummary: common.tpSchedulesSummary,
-            schedulesTitle: common.tpSchedulesTitle,
-            sourceLabel: common.tpSourceLabel,
-            statusAwaitingRegime: common.tpStatusAwaitingRegime,
-            statusClaimed: common.tpStatusClaimed,
-            statusNone: common.tpStatusNone,
-            statusNotInRegime: common.tpStatusNotInRegime,
-            taxPaidTotal: common.tpTaxPaidTotal,
-            whyLabel: common.tpWhyLabel,
-          }}
-          language={language}
-          regime={draft.regime}
-        />
-      </section>
 
       {formError && <ErrorSummary message={formError} />}
 
@@ -2166,6 +1898,17 @@ export function SahiReturnApp() {
         next={continueFromRegime}
         nextLabel={common.continue}
       />
+
+      <details className="guided-details">
+        <summary>{language === "hi" ? "गणना और कटौतियाँ देखें" : "See the calculation and deductions"}</summary>
+        <div className="guided-details-body">
+          <p className="prose">{page.regime.workingIntro}</p>
+          <p className="consequence">{page.regime.rebateNote(money(REBATE_NEW_LIMIT))}</p>
+          <div className="swap">{renderRegimeColumn("new")}{renderRegimeColumn("old")}</div>
+          <TaxPaidSection labels={{ amountAwaitingRegime: common.tpAmountAwaitingRegime, deductionsIntro: common.tpDeductionsIntro, deductionsTitle: common.tpDeductionsTitle, deductionsTotal: common.tpDeductionsTotal, entriesCount: common.tpEntriesCount, entriesNone: common.tpEntriesNone, headAmount: common.tpHeadAmount, headSection: common.tpHeadSection, headStatus: common.tpHeadStatus, headWhat: common.tpHeadWhat, officialSummary: common.tpOfficialSummary, regimeNew: common.tpRegimeNew, regimeOld: common.tpRegimeOld, regimeUnchosen: common.tpRegimeUnchosen, schedulesIntro: common.tpSchedulesIntro, schedulesSummary: common.tpSchedulesSummary, schedulesTitle: common.tpSchedulesTitle, sourceLabel: common.tpSourceLabel, statusAwaitingRegime: common.tpStatusAwaitingRegime, statusClaimed: common.tpStatusClaimed, statusNone: common.tpStatusNone, statusNotInRegime: common.tpStatusNotInRegime, taxPaidTotal: common.tpTaxPaidTotal, whyLabel: common.tpWhyLabel }} language={language} regime={draft.regime} />
+        </div>
+      </details>
+
     </>
   );
 
@@ -2176,85 +1919,30 @@ export function SahiReturnApp() {
 
     return (
       <>
-        <div className="page-head">
-          <p className="label">{page.checks.eyebrow}</p>
+        <div className="guided-head">
+          <p className="guided-kicker">{page.checks.eyebrow}</p>
           <h1 ref={headingRef} tabIndex={-1}>
-            {page.checks.title}
+            {attention.length === 0
+              ? language === "hi" ? "आपका रिटर्न तैयार है" : "Your return is ready"
+              : language === "hi" ? "एक बात ठीक करनी है" : "There is something to fix"}
           </h1>
-          <Prose className="lede">{page.checks.intro}</Prose>
+          <p className="lede">
+            {language === "hi" ? "फाइल करने से पहले हमने आम गलतियाँ जाँच ली हैं।" : "We checked the common mistakes before anything is filed."}
+          </p>
         </div>
 
-        <section className="section">
-          <p className="statement">
-            {page.checks.passed(passed, checks.length)}
-          </p>
-          <p className="consequence">{page.checks.idea}</p>
-          <p className="no-print">
-            <OutLink
-              href={OFFICIAL_DEFECTIVE_FAQ}
-              newWindow={common.newWindow}
-            >
-              {language === "hi"
-                ? "धारा 139(9) पर आधिकारिक जानकारी"
-                : "Official guidance on section 139(9)"}
-            </OutLink>
-          </p>
-        </section>
-
-        <section className="section">
-          <ul className="sequence">
-            {checks.map((check) => {
-              const id = check.id as CheckId;
-              return (
-                <li key={check.id}>
-                  <h3>
-                    <span
-                      className={
-                        check.state === "pass" ? "verdict-ok" : "verdict-missing"
-                      }
-                    >
-                      {page.checks.labels[id]}
-                    </span>
-                  </h3>
-                  <p>{page.checks.detail[id]}</p>
-                  {check.state !== "pass" && page.checks.fix[id] && (
-                    <p>
-                      <span className="label-alert">{page.checks.fix[id]}</span>
-                    </p>
-                  )}
-                  {check.id === "disputed-tds-dropped" &&
-                    (check.amount ?? 0) > 0 && (
-                      <p>
-                        <span className="label-ink">
-                          {page.checks.strandedLabel}
-                        </span>{" "}
-                        <span className="num">{money(stranded)}</span>
-                      </p>
-                    )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        <section className="section">
+        <section className="guided-panel" style={{ textAlign: "center" }}>
+          <div className="guided-check-mark"><CheckIcon /></div>
+          <p className="statement" style={{ marginInline: "auto" }}>{page.checks.passed(passed, checks.length)}</p>
           {attention.length === 0 ? (
             <>
               <h2 className="verdict-ok">{page.checks.allClearTitle}</h2>
-              <p className="prose">{page.checks.allClear}</p>
+              {stranded > 0 && <p className="consequence" style={{ marginInline: "auto" }}>{page.checks.strandedLabel}: <strong>{money(stranded)}</strong></p>}
             </>
           ) : (
             <>
               <h2>{page.checks.attentionTitle}</h2>
-              <div className="actions no-print">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => goTo(3)}
-                  type="button"
-                >
-                  {page.checks.goToStep}
-                </button>
-              </div>
+              <button className="btn btn-secondary" onClick={() => goTo(3)} type="button">{page.checks.goToStep}</button>
             </>
           )}
         </section>
@@ -2267,133 +1955,50 @@ export function SahiReturnApp() {
           next={() => goTo(6)}
           nextLabel={page.checks.continue}
         />
+
+        <details className="guided-details">
+          <summary>{language === "hi" ? "चारों जाँच देखें" : "See all four checks"}</summary>
+          <div className="guided-details-body">
+            <ul className="sequence">
+              {checks.map((check) => {
+                const id = check.id as CheckId;
+                return <li key={check.id}><h3><span className={check.state === "pass" ? "verdict-ok" : "verdict-missing"}>{page.checks.labels[id]}</span></h3><p>{page.checks.detail[id]}</p>{check.state !== "pass" && page.checks.fix[id] && <p><span className="label-alert">{page.checks.fix[id]}</span></p>}</li>;
+              })}
+            </ul>
+            <p className="no-print"><OutLink href={OFFICIAL_DEFECTIVE_FAQ} newWindow={common.newWindow}>{language === "hi" ? "धारा 139(9) पर आधिकारिक जानकारी" : "Official guidance on section 139(9)"}</OutLink></p>
+          </div>
+        </details>
+
       </>
     );
   };
 
   const renderReview = () => (
     <>
-      <div className="page-head">
-        <p className="label">{page.review.eyebrow}</p>
+      <div className="guided-head">
+        <p className="guided-kicker">{page.review.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {page.review.title}
+          {language === "hi" ? "एक आखिरी नज़र" : "One last look"}
         </h1>
-        <Prose className="lede">{page.review.intro}</Prose>
+        <p className="lede">{language === "hi" ? "नतीजा पहले। जरूरत हो तो पूरी रकम नीचे देख सकते हैं।" : "The result comes first. Open the totals only if you want to check them."}</p>
       </div>
 
-      <section className="section">
-        <h2>{page.review.incomeTitle}</h2>
-        <table className="ledger-table">
-          <tbody>
-            <tr>
-              <th scope="row">{page.review.salaryLine}</th>
-              <td className="col-num">{money(computation.salaryAfterStandard)}</td>
-            </tr>
-            <tr>
-              <th scope="row">{page.review.otherLine}</th>
-              <td className="col-num">{money(computation.otherIncome)}</td>
-            </tr>
-            <tr>
-              <th scope="row">{page.regime.totalIncome}</th>
-              <td className="col-num">{money(computation.totalIncome)}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="actions no-print">
-          <button className="link-btn" onClick={() => goTo(3)} type="button">
-            {page.review.editLabel}
-          </button>
-        </div>
-      </section>
-
-      <section className="section">
-        <h2>{page.review.taxTitle}</h2>
-        <table className="ledger-table">
-          <tbody>
-            <tr>
-              <th scope="row">{page.regime.totalTax}</th>
-              <td className="col-num">{money(computation.totalTax)}</td>
-            </tr>
-            <tr>
-              <th scope="row">{page.review.creditTitle}</th>
-              <td className="col-num">{money(computation.tdsPaid)}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="actions no-print">
-          <button className="link-btn" onClick={() => goTo(4)} type="button">
-            {page.review.editLabel}
-          </button>
-        </div>
-      </section>
-
-      <section className="section">
-        {computation.refundDue > 0 ? (
-          <>
-            <h2 className="verdict-ok">{page.review.refundTitle}</h2>
-            <p className="statement">
-              <span className="num">{money(computation.refundDue)}</span>
-            </p>
-            <p className="prose">{page.review.refundNote}</p>
-
-            {/* A refund figure with no account named beside it is half an
-                answer. The one account it can reach is named here, on the
-                screen where the money is promised, rather than left three
-                blocks up the previous step. */}
-            {refundAccount ? (
-              <div className="refund-account">
-                <p className="label">{page.review.refundAccountLabel}</p>
-                <p className="refund-account-name">
-                  {page.review.refundAccountLine(
-                    refundAccount.bank,
-                    refundAccount.masked,
-                    refundAccount.kind,
-                  )}
-                </p>
-                <p className="prose">{page.review.refundAccountNote}</p>
-                <div className="actions no-print">
-                  <button
-                    className="link-btn"
-                    onClick={() => goTo(1)}
-                    type="button"
-                  >
-                    {page.review.refundAccountEdit}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="refund-account is-missing">
-                <p className="prose">{page.review.refundNoAccountNote}</p>
-                <div className="actions no-print">
-                  <button
-                    className="link-btn"
-                    onClick={() => goTo(1)}
-                    type="button"
-                  >
-                    {page.review.refundAccountEdit}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <h2>{page.review.payableTitle}</h2>
-            <p className="statement">
-              <span className="num">{money(computation.balancePayable)}</span>
-            </p>
-            <p className="prose">{page.review.payableNote}</p>
-          </>
+      <section className="guided-outcome">
+        <p className="label">{computation.refundDue > 0 ? page.review.refundTitle : page.review.payableTitle}</p>
+        <strong className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</strong>
+        {computation.refundDue > 0 && refundAccount && <p className="consequence" style={{ marginInline: "auto" }}>{page.review.refundAccountLine(refundAccount.bank, refundAccount.masked, refundAccount.kind)}</p>}
+        {computation.refundDue > 0 && !refundAccount && (
+          <div className="caution">
+            <p>{language === "hi" ? "रिफ़ंड के लिए कोई सत्यापित खाता तैयार नहीं है।" : "No verified account is ready for the refund."}</p>
+            <button className="link-btn no-print" onClick={() => goTo(1)} type="button">
+              {language === "hi" ? "खाता चुनें" : "Choose an account"}
+            </button>
+          </div>
         )}
       </section>
 
-      <section className="section">
-        <h2>{page.review.verifyTitle}</h2>
-        <p className="prose">{page.review.verifyNote}</p>
-      </section>
-
       <label
-        className={`declare${spotlightClass("review-declare")}`}
+        className={`guided-answer${spotlightClass("review-declare")}`}
         id="review-declare"
       >
         <input
@@ -2433,21 +2038,121 @@ export function SahiReturnApp() {
           {common.back}
         </button>
       </div>
+
+      <details className="guided-details">
+        <summary>{language === "hi" ? "आय का हिसाब देखें" : "See the income total"}</summary>
+        <div className="guided-details-body">
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">{page.review.salaryLine}</th>
+              <td className="col-num">{money(computation.salaryAfterStandard)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.review.otherLine}</th>
+              <td className="col-num">{money(computation.otherIncome)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.regime.totalIncome}</th>
+              <td className="col-num">{money(computation.totalIncome)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="actions no-print">
+          <button className="link-btn" onClick={() => goTo(3)} type="button">
+            {page.review.editLabel}
+          </button>
+        </div>
+        </div>
+      </details>
+
+      <details className="guided-details">
+        <summary>{language === "hi" ? "कर का हिसाब देखें" : "See the tax total"}</summary>
+        <div className="guided-details-body">
+        <table className="ledger-table">
+          <tbody>
+            <tr>
+              <th scope="row">{page.regime.totalTax}</th>
+              <td className="col-num">{money(computation.totalTax)}</td>
+            </tr>
+            <tr>
+              <th scope="row">{page.review.creditTitle}</th>
+              <td className="col-num">{money(computation.tdsPaid)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="actions no-print">
+          <button className="link-btn" onClick={() => goTo(4)} type="button">
+            {page.review.editLabel}
+          </button>
+        </div>
+        </div>
+      </details>
+
     </>
   );
 
   const renderReceipt = () => (
     <div className="receipt">
-      <div className="receipt-head">
-        <p className="label">{page.receipt.eyebrow}</p>
+      <div className="guided-head receipt-head">
+        <p className="guided-kicker">{page.receipt.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {page.receipt.title}
+          {draft.verifiedAt
+            ? language === "hi" ? "रिटर्न फाइल और सत्यापित हो गया" : "Your return is filed and verified"
+            : language === "hi" ? "रिटर्न जमा हुआ। अब सत्यापन करें" : "Return submitted. Verify it now"}
         </h1>
-        <Prose className="lede">{page.receipt.intro}</Prose>
+        <p className="lede">
+          {draft.verifiedAt
+            ? language === "hi" ? "सब हो गया। रसीद अपने रिकॉर्ड के लिए रख लें।" : "You are done. Keep the receipt for your records."
+            : language === "hi" ? "इसे पूरा करने के लिए अब सत्यापन करें।" : "Verify it now to finish."}
+        </p>
       </div>
 
-      <div className="receipt-body">
-        <dl className="rows receipt-refs">
+      <VerifySection
+        dateFormat={(date) => formatDate(date, language)}
+        filedAt={draft.submittedIso ? new Date(draft.submittedIso) : null}
+        language={language}
+        now={now}
+        onVerify={verifyReturn}
+        reference={draft.verifiedAt ? DEMO_VERIFY_REFERENCE : null}
+        verifiedAt={draft.verifiedAt}
+      />
+
+      <section className="guided-outcome receipt-summary">
+        <div>
+          <span className="label">{page.receipt.statusLabel}</span>
+          <strong>{draft.verifiedAt ? page.receipt.statusValue : page.receipt.statusUnverified}</strong>
+        </div>
+        <div>
+          <span className="label">{computation.refundDue > 0 ? page.receipt.refundLabel : page.receipt.payableLabel}</span>
+          <strong className="amount">{money(computation.refundDue > 0 ? computation.refundDue : computation.balancePayable)}</strong>
+        </div>
+        <div>
+          <span className="label">{page.receipt.ackLabel}</span>
+          <strong>{draft.reference ?? DEMO_ACKNOWLEDGEMENT}</strong>
+        </div>
+      </section>
+
+      <div className="actions no-print receipt-actions">
+        <button className="btn" onClick={() => window.print()} type="button">
+          {page.receipt.print}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={downloadReceipt}
+          type="button"
+        >
+          {page.receipt.download}
+        </button>
+        <button className="link-btn" onClick={resetDemo} type="button">
+          {page.receipt.restart}
+        </button>
+      </div>
+
+      <details className="guided-details receipt-details">
+        <summary>{language === "hi" ? "पूरी रसीद देखें" : "View full receipt"}</summary>
+        <div className="guided-details-body receipt-body">
+          <dl className="rows receipt-refs">
           <Row
             label={page.receipt.ackLabel}
             value={draft.reference ?? DEMO_ACKNOWLEDGEMENT}
@@ -2497,50 +2202,22 @@ export function SahiReturnApp() {
             label={page.receipt.versionLabel}
             value={demoCase.calculationVersion}
           />
-        </dl>
-      </div>
+          </dl>
+          <div className="receipt-next">
+            <h2>{page.receipt.nextTitle}</h2>
+            <ul className="sequence">
+              {page.receipt.next.map((item) => (
+                <li key={item.title}>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="caution">{page.receipt.warning}</p>
+        </div>
+      </details>
 
-      {/* Before "what happens next", because until this is done none of what
-          happens next happens. */}
-      <VerifySection
-        dateFormat={(date) => formatDate(date, language)}
-        filedAt={draft.submittedIso ? new Date(draft.submittedIso) : null}
-        language={language}
-        now={now}
-        onVerify={verifyReturn}
-        reference={draft.verifiedAt ? DEMO_VERIFY_REFERENCE : null}
-        verifiedAt={draft.verifiedAt}
-      />
-
-      <div className="receipt-next">
-        <h2>{page.receipt.nextTitle}</h2>
-        <ul className="sequence">
-          {page.receipt.next.map((item) => (
-            <li key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <p className="caution">{page.receipt.warning}</p>
-
-      <div className="actions no-print">
-        <button className="btn" onClick={() => window.print()} type="button">
-          {page.receipt.print}
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={downloadReceipt}
-          type="button"
-        >
-          {page.receipt.download}
-        </button>
-        <button className="link-btn" onClick={resetDemo} type="button">
-          {page.receipt.restart}
-        </button>
-      </div>
     </div>
   );
 
@@ -2719,9 +2396,9 @@ export function SahiReturnApp() {
      details on the right; the dashboard needs the case details only; the home,
      sign-in and registration screens need the full measure to themselves. */
   const inJourney = screen === "journey" && session != null && draft.step > 0;
-  const hasMargin = inJourney || screen === "dashboard";
+  const hasMargin = screen === "dashboard";
   const layoutShape = inJourney
-    ? "is-journey"
+    ? "is-guided"
     : hasMargin
       ? "is-two"
       : "is-plain";
@@ -2860,50 +2537,19 @@ export function SahiReturnApp() {
         </div>
       </header>
 
-      <PortalNav
-        common={common}
-        onHelp={openHelp}
-        onHome={() => goTo(0)}
-        onService={openService}
-        open={navOpen}
-        setOpen={setNavOpen}
-      />
-
-      {screen === "journey" && draft.step > 0 && (
-        <div className="stepstrip no-print">
-          <div className="shell stepstrip-inner">
-            <span className="label">
-              {common.stepOf(draft.step, TOTAL_STEPS - 1)}
-            </span>
-            <span className="stepstrip-name">{common.steps[draft.step]}</span>
-            {draft.step < RECEIPT_STEP && (
-              <DeadlineInline common={common} window={filing} />
-            )}
-          </div>
-        </div>
-      )}
-
-      <main className="main" id="main-content">
+      <main className={inJourney ? "main is-journey-main" : "main"} id="main-content">
         <div className={`shell layout ${layoutShape}`}>
-          {/* The journey's table of contents belongs to the journey. On the home
-              page it was seven locked steps and "0 of 7 done" beside a screen
-              nobody had started — a progress bar for work not yet begun. */}
           {inJourney && (
             <StepRail
-              complete={draft.status === "submitted"}
+              complete={Boolean(draft.verifiedAt)}
               current={draft.step}
               language={language}
               names={common.steps}
               onGo={goTo}
               reached={draft.reached}
               words={{
-                /* Counted from how far the return has got, not from where the
-                   citizen happens to be standing in it — and once it is filed,
-                   from the fact that it is filed. The acknowledgement used to
-                   read "6 of 7 steps done" while showing a filed return, which
-                   is the one screen where nothing is left to do. */
                 count: common.stepsDone(
-                  draft.status === "submitted"
+                  draft.verifiedAt
                     ? TOTAL_STEPS - 1
                     : Math.max(0, Math.max(draft.step, draft.reached) - 1),
                   TOTAL_STEPS - 1,
@@ -2916,7 +2562,6 @@ export function SahiReturnApp() {
               }}
             />
           )}
-
           <div className="work">
             {/* "Saved on this device" is about a draft. On a screen where
                 nothing has been started there is no draft to have saved, and
@@ -2970,54 +2615,15 @@ export function SahiReturnApp() {
       )}
 
       <footer className="site-footer no-print">
-        <div className="shell footer-inner">
+        <div className="shell footer-inner guided-footer">
           <div>
             <p className="footer-mark">{common.brand}</p>
             <p>{common.officialWarning}</p>
           </div>
-          <div className="footer-col">
-            <p className="label">{common.commandGroupHelp}</p>
-            <ul>
-              <li>
-                <OutLink href={OFFICIAL_FILING_HELP} newWindow={common.newWindow}>
-                  {common.officialSource}
-                </OutLink>
-              </li>
-              <li>
-                <OutLink href={OFFICIAL_AIS_HELP} newWindow={common.newWindow}>
-                  {common.officialManual}
-                </OutLink>
-              </li>
-              <li>
-                <button className="link-btn" onClick={openSupport} type="button">
-                  {common.support}
-                </button>
-              </li>
-            </ul>
-          </div>
-          <div className="footer-col">
-            <p className="label">{common.settings}</p>
-            <ul>
-              <li>
-                <button
-                  className="link-btn"
-                  onClick={() => setClearOpen(true)}
-                  type="button"
-                >
-                  {common.clearData}
-                </button>
-              </li>
-              <li>
-                <button
-                  className="link-btn"
-                  onClick={() => setPaletteOpen(true)}
-                  type="button"
-                >
-                  {common.commandTrigger}
-                </button>
-              </li>
-            </ul>
-            <p className="fine">{demoCase.calculationVersion}</p>
+          <div className="footer-col guided-card-actions">
+            <OutLink href={OFFICIAL_FILING_HELP} newWindow={common.newWindow}>{common.officialSource}</OutLink>
+            <button className="link-btn" onClick={openSupport} type="button">{common.support}</button>
+            <button className="link-btn" onClick={() => setClearOpen(true)} type="button">{common.clearData}</button>
           </div>
         </div>
       </footer>

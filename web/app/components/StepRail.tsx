@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { stepGuides } from "../step-guide";
 import { CheckIcon, LockIcon } from "./icons";
 import { Hovercard } from "./Hovercard";
@@ -7,8 +8,20 @@ import { Hovercard } from "./Hovercard";
 type Lang = "en" | "hi";
 
 const previewLabels = {
-  en: { ask: (name: string) => `${name} — what this step involves`, needs: "You need" },
-  hi: { ask: (name: string) => `${name} — इस चरण में क्या है`, needs: "आपको चाहिए" },
+  en: {
+    ask: (name: string) => `${name}, what this step involves`,
+    hide: "Hide all steps",
+    needs: "You need",
+    show: "Show all steps",
+    stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+  },
+  hi: {
+    ask: (name: string) => `${name}, इस चरण में क्या है`,
+    hide: "सभी चरण छिपाएँ",
+    needs: "आपको चाहिए",
+    show: "सभी चरण देखें",
+    stepOf: (current: number, total: number) => `चरण ${current} / ${total}`,
+  },
 } as const;
 
 export function StepRail({
@@ -30,10 +43,10 @@ export function StepRail({
       against this, never against `current`: going back to step 4 to check a
       figure must not re-lock the step 5 you have already been through. */
   reached: number;
-  /** The return has been filed. Reaching the last step is not the same as
-      finishing it — the acknowledgement is a step you stand on, and only
-      filing makes it done — so the last node and the meter wait for this
-      rather than for `reached`. */
+  /** The return has been verified. Reaching the last step is not the same as
+      finishing it — the verification screen is a step you stand on, and only
+      verification makes it done — so the last node and the meter wait for
+      this rather than for `reached`. */
   complete: boolean;
   words: {
     label: string;
@@ -46,6 +59,7 @@ export function StepRail({
 }) {
   const guides = stepGuides[language];
   const preview = previewLabels[language];
+  const [expanded, setExpanded] = useState(false);
 
   const total = names.length - 1;
   /* How far the return has got, which is not the same as where the citizen is
@@ -59,26 +73,43 @@ export function StepRail({
 
   return (
     <nav aria-label={words.label} className="toc no-print">
-      <p className="label">{words.label}</p>
-      <p className="toc-count">{words.count}</p>
-      {/* The same count, drawn. Hidden from a screen reader because the line
-          above has already said it in words. */}
-      <div aria-hidden="true" className="toc-meter">
-        <span
-          className="toc-meter-fill"
-          style={{ width: `${total > 0 ? (walked / total) * 100 : 0}%` }}
-        />
+      <button
+        aria-expanded={expanded}
+        className="toc-toggle"
+        onClick={() => setExpanded((open) => !open)}
+        type="button"
+      >
+        <span>
+          <span className="label">{preview.stepOf(current, total)}</span>
+          <strong>{names[current]}</strong>
+        </span>
+        <span className="toc-toggle-action">
+          {expanded ? preview.hide : preview.show}
+        </span>
+      </button>
+
+      <div className="toc-summary">
+        <p className="label">{words.label}</p>
+        <p className="toc-count">{words.count}</p>
+        {/* The same count, drawn. Hidden from a screen reader because the line
+            above has already said it in words. */}
+        <div aria-hidden="true" className="toc-meter">
+          <span
+            className="toc-meter-fill"
+            style={{ width: `${total > 0 ? (walked / total) * 100 : 0}%` }}
+          />
+        </div>
       </div>
-      <ol>
+      <ol className={expanded ? "is-expanded" : undefined}>
         {names.slice(1).map((name, index) => {
           const number = index + 1;
           const here = number === current;
           /* Four states, not three. A step below the furthest you have been is
              behind you; the furthest one itself is open but not finished; and
              only what you have never opened is locked. */
-          /* Once the return is filed every step is behind you, including the
-             one you are standing on: the acknowledgement is not something left
-             to do. Until then, the step you are on is never "done". */
+          /* Once the return is verified every step is behind you, including
+             the one you are standing on. Until then, the final step remains
+             current because submission still needs verification. */
           const done = complete || (!here && number < reached);
           const open = !here && !done && number <= reached;
           const locked = number > reached;

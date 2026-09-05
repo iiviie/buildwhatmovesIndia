@@ -12,7 +12,7 @@ import {
 } from "../auth";
 import { demoCase } from "../case-data";
 import type { copy } from "../content";
-import { CheckIcon, LockIcon } from "./icons";
+import { CheckIcon } from "./icons";
 import "../styles/login.css";
 
 type Common = (typeof copy)["en"];
@@ -99,15 +99,27 @@ export function LoginScreen({
   };
 
   return (
-    <div className="auth">
+    <div className="auth guided-auth">
       <div className="auth-main">
         <div className="page-head">
-          <p className="label">{common.demoAccountNote}</p>
           <h1 tabIndex={-1}>{common.loginTitle}</h1>
           <p className="lede">
             {stage === "id" ? common.loginIntro : common.loginOtpTitle}
           </p>
         </div>
+
+        {stage === "id" && (
+          <section className="guided-start-card login-shortcut-card">
+            <div>
+              <p className="label">{common.demoAccountNote}</p>
+              <h2>{common.loginShortcut}</h2>
+              <p className="consequence">{common.loginShortcutNote}</p>
+            </div>
+            <button className="btn btn-lg" onClick={straightIn} type="button">
+              {common.loginShortcut}
+            </button>
+          </section>
+        )}
 
         {error && (
           <div className="alert" role="alert">
@@ -117,6 +129,7 @@ export function LoginScreen({
 
         {stage === "id" ? (
           <form className="auth-form" onSubmit={submitId}>
+            <p className="label">{common.loginIdLabel}</p>
             <label className="field">
               <span>{common.loginIdLabel}</span>
               <input
@@ -146,27 +159,10 @@ export function LoginScreen({
               {readback}
             </p>
 
-            {/* The demo way in sits beside Continue, not below the fold. A
-                reviewer holds no synthetic PAN, so the shortcut has to be in
-                the first screenful — but it stays the outlined, secondary
-                thing next to the citizen's real path. */}
             <div className="actions login-actions">
               <button className="btn" type="submit">
                 {common.continue}
               </button>
-              <div className="login-demo">
-                <button
-                  aria-describedby="login-demo-note"
-                  className="btn btn-secondary"
-                  onClick={straightIn}
-                  type="button"
-                >
-                  {common.loginShortcut}
-                </button>
-                <p className="login-demo-note" id="login-demo-note">
-                  {common.loginShortcutNote}
-                </p>
-              </div>
             </div>
 
             <p className="auth-alt">
@@ -176,19 +172,6 @@ export function LoginScreen({
               </button>
             </p>
 
-            <div className="auth-other">
-              <p className="label">{common.loginOtherWays}</p>
-              <button
-                aria-disabled="true"
-                aria-label={`${common.loginNetBanking}, ${common.navPlanned}`}
-                className="navlink is-off"
-                disabled
-                type="button"
-              >
-                {common.loginNetBanking}
-                <LockIcon className="nav-lock" />
-              </button>
-            </div>
           </form>
         ) : (
           <form className="auth-form" onSubmit={submitOtp}>
@@ -246,33 +229,18 @@ export function LoginScreen({
         )}
       </div>
 
-      {/* The official page puts a wall of departmental roles here. This asks
-          the question the citizen is actually stuck on. */}
-      <aside aria-label={common.loginWhichTitle} className="auth-aside">
-        <h2>{common.loginWhichTitle}</h2>
-        <p className="prose">{common.loginWhichIntro}</p>
-        <ul className="rules-list">
-          <li>
-            <CheckIcon />
-            {common.loginWhichPan}
-          </li>
-          <li>
-            <CheckIcon />
-            {common.loginWhichAadhaar}
-          </li>
-          <li>
-            <CheckIcon />
-            {common.loginWhichOther}
-          </li>
-        </ul>
-        <button
-          className="link-btn"
-          onClick={() => onAskAssistant(common.loginWhichTitle)}
-          type="button"
-        >
-          {common.registerNotSureAction}
-        </button>
-      </aside>
+      <details className="guided-details auth-aside">
+        <summary>{common.loginWhichTitle}</summary>
+        <div className="guided-details-body">
+          <p className="prose">{common.loginWhichIntro}</p>
+          <ul className="rules-list">
+            <li><CheckIcon />{common.loginWhichPan}</li>
+            <li><CheckIcon />{common.loginWhichAadhaar}</li>
+            <li><CheckIcon />{common.loginWhichOther}</li>
+          </ul>
+          <button className="link-btn" onClick={() => onAskAssistant(common.loginWhichTitle)} type="button">{common.registerNotSureAction}</button>
+        </div>
+      </details>
     </div>
   );
 }

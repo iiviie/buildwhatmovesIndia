@@ -97,8 +97,6 @@ export function VerifySection({
         </>
       ) : (
         <>
-          <Prose className="prose verify-intro">{copy.intro}</Prose>
-
           {deadline && (
             <p className="verify-deadline">
               <span className="label">{copy.deadlineLabel}</span>
@@ -111,17 +109,12 @@ export function VerifySection({
             </p>
           )}
 
-          <Prose className="verify-consequence">{copy.consequence}</Prose>
-
           {demoRoute && (
             <div className="verify-route">
-              <p className="label">{copy.routesLabel}</p>
-              <p className="verify-route-name">{demoRoute.official}</p>
-              <Prose className="verify-route-plain">{demoRoute.plain}</Prose>
-              <p className="verify-needs">
-                <span className="label">{copy.needsLabel}</span>
-                {markUp(demoRoute.needs)}
+              <p className="label">
+                {language === "hi" ? "सबसे आसान तरीका" : "Easiest option"}
               </p>
+              <p className="verify-route-name">{demoRoute.official}</p>
             </div>
           )}
 
@@ -131,6 +124,22 @@ export function VerifySection({
             </button>
           </div>
           <p className="verify-note">{copy.actionNote}</p>
+
+          <details className="pers-more verify-more">
+            <summary>
+              {language === "hi"
+                ? "सत्यापन क्यों ज़रूरी है?"
+                : "Why do I need to verify?"}
+            </summary>
+            <Prose className="prose verify-intro">{copy.intro}</Prose>
+            <Prose className="verify-consequence">{copy.consequence}</Prose>
+            {demoRoute && (
+              <p className="verify-needs">
+                <span className="label">{copy.needsLabel}</span>
+                {markUp(demoRoute.needs)}
+              </p>
+            )}
+          </details>
         </>
       )}
 

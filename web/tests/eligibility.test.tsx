@@ -94,7 +94,7 @@ describe("on the screen", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
 
     expect(
       screen.getByText("18 questions in 6 sections, already answered"),
@@ -111,7 +111,7 @@ describe("on the screen", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
 
     /* Six lines, not eighteen. A section only opens when it has something to
        say, which is what stops this reading as a wall. Scoped to the wizard —
@@ -133,7 +133,7 @@ describe("on the screen", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
     await userEvent.click(
       screen.getByRole("button", { name: /General Information/ }),
     );
@@ -160,7 +160,7 @@ describe("on the screen", () => {
     atStepOne();
     const first = render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
     await userEvent.click(
       screen.getByRole("button", { name: /Income Details/ }),
     );
@@ -171,7 +171,7 @@ describe("on the screen", () => {
 
     first.unmount();
     render(<SahiReturnApp />);
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
 
     expect(decidedForm()).not.toHaveTextContent("ITR-1");
     expect(screen.getByText(/take you out of ITR-1/i)).toBeInTheDocument();
@@ -201,7 +201,7 @@ describe("the closing verdict", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
 
     const end = within(closing());
     expect(end.getByText("Where this leaves you")).toBeInTheDocument();
@@ -221,7 +221,7 @@ describe("the closing verdict", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
     await openSection(/General Information/);
 
     const { question, option } = answer(1, "director", "yes");
@@ -246,7 +246,7 @@ describe("the closing verdict", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
     await openSection(/General Information/);
 
     const { question, option } = answer(1, "director", "yes");
@@ -268,7 +268,7 @@ describe("the closing verdict", () => {
     atStepOne();
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "What applies to you" });
+    await screen.findByRole("heading", { name: "Does this sound like you?" });
     await openSection(/Business Details/);
 
     const { question, option } = answer(2, "partner-firm", "yes");
@@ -286,25 +286,16 @@ describe("the closing verdict", () => {
   });
 });
 
-describe("the three documents", () => {
-  it("explains what they are on the way in, rather than naming them", async () => {
+describe("the guided introduction", () => {
+  it("promises a jargon-free route before naming tax documents", async () => {
     render(<SahiReturnApp />);
 
     await screen.findByRole("heading", {
-      name: "File your own salaried return, without paying anyone.",
+      name: "Answer simple questions. We will build the return.",
     });
 
-    expect(
-      screen.getByRole("heading", { name: "Your documents" }),
-    ).toBeInTheDocument();
-    /* The complaint this answers: the portal tells you to fetch Form 26AS and
-       never says what it is. It is named twice on the panel on purpose — once
-       as a document, once in a cross-check pair. */
-    expect(
-      screen.getAllByRole("heading", { name: /Form 26AS/ }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getByRole("heading", { name: "How these check each other" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/do not need to know forms, sections, or tax regimes/i)).toBeInTheDocument();
+    expect(screen.getByText("Confirm details")).toBeInTheDocument();
+    expect(screen.getByText("Recognise income")).toBeInTheDocument();
   });
 });

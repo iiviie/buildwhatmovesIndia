@@ -30,9 +30,9 @@ test("server-renders the complete prototype start page", async () => {
   const html = await response.text();
   assert.match(html, /<title>Salaried ITR filing demo \| Sahi Return<\/title>/i);
   assert.match(html, /Independent hackathon prototype/);
-  assert.match(html, /Start the return/);
+  assert.match(html, /Start the guided demo/);
   assert.match(html, /Synthetic data only/);
-  assert.match(html, /Do not upload a real tax document or identifier/);
+  assert.match(html, /No real data/);
   assert.match(html, /Skip to main content/);
   assert.match(
     html,

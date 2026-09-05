@@ -32,18 +32,23 @@ export function Dashboard({
   session: Session;
   totalSteps: number;
 }) {
-  const filed = draft.status === "submitted" || draft.reference != null;
-  const started = draft.step > 0 && !filed;
+  const submitted = draft.status === "submitted" || draft.reference != null;
+  const verified = Boolean(draft.verifiedAt);
+  const started = draft.step > 0 && !submitted;
   const done = Math.max(0, Math.min(draft.step - 1, totalSteps));
 
-  const statusLine = filed
+  const statusLine = verified
     ? common.dashReturnFiled
+    : submitted
+      ? common.dashReturnNeedsVerification
     : started
       ? common.dashReturnInProgress(done, totalSteps)
       : common.dashReturnNotStarted;
 
-  const action = filed
+  const action = verified
     ? common.dashViewReceipt
+    : submitted
+      ? common.dashVerifyReturn
     : started
       ? common.dashResume
       : common.dashStart;
@@ -62,6 +67,7 @@ export function Dashboard({
           <span className="dash-greeting">
             {greetingFor(language, now.getHours())},
           </span>
+          {" "}
           <span className="dash-name">{session.name}</span>
         </h1>
         <p className="lede">{common.dashIntro}</p>
@@ -74,7 +80,7 @@ export function Dashboard({
           <div className="task-body">
             <h3>{common.dashReturnTitle(demoCase.assessmentYear)}</h3>
             <p className="task-status">
-              {filed ? <CheckIcon /> : null}
+              {verified ? <CheckIcon /> : null}
               {statusLine}
             </p>
             <p className="task-note">{demoCase.form}</p>

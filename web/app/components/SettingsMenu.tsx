@@ -131,6 +131,7 @@ export function SettingsMenu({
       ref={wrap}
     >
       <button
+        aria-label={common.settings}
         aria-controls={id}
         aria-expanded={open}
         className="tool-btn"

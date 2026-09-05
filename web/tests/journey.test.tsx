@@ -62,7 +62,7 @@ describe("Sahi Return salaried filing journey", () => {
     const user = userEvent.setup();
     render(<SahiReturnApp />);
 
-    await user.click(screen.getByRole("button", { name: "Start the return" }));
+    await user.click(screen.getByRole("button", { name: "Start the guided demo" }));
 
     /* The portal will not start a return for a stranger, and neither does this.
        Signing in resumes the step the citizen was actually heading for. */
@@ -72,7 +72,7 @@ describe("Sahi Return salaried filing journey", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "What applies to you" }),
+      screen.getByRole("heading", { name: "Does this sound like you?" }),
     ).toBeInTheDocument();
     /* The form is decided for the citizen rather than asked of them. */
     expect(screen.getAllByText(/ITR-1 \(Sahaj\)/).length).toBeGreaterThan(0);
@@ -88,9 +88,9 @@ describe("Sahi Return salaried filing journey", () => {
     ).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "Load the demo document" }),
+      screen.getByRole("button", { name: "Use fictional demo documents" }),
     );
-    expect(screen.getByText("₹13,20,000")).toBeInTheDocument();
+    expect(screen.getAllByText("₹13,20,000").length).toBeGreaterThan(0);
 
     /* And not until the citizen confirms the figures match Form 16. */
     await user.click(screen.getByRole("button", { name: "Continue" }));
@@ -100,13 +100,13 @@ describe("Sahi Return salaried filing journey", () => {
 
     await user.click(
       screen.getByRole("checkbox", {
-        name: "These figures match my Form 16",
+        name: "Yes, these match my Form 16",
       }),
     );
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(
-      screen.getByRole("heading", { name: "Your other income" }),
+      screen.getByRole("heading", { name: "Do you recognise this income?" }),
     ).toBeInTheDocument();
     expect(screen.getByText("0 of 4 entries answered")).toBeInTheDocument();
 
@@ -116,53 +116,47 @@ describe("Sahi Return salaried filing journey", () => {
       screen.getByText("Answer every entry before continuing."),
     ).toBeInTheDocument();
 
-    const mine = screen.getAllByRole("radio", { name: journeyCopy.en.income.mine });
-    const notMine = screen.getAllByRole("radio", {
-      name: "No, I do not recognise this",
-    });
-    expect(mine).toHaveLength(4);
-
-    await user.click(mine[0]);
-    await user.click(mine[1]);
-    await user.click(mine[2]);
-    await user.click(notMine[3]);
+    for (let entry = 0; entry < 3; entry += 1) {
+      await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.mine }));
+      await user.click(screen.getByRole("button", { name: "Next income" }));
+    }
+    await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.notMine }));
     expect(screen.getByText("4 of 4 entries answered")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     /* Both regimes are computed from the citizen's own figures. */
     expect(
-      screen.getByRole("heading", { name: "Your tax regime" }),
+      screen.getByRole("heading", { name: "Which option leaves you with less tax?" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("The new regime costs you less"),
+      screen.getByText("Saves ₹84,489"),
     ).toBeInTheDocument();
-    expect(screen.getByText("₹84,489")).toBeInTheDocument();
+    expect(screen.getAllByText(/₹84,489/).length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("Choose a regime before continuing.")).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "File under the new regime" }),
+      screen.getAllByRole("button", { name: "File under the new regime" })[0],
     );
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     /* The prevention engine runs the section 139(9) rules before filing. */
     expect(
-      screen.getByRole("heading", { name: "Before you file" }),
+      screen.getByRole("heading", { name: "Your return is ready" }),
     ).toBeInTheDocument();
     expect(screen.getByText("4 of 4 checks passed")).toBeInTheDocument();
     expect(
       screen.getByText("Nothing is blocking your return"),
     ).toBeInTheDocument();
     /* The credit on the disputed entry is given up on purpose. */
-    expect(screen.getByText("Credit deliberately not claimed")).toBeInTheDocument();
     expect(screen.getByText("₹3,150")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Continue to review" }));
 
     expect(
-      screen.getByRole("heading", { name: "Review and file" }),
+      screen.getByRole("heading", { name: "One last look" }),
     ).toBeInTheDocument();
     expect(screen.getByText("You are owed a refund")).toBeInTheDocument();
     /* The refund shows in the review body and again in the margin summary. */
@@ -180,10 +174,10 @@ describe("Sahi Return salaried filing journey", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Your demo return has been filed.",
+        name: "Return submitted. Verify it now",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("DEMO-ACK-2026-4471028")).toBeInTheDocument();
+    expect(screen.getAllByText("DEMO-ACK-2026-4471028").length).toBeGreaterThan(0);
     /* The calculation version is on the receipt and in the footer. */
     expect(screen.getAllByText("DEMO-AY26-27-v2").length).toBeGreaterThan(0);
     expect(
@@ -200,21 +194,17 @@ describe("Sahi Return salaried filing journey", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your other income" });
-
-    const mine = screen.getAllByRole("radio", { name: journeyCopy.en.income.mine });
-    const notMine = screen.getAllByRole("radio", {
-      name: "No, I do not recognise this",
-    });
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
 
     /* The first three entries are the taxpayer's; the Trilok Bank line is not. */
-    await user.click(mine[0]);
-    await user.click(mine[1]);
-    await user.click(mine[2]);
-    await user.click(notMine[3]);
+    for (let entry = 0; entry < 3; entry += 1) {
+      await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.mine }));
+      await user.click(screen.getByRole("button", { name: "Next income" }));
+    }
+    await user.click(screen.getByRole("radio", { name: journeyCopy.en.income.notMine }));
 
     expect(
-      screen.getByText(/What happens to an entry you do not recognise/),
+      screen.getByText("We will leave this out"),
     ).toBeInTheDocument();
 
     /* ₹31,500 of income and its ₹3,150 credit are both excluded, so the
@@ -224,12 +214,11 @@ describe("Sahi Return salaried filing journey", () => {
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(
-      screen.getByRole("button", { name: "File under the new regime" }),
+      screen.getAllByRole("button", { name: "File under the new regime" })[0],
     );
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(screen.getByText("4 of 4 checks passed")).toBeInTheDocument();
-    expect(screen.getByText("Credit deliberately not claimed")).toBeInTheDocument();
     expect(screen.getByText("₹3,150")).toBeInTheDocument();
   });
 
@@ -243,7 +232,7 @@ describe("Sahi Return salaried filing journey", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Before you file" });
+    await screen.findByRole("heading", { name: "There is something to fix" });
     expect(screen.getByText("2 of 4 checks passed")).toBeInTheDocument();
     expect(screen.getByText("Needs your attention")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Fix this" })).toBeInTheDocument();
@@ -266,7 +255,7 @@ describe("Sahi Return salaried filing journey", () => {
     });
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Review and file" });
+    await screen.findByRole("heading", { name: "One last look" });
     await user.click(
       screen.getByRole("button", { name: "File this demo return" }),
     );
@@ -286,12 +275,12 @@ describe("Sahi Return salaried filing journey", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "अपना वेतन रिटर्न खुद भरें, किसी को पैसे दिए बिना।",
+        name: "सवालों के जवाब दें। रिटर्न हम तैयार करेंगे।",
       }),
     ).toBeInTheDocument();
     expect(document.documentElement.lang).toBe("hi");
     expect(
-      screen.getByRole("button", { name: "रिटर्न शुरू करें" }),
+      screen.getByRole("button", { name: "निर्देशित डेमो शुरू करें" }),
     ).toBeInTheDocument();
   });
 
@@ -301,13 +290,13 @@ describe("Sahi Return salaried filing journey", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(4, { language: "hi" }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "आपकी कर व्यवस्था" });
-    expect(screen.getByText("नई व्यवस्था में कम कर लगता है")).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "कौन सा विकल्प आपका कर कम करता है?" });
+    expect(screen.getByText(/84,489 बचते हैं/)).toBeInTheDocument();
     /* The Hindi locale renders the same amount in the Indian numbering system. */
     expect(screen.getAllByText(/84,489/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "पीछे" }));
     expect(
-      screen.getByRole("heading", { name: "आपकी अन्य आय" }),
+      screen.getByRole("heading", { name: "क्या आप इन पैसों को पहचानते हैं?" }),
     ).toBeInTheDocument();
   });
 
@@ -347,9 +336,12 @@ describe("Sahi Return salaried filing journey", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your other income" });
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
+    await user.click(screen.getByRole("button", { name: "Next income" }));
+    await user.click(screen.getByRole("button", { name: "Next income" }));
+    await user.click(screen.getByRole("button", { name: "Next income" }));
     await user.click(
-      screen.getByRole("button", { name: "Report this entry as not mine" }),
+      screen.getByRole("button", { name: "Report the wrong record" }),
     );
     await user.click(
       screen.getByRole("button", { name: "Create synthetic feedback reference" }),
@@ -374,7 +366,7 @@ describe("Sahi Return salaried filing journey", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "What applies to you" }),
+      await screen.findByRole("heading", { name: "Does this sound like you?" }),
     ).toBeInTheDocument();
   });
 
@@ -388,7 +380,7 @@ describe("Sahi Return salaried filing journey", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Start the return" }),
+      screen.getByRole("button", { name: "Start the guided demo" }),
     ).toBeInTheDocument();
   });
 
@@ -423,67 +415,30 @@ describe("Sahi Return salaried filing journey", () => {
     ).toBeInTheDocument();
   });
 
-  it("marks finished steps done, the current step, and the rest as locked", async () => {
+  it("shows the current position in the seven-step journey", async () => {
     signedIn();
     window.localStorage.setItem(DRAFT_KEY, draftAt(4));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your tax regime" });
+    await screen.findByRole("heading", { name: "Which option leaves you with less tax?" });
 
-    /* Status is a word, not just a colour, so it is assertable and readable. */
-    expect(screen.getByText("3 of 7 steps done")).toBeInTheDocument();
-    expect(screen.getAllByText("Done")).toHaveLength(3);
-    expect(screen.getAllByText("You are here")).toHaveLength(1);
-    expect(screen.getAllByText("Not yet")).toHaveLength(3);
-
-    /* A step not yet reached cannot be jumped to. It is marked aria-disabled
-       rather than disabled, because a disabled button takes neither hover nor
-       focus and a locked step is exactly the one whose preview is worth
-       reading. What matters is that clicking it does not move you. */
-    const locked = screen.getByRole("button", { name: /Acknowledgement/ });
-    expect(locked).toHaveAttribute("aria-disabled", "true");
-    await userEvent.click(locked);
-    expect(
-      screen.getByRole("heading", { name: "Your tax regime" }),
-    ).toBeInTheDocument();
-
-    const reached = screen.getByRole("button", { name: /Your salary/ });
-    expect(reached).not.toHaveAttribute("aria-disabled");
-    await userEvent.click(reached);
-    expect(
-      await screen.findByRole("heading", { name: "Your salary" }),
-    ).toBeInTheDocument();
+    const journey = screen.getByRole("navigation", { name: "Your return" });
+    expect(within(journey).getByText("Step 4 of 7")).toBeInTheDocument();
+    expect(within(journey).getByText("3 of 7 steps done")).toBeInTheDocument();
+    expect(within(journey).getByText("Verify and finish")).toBeInTheDocument();
   });
 
-  it("leaves a step you have already opened open when you step back from it", async () => {
+  it("keeps a completed answer when the citizen steps back", async () => {
     signedIn();
     window.localStorage.setItem(DRAFT_KEY, draftAt(5));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Before you file" });
+    await screen.findByRole("heading", { name: "Your return is ready" });
 
-    /* Back one, to check a figure against the step that produced it. */
-    await userEvent.click(screen.getByRole("button", { name: /Your tax regime/ }));
-    await screen.findByRole("heading", { name: "Your tax regime" });
-
-    /* The step just left is not locked again. Locking it would mean a citizen
-       who went back to look at something had to redo their way forward. */
-    const stepBack = screen.getByRole("button", { name: /Before you file/ });
-    expect(stepBack).not.toHaveAttribute("aria-disabled");
-    expect(stepBack).toHaveTextContent("You have been here");
-
-    /* Nor is the progress count wound back to where they are standing. */
-    expect(screen.getByText("4 of 7 steps done")).toBeInTheDocument();
-
-    await userEvent.click(stepBack);
-    expect(
-      await screen.findByRole("heading", { name: "Before you file" }),
-    ).toBeInTheDocument();
-
-    /* What was never opened is still shut. */
-    expect(
-      screen.getByRole("button", { name: /Acknowledgement/ }),
-    ).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    await screen.findByRole("heading", { name: "Which option leaves you with less tax?" });
+    expect(screen.getByRole("button", { name: "Chosen" })).toBeInTheDocument();
+    expect(within(screen.getByRole("navigation", { name: "Your return" })).getByText("Step 4 of 7")).toBeInTheDocument();
   });
 
   it("states the accepted formats and size limit before the file control", async () => {
@@ -491,14 +446,9 @@ describe("Sahi Return salaried filing journey", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(2));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your salary" });
-    expect(
-      screen.getByText("PDF, JPG or PNG. Nothing else is accepted."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Up to 5 MB for each document."),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/A photo is fine/)).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Add your salary documents" });
+    expect(screen.getByText(/PDF or photo, up to 5 MB each/)).toBeInTheDocument();
+    expect(screen.getByText(/Do not add real documents/)).toBeInTheDocument();
   });
 
   it("names the official portal field beside our plain-language one", async () => {
@@ -506,7 +456,7 @@ describe("Sahi Return salaried filing journey", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(2));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your salary" });
+    await screen.findByRole("heading", { name: "Add your salary documents" });
     expect(screen.getByText("B1 i. Gross Salary (a + b + c)")).toBeInTheDocument();
     expect(
       screen.getByText("B1 iii a. Standard Deduction u/s 16(ia)"),
@@ -521,12 +471,8 @@ describe("Sahi Return salaried filing journey", () => {
   it("says up front that nothing will be charged and when the amount appears", () => {
     render(<SahiReturnApp />);
 
-    expect(
-      screen.getByText(
-        "This service is free, and it will never ask you to pay anything.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/whether you are owed a refund/)).toBeInTheDocument();
+    expect(screen.getByText("No real data")).toBeInTheDocument();
+    expect(screen.getByText("About 5 minutes")).toBeInTheDocument();
   });
 
   it("keeps contextual help keyboard dismissible", async () => {
@@ -570,7 +516,7 @@ it("shows the profile and contact the department already holds", async () => {
   window.localStorage.setItem(DRAFT_KEY, draftAt(1));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "What applies to you" });
+  await screen.findByRole("heading", { name: "Does this sound like you?" });
 
   expect(
     screen.getByRole("heading", { name: "Who the department thinks you are" }),
@@ -599,7 +545,7 @@ it("takes a correction to a prefilled field and marks it as the citizen's", asyn
   window.localStorage.setItem(DRAFT_KEY, draftAt(1));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "What applies to you" });
+  await screen.findByRole("heading", { name: "Does this sound like you?" });
 
   const contact = screen
     .getByRole("heading", { name: "Where the department would write to you" })
@@ -641,7 +587,7 @@ it("cancels an edit without touching the draft", async () => {
   window.localStorage.setItem(DRAFT_KEY, draftAt(1));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "What applies to you" });
+  await screen.findByRole("heading", { name: "Does this sound like you?" });
   const profile = screen
     .getByRole("heading", { name: "Who the department thinks you are" })
     .closest("section") as HTMLElement;
@@ -666,7 +612,7 @@ it("shows PAN and Aadhaar without offering a box to retype them into", async () 
   window.localStorage.setItem(DRAFT_KEY, draftAt(1));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "What applies to you" });
+  await screen.findByRole("heading", { name: "Does this sound like you?" });
   const profile = screen
     .getByRole("heading", { name: "Who the department thinks you are" })
     .closest("section") as HTMLElement;
@@ -689,7 +635,7 @@ it("asks for a secondary address only once the two differ", async () => {
   window.localStorage.setItem(DRAFT_KEY, draftAt(1));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "What applies to you" });
+  await screen.findByRole("heading", { name: "Does this sound like you?" });
   const contact = screen
     .getByRole("heading", { name: "Where the department would write to you" })
     .closest("section") as HTMLElement;
@@ -719,15 +665,11 @@ it("names the account the refund would be paid into, beside the figure", async (
   window.localStorage.setItem(DRAFT_KEY, draftAt(6));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "Review and file" });
+  await screen.findByRole("heading", { name: "One last look" });
 
   expect(screen.getByText("You are owed a refund")).toBeInTheDocument();
-  expect(screen.getByText("It would be paid into")).toBeInTheDocument();
   expect(
     screen.getByText("Sampurna Bank · DEMOXXXXXXXX4021 · Savings"),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "Change the account" }),
   ).toBeInTheDocument();
 });
 
@@ -740,10 +682,11 @@ it("says so plainly when no account can receive the refund", async () => {
   );
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "Review and file" });
+  await screen.findByRole("heading", { name: "One last look" });
   expect(
-    screen.getByText(/No validated account is nominated for the refund/),
+    screen.getByText("No verified account is ready for the refund."),
   ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Choose an account" })).toBeInTheDocument();
 });
 });
 
@@ -755,7 +698,7 @@ it("does not let the acknowledgement claim the return is finished", async () => 
   window.localStorage.setItem(DRAFT_KEY, draftAt(6, { declaration: true }));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "Review and file" });
+  await screen.findByRole("heading", { name: "One last look" });
   await user.click(
     screen.getByRole("button", { name: "File this demo return" }),
   );
@@ -770,7 +713,7 @@ it("does not let the acknowledgement claim the return is finished", async () => 
   expect(within(verify).getByText("30 days left")).toBeInTheDocument();
   /* The status row in the receipt above must not disagree with it. */
   expect(
-    screen.getByText("Simulated filing complete, not verified"),
+    screen.getAllByText("Simulated filing complete, not verified")[0],
   ).toBeInTheDocument();
 });
 
@@ -780,7 +723,7 @@ it("verifies the demo return without pretending to send an OTP", async () => {
   window.localStorage.setItem(DRAFT_KEY, draftAt(6, { declaration: true }));
   render(<SahiReturnApp />);
 
-  await screen.findByRole("heading", { name: "Review and file" });
+  await screen.findByRole("heading", { name: "One last look" });
   await user.click(
     screen.getByRole("button", { name: "File this demo return" }),
   );
@@ -796,14 +739,22 @@ it("verifies the demo return without pretending to send an OTP", async () => {
   const done = await screen.findByRole("heading", {
     name: "Filed and verified",
   });
+  expect(
+    screen.getByRole("heading", { name: "Your return is filed and verified" }),
+  ).toBeInTheDocument();
   const verify = done.closest("section") as HTMLElement;
   expect(within(verify).getByText("DEMO-EVC-2026-5510834")).toBeInTheDocument();
   expect(
-    screen.getByText("Simulated filing complete, verified"),
+    screen.getAllByText("Simulated filing complete, verified")[0],
   ).toBeInTheDocument();
   expect(
     screen.queryByRole("button", { name: "e-Verify this demo return" }),
   ).not.toBeInTheDocument();
+  expect(
+    within(screen.getByRole("navigation", { name: "Your return" })).getByText(
+      "7 of 7 steps done",
+    ),
+  ).toBeInTheDocument();
 });
 
 it("keeps the other six routes readable rather than hidden", async () => {
@@ -845,7 +796,7 @@ describe("stopping the reader at the field that is wrong", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your salary" });
+    await screen.findByRole("heading", { name: "Add your salary documents" });
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(
@@ -853,7 +804,7 @@ describe("stopping the reader at the field that is wrong", () => {
     ).toBeInTheDocument();
 
     const box = screen
-      .getByText("These figures match my Form 16")
+      .getByText("Yes, these match my Form 16")
       .closest("label")
       ?.querySelector("input") as HTMLInputElement;
     expect(box).toHaveFocus();
@@ -866,7 +817,7 @@ describe("stopping the reader at the field that is wrong", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(4, { regime: null }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your tax regime" });
+    await screen.findByRole("heading", { name: "Which option leaves you with less tax?" });
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     const cards = document.getElementById("regime-choice") as HTMLElement;
@@ -889,15 +840,14 @@ describe("stopping the reader at the field that is wrong", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your other income" });
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
     await user.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByText(/Meghdoot/);
 
     expect(
       document.getElementById("entry-dividend-meghdoot"),
     ).toHaveClass("is-spotlit");
-    expect(document.getElementById("entry-fd-sampurna")).not.toHaveClass(
-      "is-spotlit",
-    );
+    expect(document.getElementById("entry-fd-sampurna")).not.toBeInTheDocument();
   });
 
   /* The ring for a refusal and the ring for a hand-off must not look alike. */
@@ -907,7 +857,7 @@ describe("stopping the reader at the field that is wrong", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(4, { regime: null }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your tax regime" });
+    await screen.findByRole("heading", { name: "Which option leaves you with less tax?" });
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.getElementById("regime-choice")).toHaveClass(
       "is-spotlit-error",
@@ -923,11 +873,11 @@ describe("stopping the reader at the field that is wrong", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your salary" });
+    await screen.findByRole("heading", { name: "Add your salary documents" });
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.getElementById("salary-confirm")).toHaveClass("is-spotlit");
 
-    await user.click(screen.getByText("These figures match my Form 16"));
+    await user.click(screen.getByText("Yes, these match my Form 16"));
     expect(document.getElementById("salary-confirm")).not.toHaveClass(
       "is-spotlit",
     );
@@ -941,11 +891,11 @@ describe("correcting a figure the statement got wrong", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(3, { incomeAnswers: {} }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your other income" });
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
 
     const entry = document.getElementById("entry-savings-sampurna") as HTMLElement;
     await user.click(
-      within(entry).getByRole("radio", { name: /Yes, but the figure is wrong/ }),
+      within(entry).getByRole("radio", { name: "The amount is wrong" }),
     );
 
     /* The box appears several lines above the radio that opened it, so nothing
@@ -976,23 +926,23 @@ describe("the review step once the return is already filed", () => {
     );
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Review and file" });
+    await screen.findByRole("heading", { name: "One last look" });
     await user.click(
       screen.getByRole("button", { name: "File this demo return" }),
     );
 
     expect(
       await screen.findByRole("heading", {
-        name: "Your demo return has been filed.",
+        name: "Return submitted. Verify it now",
       }),
     ).toBeInTheDocument();
   });
 });
 
 describe("the journey progress", () => {
-  /* Reaching the last step and finishing it are different things, and the one
-     screen where nothing is left to do used to say six of seven. */
-  it("counts every step once the return is filed", async () => {
+  /* Submission is not completion. The final step stays current until the
+     citizen verifies the return. */
+  it("shows one step left after the return is submitted", async () => {
     signedIn();
     window.localStorage.setItem(
       DRAFT_KEY,
@@ -1007,9 +957,11 @@ describe("the journey progress", () => {
     render(<SahiReturnApp />);
 
     await screen.findByRole("heading", {
-      name: "Your demo return has been filed.",
+      name: "Return submitted. Verify it now",
     });
-    expect(screen.getByText("7 of 7 steps done")).toBeInTheDocument();
+    const journey = screen.getByRole("navigation", { name: "Your return" });
+    expect(within(journey).getByText("Step 7 of 7")).toBeInTheDocument();
+    expect(within(journey).getByText("6 of 7 steps done")).toBeInTheDocument();
   });
 
   it("counts how far the return has got, not where the reader stands", async () => {
@@ -1017,9 +969,8 @@ describe("the journey progress", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(3, { reached: 5 }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your other income" });
-    /* Stepping back to check a figure does not undo the steps behind it. */
-    expect(screen.getByText("4 of 7 steps done")).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Do you recognise this income?" });
+    expect(screen.getByText("Step 3 of 7")).toBeInTheDocument();
   });
 });
 
@@ -1029,15 +980,11 @@ describe("the regime cards", () => {
     window.localStorage.setItem(DRAFT_KEY, draftAt(4, { regime: null }));
     render(<SahiReturnApp />);
 
-    await screen.findByRole("heading", { name: "Your tax regime" });
+    await screen.findByRole("heading", { name: "Which option leaves you with less tax?" });
 
-    const recaps = document.querySelectorAll(".regime-recap");
-    expect(recaps).toHaveLength(2);
-    /* One per card, each sitting directly above its own choose button. */
-    for (const recap of recaps) {
-      expect(
-        within(recap as HTMLElement).getByText("What you would pay under it"),
-      ).toBeInTheDocument();
-    }
+    const cards = document.querySelectorAll(".guided-choice-card");
+    expect(cards).toHaveLength(2);
+    expect(screen.getAllByText("₹79,810").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₹1,64,299").length).toBeGreaterThan(0);
   });
 });

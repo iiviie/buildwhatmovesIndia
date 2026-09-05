@@ -1,0 +1,628 @@
+/* The guided filing layer keeps the tax engine and audit trail, but changes
+   what a citizen meets first. One screen asks for one decision. Explanations,
+   portal field names and calculations stay available behind a disclosure. */
+
+.layout.is-guided {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.layout.is-guided .work {
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .layout.is-guided {
+    width: 100%;
+    grid-template-columns: minmax(180px, 220px) minmax(0, 760px);
+    gap: clamp(28px, 4vw, 56px);
+  }
+}
+
+.main.is-journey-main {
+  padding-top: var(--s4);
+}
+
+.layout.is-guided .savebar {
+  min-height: 20px;
+  margin-bottom: var(--s2);
+  font-size: var(--t-small);
+}
+
+.layout.is-guided .actions {
+  margin-top: var(--s4);
+}
+
+.guided-home {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+.guided-hero {
+  max-width: 760px;
+  padding-block: var(--s2) var(--s5);
+}
+
+.guided-hero h1 {
+  max-width: 15ch;
+  margin-top: var(--s2);
+  font-size: clamp(2.5rem, 2rem + 2.4vw, 4.25rem);
+  line-height: 1;
+}
+
+.guided-hero .lede {
+  max-width: 42ch;
+  margin-top: var(--s4);
+  font-size: clamp(1.08rem, 1rem + 0.45vw, 1.3rem);
+}
+
+@media (min-width: 900px) {
+  .guided-home {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(440px, 1.1fr);
+    align-items: center;
+    gap: clamp(36px, 5vw, 72px);
+  }
+
+  .guided-home > .guided-flow,
+  .guided-home > .guided-more {
+    grid-column: 1 / -1;
+  }
+
+  .guided-hero {
+    padding-block: var(--s4);
+  }
+
+  .guided-hero h1 {
+    font-size: clamp(3rem, 2.4rem + 1.8vw, 4.25rem);
+  }
+}
+
+.guided-start-card,
+.guided-panel,
+.guided-choice-card,
+.guided-income-card,
+.guided-outcome {
+  border: 1px solid var(--rule-2);
+  border-radius: 20px;
+  background: var(--sheet);
+}
+
+.guided-start-card {
+  display: grid;
+  gap: var(--s4);
+  padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 16px 60px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.guided-start-card h2 {
+  max-width: 22ch;
+  font-family: var(--sans);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 2rem);
+  font-weight: 700;
+}
+
+.guided-start-meta,
+.guided-fact-grid,
+.guided-money-grid,
+.guided-choice-grid,
+.guided-flow {
+  display: grid;
+  gap: var(--s3);
+}
+
+.guided-start-meta {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.guided-start-meta > div,
+.guided-fact,
+.guided-money {
+  padding: var(--s4);
+  border-radius: 14px;
+  background: var(--paper-2);
+}
+
+.guided-start-meta strong,
+.guided-fact strong,
+.guided-money strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.guided-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.guided-card-actions .btn {
+  min-width: min(100%, 260px);
+}
+
+.guided-flow {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: var(--s4);
+  counter-reset: guided-flow;
+}
+
+.guided-flow li {
+  display: grid;
+  gap: var(--s2);
+  padding: var(--s4);
+  border-top: 2px solid var(--accent);
+  counter-increment: guided-flow;
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.guided-flow li::before {
+  color: var(--accent);
+  content: counter(guided-flow, decimal-leading-zero);
+  font-size: var(--t-label);
+}
+
+.guided-more {
+  margin-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.guided-more > summary,
+.guided-details > summary {
+  min-height: 52px;
+  padding-block: var(--s4);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.guided-more-body,
+.guided-details-body {
+  padding: 0 0 var(--s6);
+}
+
+.guided-head {
+  display: grid;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  text-align: left;
+}
+
+.guided-head h1 {
+  max-width: 23ch;
+  font-size: clamp(2rem, 1.7rem + 1.25vw, 3rem);
+  line-height: 1.02;
+}
+
+.guided-head .lede {
+  max-width: 48ch;
+  color: var(--ink-2);
+}
+
+.layout.is-guided .guided-kicker {
+  display: none;
+}
+
+.layout.is-guided h1[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+.guided-kicker {
+  color: var(--accent);
+  font-size: var(--t-small);
+  font-weight: 700;
+}
+
+.guided-panel {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.guided-panel + .guided-panel,
+.guided-panel + .guided-details,
+.guided-details + .guided-panel {
+  margin-top: var(--s3);
+}
+
+.guided-panel h2 {
+  margin-bottom: var(--s4);
+  font-family: var(--sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.guided-fact-grid,
+.guided-money-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.guided-fact span,
+.guided-money span {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.guided-panel .files li {
+  padding: var(--s3);
+  background: var(--paper-2);
+}
+
+.guided-money strong {
+  color: var(--accent);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 2rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.guided-answer {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4);
+  border: 1px solid var(--rule-2);
+  border-radius: 14px;
+  margin-top: var(--s4);
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.guided-answer:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--sheet));
+}
+
+.guided-answer input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.guided-details {
+  border-bottom: 1px solid var(--rule);
+}
+
+.guided-details[open] > summary {
+  color: var(--accent);
+}
+
+.guided-income-list {
+  display: grid;
+  gap: var(--s4);
+}
+
+.guided-income-card {
+  min-width: 0;
+  padding: clamp(18px, 3vw, 30px);
+}
+
+.guided-income-card.finding {
+  border-top: 1px solid var(--rule-2);
+  margin-top: var(--s4);
+}
+
+.guided-income-card .entry-facts {
+  margin-top: var(--s3);
+}
+
+.guided-income-card .portal-line,
+.guided-income-card > .source-line,
+.guided-income-card .choice-help,
+#income-entries > .portal-line {
+  display: none;
+}
+
+.guided-income-card .choices {
+  border: 0;
+  padding: 0;
+}
+
+.guided-income-card .guided-choice {
+  margin: 0;
+}
+
+.guided-income-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.guided-income-top legend {
+  max-width: 28ch;
+  font-weight: 700;
+}
+
+.guided-income-amount {
+  flex: none;
+  color: var(--accent);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.guided-choice-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--s4);
+}
+
+.guided-choice-grid > .label {
+  grid-column: 1 / -1;
+}
+
+.guided-choice {
+  position: relative;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s3);
+  border: 1px solid var(--rule-2);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 650;
+  text-align: center;
+}
+
+.guided-choice:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--sheet));
+  color: var(--accent-strong);
+}
+
+.guided-choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.guided-income-status {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s2) 0 var(--s3);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.income-nav {
+  justify-content: space-between;
+  margin-top: var(--s4);
+}
+
+.income-nav .btn:only-child {
+  margin-left: auto;
+}
+
+.guided-choice-grid.regimes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.guided-choice-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: clamp(18px, 2.5vw, 24px);
+}
+
+.guided-choice-card.is-recommended {
+  border: 2px solid var(--accent);
+}
+
+.guided-choice-card .price {
+  color: var(--ink);
+  font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.guided-choice-card .consequence {
+  margin-top: 0;
+}
+
+.guided-choice-card .btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+.guided-saved {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--sheet));
+  color: var(--accent-strong);
+  font-size: var(--t-label);
+  font-weight: 750;
+}
+
+.guided-check-mark {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border-radius: 50%;
+  margin: 0 auto var(--s4);
+  background: color-mix(in srgb, var(--ok) 14%, var(--sheet));
+  color: var(--ok);
+}
+
+.guided-check-mark svg {
+  width: 34px;
+  height: 34px;
+}
+
+.guided-outcome {
+  padding: clamp(22px, 3vw, 34px);
+  text-align: center;
+}
+
+.guided-outcome .amount {
+  display: block;
+  margin-block: var(--s2);
+  color: var(--accent);
+  font-family: var(--serif);
+  font-size: clamp(3rem, 2.2rem + 3vw, 4.75rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.receipt-summary {
+  display: grid;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+}
+
+.receipt-summary > div {
+  display: grid;
+  gap: var(--s1);
+}
+
+.receipt-summary strong {
+  overflow-wrap: anywhere;
+  font-size: 1.1rem;
+}
+
+.receipt-summary .amount {
+  font-size: clamp(1.8rem, 1.35rem + 2vw, 2.8rem);
+}
+
+.receipt .verify {
+  margin-block: 0 var(--s5);
+  border-radius: 20px;
+}
+
+.receipt-details {
+  margin-bottom: var(--s5);
+}
+
+.receipt-actions {
+  margin-bottom: var(--s4);
+}
+
+.guided-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.guided-auth {
+  grid-template-columns: 1fr;
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.guided-auth .auth-main {
+  max-width: none;
+}
+
+.login-shortcut-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  margin-bottom: var(--s6);
+  padding: var(--s5);
+  box-shadow: none;
+}
+
+.guided-auth .auth-aside {
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 0;
+}
+
+.guided-auth .auth-form {
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 699px) {
+  .guided-flow,
+  .guided-money-grid,
+  .guided-choice-grid,
+  .guided-choice-grid.regimes {
+    grid-template-columns: 1fr;
+  }
+
+  .guided-fact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guided-fact {
+    padding: var(--s3);
+  }
+
+  .guided-start-card {
+    gap: var(--s4);
+  }
+
+  .main.is-journey-main {
+    padding-top: var(--s2);
+  }
+
+  .guided-head h1 {
+    font-size: clamp(1.85rem, 1.55rem + 1.8vw, 2.25rem);
+  }
+
+  .guided-start-meta {
+    display: flex;
+    gap: 0;
+  }
+
+  .guided-start-meta > div {
+    min-width: 0;
+    flex: 1;
+    padding: 0 var(--s3);
+    border-left: 1px solid var(--rule);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .guided-start-meta > div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .guided-start-meta .label {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+
+  .guided-start-meta strong {
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  .guided-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guided-income-top {
+    display: grid;
+  }
+
+  .guided-choice-grid:not(.regimes) {
+    gap: var(--s2);
+  }
+
+  .guided-card-actions .btn,
+  .guided-card-actions .btn-secondary {
+    width: 100%;
+  }
+
+  .login-shortcut-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-start-card {
+    box-shadow: none;
+  }
+}

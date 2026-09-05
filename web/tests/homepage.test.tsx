@@ -41,7 +41,7 @@ describe("the homepage", () => {
   it("leads with the action, not with the announcements", () => {
     render(<SahiReturnApp />);
 
-    const start = screen.getByRole("button", { name: "Start the return" });
+    const start = screen.getByRole("button", { name: "Start the guided demo" });
     const notices = screen.getByRole("heading", { name: "Notices" });
 
     /* The primary action appears before the notices in document order, which
@@ -53,9 +53,9 @@ describe("the homepage", () => {
 
   it("says what you need before you commit to starting", () => {
     render(<SahiReturnApp />);
-    expect(screen.getByText("Start here")).toBeInTheDocument();
+    expect(screen.getByText("Try a fictional salaried return")).toBeInTheDocument();
     expect(
-      screen.getByText("Your Form 16 from your employer, as a PDF or a photo"),
+      screen.getByText("No real data"),
     ).toBeInTheDocument();
   });
 
@@ -126,7 +126,7 @@ describe("the homepage", () => {
       screen.getByRole("button", { name: "Sign in as the demo taxpayer" }),
     );
     expect(
-      screen.getByRole("heading", { name: "Your tax regime" }),
+      screen.getByRole("heading", { name: "Which option leaves you with less tax?" }),
     ).toBeInTheDocument();
   });
 
@@ -205,7 +205,7 @@ describe("the notices archive", () => {
 
     await user.click(screen.getByRole("button", { name: en.noticesBack }));
     expect(
-      await screen.findByRole("button", { name: "Start the return" }),
+      await screen.findByRole("button", { name: "Start the guided demo" }),
     ).toBeInTheDocument();
   });
 });

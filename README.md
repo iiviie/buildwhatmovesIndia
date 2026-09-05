@@ -13,6 +13,7 @@ The prototype does not connect to the Income Tax Department, calculate tax for a
 - `docs/2026-08-26-interface-principles.md` records the first three principles the interface is built against.
 - `docs/2026-08-28-citizen-ux-principles.md` records six further principles: task-list status, the missed-deadline alert, stating rules before controls, on-device file conversion, one divider level, and using the real form's own field names.
 - `docs/2026-08-28-site-shell-auth-and-assistant.md` records the site shell, the seven portal sections, the sign-in gate, the repaired registration question, and the filing assistant.
+- `docs/2026-09-05-guided-filing-redesign.md` records the mentor-led shift from explaining tax jargon up front to asking plain questions and revealing technical detail only when requested.
 - `docs/2026-08-24-government-service-quality-checklist.md` is the release checklist.
 - `.codex/builder-brief.md` records the hackathon rules and submission requirements.
 
@@ -157,7 +158,7 @@ Step 0 is the start screen and is not numbered.
 
 The route works in English and Hindi, and the layout does not move when the language changes. A citizen can raise synthetic AIS feedback on an entry they do not recognise at any point before filing.
 
-The step list is a task list: each step shows a tick, a number or a padlock, together with the words `Done`, `You are here` or `Not yet`, and a `3 of 7 steps done` count above it. Status is never carried by colour alone.
+The filing journey uses a seven-step vertical journey map on wider screens and a compact, expandable vertical map on phones. It always names the current step, the total number of steps, and how many are complete. Each screen asks for one decision, and calculation details, portal field names and uncommon corrections stay behind named disclosures. Income entries are reviewed one at a time.
 
 The filing deadline is real, not a demo device. Before 31 July 2026 the interface counts down to the due date. After it, the start screen leads with an alert naming the section 234F late fee, the section 234A interest, and the days left to file a belated return before 31 December 2026. After that date it points to the updated-return route. The fee follows the income, and the state machine is tested at fixed dates on both sides of midnight IST.
 
