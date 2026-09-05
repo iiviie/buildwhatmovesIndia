@@ -1,7 +1,7 @@
 # Guided filing redesign
 
 Created: 2026-09-05 01:21 IST (UTC+05:30)
-Last updated: 2026-09-06 02:41 IST (UTC+05:30)
+Last updated: 2026-09-06 03:15 IST (UTC+05:30)
 
 ## Why this changed
 
@@ -36,7 +36,7 @@ The full seven-step flow was checked again after the tax-saving change. Answer-d
 
 Uploaded demo documents have an in-product preview. Income review keeps its previous and next controls together. The final review gives the result, refund account, key totals, declaration, and filing action a clear reading order. The acknowledgement no longer uses nested certificate borders: verification is one card, the receipt is a second card, and the full receipt remains a separate disclosure.
 
-The desktop progress rail now separates adjacent interaction surfaces, gives available rows a visible hover edge, closes any preview before navigation, and keeps the current row from reopening a preview over its own content. Detailed step previews remain available on keyboard focus.
+The desktop progress control is now a navigation index instead of a connected timeline. Seven short marks state overall completion, while each row keeps its number, label, and state in fixed columns. The current row uses a quiet accent tint, completed rows use neutral checks at the far edge, and locked rows keep a lock icon. This removes the competing track, colored beads, outlined card, and merged hover surfaces. Detailed step previews remain available on keyboard focus.
 
 ## Reference used
 

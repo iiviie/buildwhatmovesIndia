@@ -91,13 +91,20 @@ export function StepRail({
       <div className="toc-summary">
         <p className="label">{words.label}</p>
         <p className="toc-count">{words.count}</p>
-        {/* The same count, drawn. Hidden from a screen reader because the line
-            above has already said it in words. */}
-        <div aria-hidden="true" className="toc-meter">
-          <span
-            className="toc-meter-fill"
-            style={{ width: `${total > 0 ? (walked / total) * 100 : 0}%` }}
-          />
+        {/* The same count, split into the same number of parts as the journey.
+            Hidden from a screen reader because the line above already says it
+            in words. */}
+        <div
+          aria-hidden="true"
+          className="toc-meter"
+          style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: total }, (_, index) => (
+            <span
+              className={`toc-meter-segment${index < walked ? " is-done" : ""}`}
+              key={index}
+            />
+          ))}
         </div>
       </div>
       <ol className={expanded ? "is-expanded" : undefined}>
@@ -117,34 +124,24 @@ export function StepRail({
 
           /* Status is carried by an icon and a word, never by colour alone, so
              it survives a screen reader and a monochrome display. */
-          const status = done
-            ? words.done
-            : here
-              ? words.here
+          const status = here
+            ? words.here
+            : done
+              ? words.done
               : open
                 ? words.open
                 : words.locked;
 
           const state = here
-            ? `is-current${done ? " is-complete" : ""}`
+            ? "is-current"
             : done
               ? "is-done"
               : open
                 ? "is-open"
                 : "is-locked";
 
-          /* The connector is drawn in two halves per row, above the mark and
-             below it, so a step name that wraps onto a second line cannot pull
-             the track out of line. A half is inked when the whole of it lies
-             behind the frontier; the frontier itself falls on the mark, which
-             is where the walked length is meant to stop. */
-          const trail = [
-            (complete || number <= frontier) && "has-trail-in",
-            (complete || number < frontier) && "has-trail-out",
-          ].filter(Boolean);
-
           return (
-            <li className={[state, ...trail].join(" ")} key={name}>
+            <li className={state} key={name}>
               <Hovercard
                 current={here}
                 label={`${preview.ask(name)}. ${status}.`}
@@ -179,14 +176,7 @@ export function StepRail({
                 placement="beside"
                 unavailable={locked}
               >
-                {/* The mark and the two lengths of track that meet at it. The
-                    wrapper exists to give those lengths something the height of
-                    the whole row to hang from. */}
-                <span aria-hidden="true" className="toc-node">
-                  <span className="toc-mark">
-                    {done ? <CheckIcon /> : (here || open) ? number : locked ? <LockIcon /> : null}
-                  </span>
-                </span>
+                <span aria-hidden="true" className="toc-index">{number}</span>
                 <span className="toc-label">
                   {name}
                   {/* The mark already says which state a row is in — a tick, a
@@ -199,6 +189,10 @@ export function StepRail({
                   ) : (
                     <span className="sr-only">{status}</span>
                   )}
+                </span>
+                <span aria-hidden="true" className="toc-end">
+                  {!here && done && <CheckIcon />}
+                  {locked && <LockIcon />}
                 </span>
               </Hovercard>
             </li>

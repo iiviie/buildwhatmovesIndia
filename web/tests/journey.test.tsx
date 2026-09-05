@@ -1095,6 +1095,8 @@ describe("the journey progress", () => {
     const journey = screen.getByRole("navigation", { name: "Your return" });
     expect(within(journey).getByText("Step 7 of 7")).toBeInTheDocument();
     expect(within(journey).getByText("6 of 7 steps done")).toBeInTheDocument();
+    expect(journey.querySelectorAll(".toc-meter-segment")).toHaveLength(7);
+    expect(journey.querySelectorAll(".toc-meter-segment.is-done")).toHaveLength(6);
   });
 
   it("counts how far the return has got, not where the reader stands", async () => {

@@ -1,25 +1,9 @@
-/* The journey rail.
-
-   It was a list of seven rows, each with a small mark at the left. Everything
-   needed to answer "how far along am I" was on the screen, but only as seven
-   separate facts: to get the answer you had to count the ticks. So the marks
-   are now strung on a track, and the part of the track you have already walked
-   is inked in. Distance is a thing the eye measures without being asked.
-
-   Colour still carries nothing on its own. A finished step keeps its tick, the
-   step you are on keeps its number and the visible word under it, and a step
-   you have not reached keeps its padlock. Turn the screen monochrome and the
-   rail still reads. */
+/* The journey rail is navigation, not a second form. Its header answers how
+   far the return has got. The rows answer where each step goes. Keeping those
+   two jobs separate makes the list quicker to scan and stops the current step
+   from becoming a card inside the page. */
 
 .toc {
-  /* The geometry, in one place, because the connector and the marks have to
-     agree to the pixel or the track shows a step in it. --rail-run is both the
-     row's vertical padding and the length of track between two marks. */
-  --rail-mark: 20px;
-  --rail-run: var(--s2);
-  --rail-track: 2px;
-  --rail-gap: 4px;
-
   display: block;
   min-width: 0;
 }
@@ -55,9 +39,9 @@
 
 .toc-toggle-action {
   flex: none;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: var(--t-small);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .toc-summary {
@@ -74,42 +58,34 @@
   }
 }
 
-.toc > .label {
-  margin-bottom: var(--s1);
-}
-
 .toc-count {
-  /* The one line that states the progress in words, so it is set at the weight
-     of the supporting text rather than the weight of a caption. */
-  margin-bottom: 6px;
+  margin-top: var(--s1);
   color: var(--ink-2);
   font-size: var(--t-small);
   font-variant-numeric: tabular-nums;
 }
 
-/* The same fact as the line above, drawn. It is hidden from a screen reader
-   because a reader that has just heard "4 of 7 steps done" does not need a
-   second telling. */
+/* Seven short marks make the number of remaining steps visible without a
+   second timeline competing with the navigation below. */
 .toc-meter {
-  overflow: hidden;
+  display: grid;
+  gap: var(--s1);
+  margin-block: var(--s3) var(--s4);
+}
+
+.toc-meter-segment {
   height: 3px;
-  margin-bottom: var(--s4);
   border-radius: 999px;
-  background: var(--rule);
+  background: var(--rule-2);
 }
 
-.toc-meter-fill {
-  display: block;
-  height: 100%;
-  background: var(--ok);
-  transition: width var(--dur) var(--ease);
+.toc-meter-segment.is-done {
+  background: var(--accent);
 }
 
-/* A task list, not a rule-separated index. A narrow gap keeps the hover and
-   current surfaces from visually merging; the connector bridges it. */
 .toc ol {
   display: none;
-  gap: var(--rail-gap);
+  gap: var(--s1);
 }
 
 .toc ol.is-expanded {
@@ -128,191 +104,122 @@
 .toc ol button {
   display: grid;
   width: 100%;
-  grid-template-columns: var(--rail-mark) minmax(0, 1fr);
-  align-items: start;
+  min-height: 48px;
+  grid-template-columns: 24px minmax(0, 1fr) 18px;
+  align-items: center;
   gap: var(--s3);
-  padding: var(--rail-run) var(--s2);
-  border: 1px solid transparent;
+  padding: var(--s2);
+  border: 0;
   border-radius: 8px;
   background: none;
-  color: var(--ink-3);
+  color: var(--ink-2);
   cursor: pointer;
   font-size: var(--t-small);
-  line-height: 1.35;
+  line-height: 1.3;
   text-align: left;
   transition: background-color var(--dur) var(--ease),
-    border-color var(--dur) var(--ease), color var(--dur) var(--ease),
-    box-shadow var(--dur) var(--ease);
+    color var(--dur) var(--ease);
 }
 
-/* The mark's column, stretched to the full height of the row. The connector is
-   drawn on it in two halves — one above the mark, one below — rather than as a
-   single line down the list, because a step name that wraps onto a second line
-   makes its row taller and any measurement taken from the top of the list
-   would then be wrong. Each half reaches its own row's edge, and there they
-   meet. */
-.toc-node {
-  position: relative;
-  display: block;
-  width: var(--rail-mark);
-  align-self: stretch;
+.toc ol button:hover:not([aria-disabled="true"]) {
+  background: var(--paper-2);
+  color: var(--ink);
 }
 
-.toc-node::before,
-.toc-node::after {
-  position: absolute;
-  left: calc(50% - var(--rail-track) / 2);
-  width: var(--rail-track);
-  background: var(--rule);
-  content: "";
-  transition: background-color var(--dur) var(--ease);
+.toc ol button:active:not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--accent) 12%, var(--paper));
 }
 
-.toc-node::before {
-  top: calc(-1 * var(--rail-run) - var(--rail-gap));
-  height: calc(var(--rail-run) + var(--rail-gap));
-}
-
-.toc-node::after {
-  top: var(--rail-mark);
-  bottom: calc(-1 * var(--rail-run) - var(--rail-gap));
-}
-
-/* The blanket reduced-motion rule in journey.css is written against `*`, which
-   matches elements and not the two pseudo-elements the track is drawn with. */
-@media (prefers-reduced-motion: reduce) {
-  .toc-node::before,
-  .toc-node::after {
-    transition: none;
-  }
-}
-
-/* Nothing above the first mark and nothing below the last: a track with loose
-   ends reads as a list that has been cut off. */
-.toc li:first-child .toc-node::before,
-.toc li:last-child .toc-node::after {
-  content: none;
-}
-
-/* The walked part of the track. Grey, not blue: the blue means "where you
-   are", and a length of blue behind you would compete with the one mark that
-   is meant to say it. */
-.toc .has-trail-in .toc-node::before,
-.toc .has-trail-out .toc-node::after {
-  background: var(--ok);
-}
-
-.toc-mark {
+.toc-index {
   display: grid;
-  width: var(--rail-mark);
-  height: var(--rail-mark);
+  width: 24px;
+  height: 24px;
   place-items: center;
   border-radius: 999px;
-  font-size: var(--t-label);
+  color: var(--ink-3);
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.toc-mark svg {
-  width: 12px;
-  height: 12px;
-}
-
 .toc-label {
   display: block;
+  min-width: 0;
 }
 
-/* The status word is what carries the state for a screen reader and for anyone
-   who cannot separate the colours. */
 .toc-status {
   display: block;
+  margin-top: 2px;
+  color: var(--accent-strong);
   font-size: 0.625rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-/* Hover marks a target, so it belongs only on rows that are targets. The
-   buttons are marked aria-disabled rather than disabled — a locked step is
-   exactly the one whose preview is worth reading — which is why this asks the
-   attribute and not :disabled. */
-.toc ol button:hover:not([aria-disabled="true"]) {
-  border-color: var(--rule-2);
-  background: var(--paper-2);
-  box-shadow: inset 3px 0 0 var(--accent);
-  color: var(--accent);
+.toc-end {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--ink-3);
 }
 
-/* Behind you. Filled rather than outlined, so the finished marks read as part
-   of the inked track and not as beads sitting on it. --ok is the settled grey
-   on the neutral themes and the printer's green on paper; either way it is the
-   quiet colour, because "done" is the thing you no longer need to look at. */
+.toc-end svg {
+  width: 14px;
+  height: 14px;
+}
+
 .toc .is-done button {
   color: var(--ink-2);
 }
 
-.toc .is-done .toc-mark {
-  background: var(--ok);
-  color: var(--paper);
-}
-
-.toc .is-done .toc-status {
-  color: var(--ok);
-}
-
-/* Where you are. The one accent on the rail, and the only mark with a halo:
-   the halo is the row's own background, so the track parts around it and the
-   bead reads as the head of the walked length rather than another link in it. */
 .toc .is-current button {
-  border-color: var(--rule-2);
-  background: var(--sheet);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--paper));
   color: var(--ink);
-  font-weight: 600;
-}
-
-.toc .is-current .hc-trigger {
   cursor: default;
+  font-weight: 650;
 }
 
-.toc .is-current .toc-mark {
+.toc .is-current button:hover {
+  background: color-mix(in srgb, var(--accent) 9%, var(--paper));
+}
+
+.toc .is-current .toc-index {
   background: var(--accent);
-  box-shadow: 0 0 0 3px var(--sheet);
-  color: var(--paper);
+  color: var(--sheet);
   font-weight: 700;
 }
 
-.toc .is-current .toc-status {
-  margin-top: 1px;
-  color: var(--accent);
-}
-
-.toc .is-current.is-complete .toc-mark {
-  background: var(--accent);
-}
-
-/* A step already opened and stepped back from. It is not behind you, so it
-   takes no tick; it is not shut, so it takes no padlock. It keeps its number,
-   outlined, and stays a live target. */
-.toc .is-open button {
+.toc .is-open .toc-index {
   color: var(--ink-2);
 }
 
-.toc .is-open .toc-mark {
-  border: 1px solid var(--rule-2);
-  color: var(--ink-2);
-}
-
-.toc .is-open .toc-status {
+.toc .is-locked button {
   color: var(--ink-3);
 }
 
-/* Ahead of you. The hairline is the lighter of the two rules, so the upcoming
-   marks sit at the same weight as the unwalked track they are strung on. */
-.toc .is-locked .toc-mark {
-  border: 1px solid var(--rule);
+.toc .is-locked .toc-index,
+.toc .is-locked .toc-end {
   color: var(--ink-3);
 }
 
-.toc .is-locked .toc-status {
-  color: var(--ink-3);
+/* In the rail the hovercard trigger is the whole row, not a glossary term. */
+.toc .hc {
+  display: block;
+}
+
+.toc .hc-trigger {
+  cursor: pointer;
+}
+
+.toc .hc-trigger[aria-current="step"],
+.toc .hc-trigger[aria-disabled="true"] {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toc ol button {
+    transition: none;
+  }
 }
