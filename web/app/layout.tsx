@@ -57,7 +57,7 @@ export const viewport: Viewport = {
 /* Applies the saved appearance, text size, and language before first paint so a
    reader never sees a flash of the wrong theme or a resize. A reader who has
    chosen nothing gets paper, which is what the service opens on. */
-const BOOT = `try{var r=document.documentElement;var p=JSON.parse(localStorage.getItem("sahi-return-prefs-v1")||"{}");var t=p.theme||"paper";r.dataset.theme=t==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;if(p.textScale)r.dataset.text=p.textScale;var d=JSON.parse(localStorage.getItem("sahi-return-filing-draft-v1")||"{}");if(d.language==="hi"||d.language==="en")r.lang=d.language;}catch(e){}`;
+const BOOT = `try{var r=document.documentElement;var p=JSON.parse(localStorage.getItem("sahi-return-prefs-v1")||"{}");var t=p.theme||"paper";r.dataset.theme=t==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;if(p.textScale)r.dataset.text=p.textScale;var d=JSON.parse(localStorage.getItem("sahi-return-filing-draft-v1")||"{}");var l=["en","hi","bn","ta","mr","te","ur"].includes(d.language)?d.language:"en";r.lang=l;r.dir=l==="ur"?"rtl":"ltr";}catch(e){}`;
 
 export default function RootLayout({
   children,

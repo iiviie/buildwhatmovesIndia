@@ -425,6 +425,30 @@
   min-width: 82px;
 }
 
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+}
+
+.language-grid button {
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid var(--rule-2);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+
+.language-grid button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+
 /* The text-size control shows its three sizes at their three sizes.
 
    The markup has always carried the size on each glyph, and nothing was ever

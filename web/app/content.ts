@@ -1234,7 +1234,38 @@ const hi: CommonCopy = {
   assistantStepLabel: "अभी देख रहा है",
 };
 
-export const copy: Record<Language, CommonCopy> = { en, hi };
+/* The five added locales use the fully translated guided journey chrome below
+   while reference-heavy tax and account copy falls back to English until it
+   has had native-speaker review. Keeping that fallback explicit prevents an
+   untranslated key from becoming an empty control. */
+const regionalCommon = (labels: {
+  settings: string;
+  language: string;
+  back: string;
+  continue: string;
+  close: string;
+  saved: string;
+  startTitle: string;
+}): CommonCopy => ({
+  ...en,
+  settings: labels.settings,
+  settingsLanguage: labels.language,
+  back: labels.back,
+  continue: labels.continue,
+  close: labels.close,
+  saved: labels.saved,
+  homeStartTitle: labels.startTitle,
+});
+
+export const copy: Record<Language, CommonCopy> = {
+  en,
+  hi,
+  bn: regionalCommon({ settings: "সেটিংস", language: "ভাষা", back: "ফিরে যান", continue: "চালিয়ে যান", close: "বন্ধ করুন", saved: "এই ডিভাইসে সংরক্ষিত", startTitle: "আপনার রিটার্ন" }),
+  ta: regionalCommon({ settings: "அமைப்புகள்", language: "மொழி", back: "பின்னால்", continue: "தொடரவும்", close: "மூடவும்", saved: "இந்தச் சாதனத்தில் சேமிக்கப்பட்டது", startTitle: "உங்கள் வருமான வரிக் கணக்கு" }),
+  mr: regionalCommon({ settings: "सेटिंग्ज", language: "भाषा", back: "मागे", continue: "पुढे चला", close: "बंद करा", saved: "या उपकरणावर जतन केले", startTitle: "तुमचा रिटर्न" }),
+  te: regionalCommon({ settings: "సెట్టింగ్‌లు", language: "భాష", back: "వెనుకకు", continue: "కొనసాగించండి", close: "మూసివేయండి", saved: "ఈ పరికరంలో సేవ్ అయింది", startTitle: "మీ రిటర్న్" }),
+  ur: regionalCommon({ settings: "ترتیبات", language: "زبان", back: "واپس", continue: "جاری رکھیں", close: "بند کریں", saved: "اس ڈیوائس پر محفوظ ہے", startTitle: "آپ کا ریٹرن" }),
+};
 
 /* ---------------------------------------------------------------- journey */
 
@@ -1936,9 +1967,66 @@ const journeyHi: JourneyCopy = {
   },
 };
 
+type RegionalJourneyLabels = {
+  step: (number: number) => string;
+  yesContinue: string;
+  confirmSalary: string;
+  confirmSalaryError: string;
+  loaded: string;
+  notLoaded: string;
+  load: string;
+  replace: string;
+  incomeQuestion: string;
+  mine: string;
+  amended: string;
+  notMine: string;
+  included: string;
+  corrected: string;
+  excluded: string;
+  saved: string;
+  incomeError: string;
+  progress: (answered: number, total: number) => string;
+  newRegime: string;
+  oldRegime: string;
+  chooseNew: string;
+  chooseOld: string;
+  chosen: string;
+  regimeError: string;
+  continueReview: string;
+  declaration: string;
+  submit: string;
+  submitting: string;
+  acknowledgement: string;
+  print: string;
+  download: string;
+  restart: string;
+};
+
+const regionalJourney = (labels: RegionalJourneyLabels): JourneyCopy => ({
+  ...journeyEn,
+  check: { ...journeyEn.check, eyebrow: labels.step(1), continue: labels.yesContinue },
+  salary: { ...journeyEn.salary, eyebrow: labels.step(2), loaded: labels.loaded, notLoaded: labels.notLoaded, load: labels.load, replace: labels.replace, confirm: labels.confirmSalary, confirmError: labels.confirmSalaryError },
+  income: { ...journeyEn.income, eyebrow: labels.step(3), question: labels.incomeQuestion, mine: labels.mine, amended: labels.amended, notMine: labels.notMine, answeredMine: labels.included, answeredAmended: labels.corrected, answeredNotMine: labels.excluded, amendSaved: labels.saved, error: labels.incomeError, progress: labels.progress },
+  regime: { ...journeyEn.regime, eyebrow: labels.step(4), newRegime: labels.newRegime, oldRegime: labels.oldRegime, chooseNew: labels.chooseNew, chooseOld: labels.chooseOld, chosen: labels.chosen, error: labels.regimeError },
+  checks: { ...journeyEn.checks, eyebrow: labels.step(5), continue: labels.continueReview },
+  review: { ...journeyEn.review, eyebrow: labels.step(6), declarationTitle: labels.declaration, submit: labels.submit, submitting: labels.submitting },
+  receipt: { ...journeyEn.receipt, eyebrow: labels.acknowledgement, print: labels.print, download: labels.download, restart: labels.restart },
+});
+
+const journeyBn = regionalJourney({ step: (number) => `ধাপ ${number}`, yesContinue: "হ্যাঁ, এগিয়ে যান", confirmSalary: "হ্যাঁ, এগুলি আমার ফর্ম ১৬-এর সঙ্গে মেলে", confirmSalaryError: "এগোনোর আগে অঙ্কগুলি নিশ্চিত করুন।", loaded: "লোড হয়েছে", notLoaded: "লোড হয়নি", load: "ডেমো নথি লোড করুন", replace: "বদলান", incomeQuestion: "এটি কি আপনার?", mine: "হ্যাঁ, ঠিক আছে", amended: "অঙ্কটি ভুল", notMine: "আমি এটি চিনি না", included: "আপনার রিটার্নে অন্তর্ভুক্ত", corrected: "আপনার দেওয়া অঙ্কে অন্তর্ভুক্ত", excluded: "বাদ দেওয়া হয়েছে এবং কর ক্রেডিটও বাদ", saved: "সংরক্ষিত", incomeError: "এগোনোর আগে প্রতিটি এন্ট্রির উত্তর দিন।", progress: (answered, total) => `${answered}/${total} এন্ট্রির উত্তর দেওয়া হয়েছে`, newRegime: "নতুন কর ব্যবস্থা", oldRegime: "পুরনো কর ব্যবস্থা", chooseNew: "নতুন ব্যবস্থায় ফাইল করুন", chooseOld: "পুরনো ব্যবস্থায় ফাইল করুন", chosen: "নির্বাচিত", regimeError: "এগোনোর আগে একটি কর ব্যবস্থা বাছুন।", continueReview: "রিভিউতে যান", declaration: "ঘোষণা", submit: "এই ডেমো রিটার্ন ফাইল করুন", submitting: "ফাইল হচ্ছে…", acknowledgement: "ডেমো স্বীকৃতিপত্র", print: "স্বীকৃতিপত্র প্রিন্ট করুন", download: "টেক্সট হিসেবে ডাউনলোড করুন", restart: "ডেমো আবার শুরু করুন" });
+const journeyTa = regionalJourney({ step: (number) => `படி ${number}`, yesContinue: "ஆம், தொடரவும்", confirmSalary: "ஆம், இவை என் படிவம் 16 உடன் பொருந்துகின்றன", confirmSalaryError: "தொடரும் முன் தொகைகளை உறுதிசெய்யவும்.", loaded: "ஏற்றப்பட்டது", notLoaded: "ஏற்றப்படவில்லை", load: "மாதிரி ஆவணத்தை ஏற்றவும்", replace: "மாற்றவும்", incomeQuestion: "இது உங்களுடையதா?", mine: "ஆம், இது சரி", amended: "தொகை தவறு", notMine: "இதை நான் அடையாளம் காணவில்லை", included: "உங்கள் வருமான வரிக் கணக்கில் சேர்க்கப்பட்டது", corrected: "நீங்கள் அளித்த தொகையில் சேர்க்கப்பட்டது", excluded: "நீக்கப்பட்டது; அதன் வரிக் கிரெடிட்டும் நீக்கப்பட்டது", saved: "சேமிக்கப்பட்டது", incomeError: "தொடரும் முன் ஒவ்வொரு பதிவுக்கும் பதிலளிக்கவும்.", progress: (answered, total) => `${total}-இல் ${answered} பதிவுகளுக்குப் பதிலளிக்கப்பட்டது`, newRegime: "புதிய வரி முறை", oldRegime: "பழைய வரி முறை", chooseNew: "புதிய வரி முறையில் தாக்கல் செய்யவும்", chooseOld: "பழைய வரி முறையில் தாக்கல் செய்யவும்", chosen: "தேர்ந்தெடுக்கப்பட்டது", regimeError: "தொடரும் முன் ஒரு வரி முறையைத் தேர்ந்தெடுக்கவும்.", continueReview: "மதிப்பாய்வுக்குச் செல்லவும்", declaration: "உறுதிமொழி", submit: "இந்த மாதிரி ரிட்டர்னை தாக்கல் செய்யவும்", submitting: "தாக்கல் செய்யப்படுகிறது…", acknowledgement: "மாதிரி ஒப்புகை", print: "ஒப்புகையை அச்சிடவும்", download: "உரையாகப் பதிவிறக்கவும்", restart: "மாதிரியை மீண்டும் தொடங்கவும்" });
+const journeyMr = regionalJourney({ step: (number) => `पायरी ${number}`, yesContinue: "होय, पुढे चला", confirmSalary: "होय, या रकमा माझ्या फॉर्म १६ शी जुळतात", confirmSalaryError: "पुढे जाण्यापूर्वी रकमांची खात्री करा.", loaded: "लोड झाले", notLoaded: "लोड झाले नाही", load: "डेमो कागदपत्र लोड करा", replace: "बदला", incomeQuestion: "हे तुमचे आहे का?", mine: "होय, हे बरोबर आहे", amended: "रक्कम चुकीची आहे", notMine: "मी हे ओळखत नाही", included: "तुमच्या रिटर्नमध्ये समाविष्ट", corrected: "तुम्ही दिलेल्या रकमेत समाविष्ट", excluded: "वगळले आणि त्याचे कर क्रेडिटही वगळले", saved: "जतन झाले", incomeError: "पुढे जाण्यापूर्वी प्रत्येक नोंदीचे उत्तर द्या.", progress: (answered, total) => `${total} पैकी ${answered} नोंदींची उत्तरे`, newRegime: "नवी कर पद्धत", oldRegime: "जुनी कर पद्धत", chooseNew: "नव्या पद्धतीत फाइल करा", chooseOld: "जुन्या पद्धतीत फाइल करा", chosen: "निवडले", regimeError: "पुढे जाण्यापूर्वी कर पद्धत निवडा.", continueReview: "पुनरावलोकनाकडे जा", declaration: "घोषणा", submit: "हा डेमो रिटर्न फाइल करा", submitting: "फाइल होत आहे…", acknowledgement: "डेमो पोचपावती", print: "पोचपावती प्रिंट करा", download: "मजकूर म्हणून डाउनलोड करा", restart: "डेमो पुन्हा सुरू करा" });
+const journeyTe = regionalJourney({ step: (number) => `దశ ${number}`, yesContinue: "అవును, కొనసాగించండి", confirmSalary: "అవును, ఇవి నా ఫారమ్ 16తో సరిపోలుతున్నాయి", confirmSalaryError: "కొనసాగించే ముందు మొత్తాలను నిర్ధారించండి.", loaded: "లోడ్ అయింది", notLoaded: "లోడ్ కాలేదు", load: "డెమో పత్రాన్ని లోడ్ చేయండి", replace: "మార్చండి", incomeQuestion: "ఇది మీదేనా?", mine: "అవును, ఇది సరైనది", amended: "మొత్తం తప్పు", notMine: "దీన్ని నేను గుర్తించలేదు", included: "మీ రిటర్న్‌లో చేర్చబడింది", corrected: "మీరు ఇచ్చిన మొత్తంతో చేర్చబడింది", excluded: "తీసివేయబడింది; పన్ను క్రెడిట్ కూడా తీసివేయబడింది", saved: "సేవ్ అయింది", incomeError: "కొనసాగించే ముందు ప్రతి నమోదుకు సమాధానం ఇవ్వండి.", progress: (answered, total) => `${total}లో ${answered} నమోదులకు సమాధానం ఇచ్చారు`, newRegime: "కొత్త పన్ను విధానం", oldRegime: "పాత పన్ను విధానం", chooseNew: "కొత్త విధానంలో ఫైల్ చేయండి", chooseOld: "పాత విధానంలో ఫైల్ చేయండి", chosen: "ఎంచుకున్నారు", regimeError: "కొనసాగించే ముందు ఒక పన్ను విధానాన్ని ఎంచుకోండి.", continueReview: "సమీక్షకు కొనసాగండి", declaration: "ప్రకటన", submit: "ఈ డెమో రిటర్న్‌ను ఫైల్ చేయండి", submitting: "ఫైల్ అవుతోంది…", acknowledgement: "డెమో రసీదు", print: "రసీదును ప్రింట్ చేయండి", download: "టెక్స్ట్‌గా డౌన్‌లోడ్ చేయండి", restart: "డెమోను మళ్లీ ప్రారంభించండి" });
+const journeyUr = regionalJourney({ step: (number) => `مرحلہ ${number}`, yesContinue: "ہاں، جاری رکھیں", confirmSalary: "ہاں، یہ رقمیں میرے فارم 16 سے ملتی ہیں", confirmSalaryError: "آگے بڑھنے سے پہلے رقموں کی تصدیق کریں۔", loaded: "لوڈ ہو گیا", notLoaded: "لوڈ نہیں ہوا", load: "ڈیمو دستاویز لوڈ کریں", replace: "تبدیل کریں", incomeQuestion: "کیا یہ آپ کا ہے؟", mine: "ہاں، یہ درست ہے", amended: "رقم غلط ہے", notMine: "میں اسے نہیں پہچانتا/پہچانتی", included: "آپ کے ریٹرن میں شامل", corrected: "آپ کی دی ہوئی رقم پر شامل", excluded: "خارج کیا گیا اور ٹیکس کریڈٹ بھی خارج", saved: "محفوظ ہو گیا", incomeError: "آگے بڑھنے سے پہلے ہر اندراج کا جواب دیں۔", progress: (answered, total) => `${total} میں سے ${answered} اندراجات کے جواب دیے گئے`, newRegime: "نیا ٹیکس نظام", oldRegime: "پرانا ٹیکس نظام", chooseNew: "نئے نظام کے تحت فائل کریں", chooseOld: "پرانے نظام کے تحت فائل کریں", chosen: "منتخب", regimeError: "آگے بڑھنے سے پہلے ٹیکس نظام منتخب کریں۔", continueReview: "جائزے کی طرف جائیں", declaration: "اعلان", submit: "یہ ڈیمو ریٹرن فائل کریں", submitting: "فائل ہو رہا ہے…", acknowledgement: "ڈیمو رسید", print: "رسید پرنٹ کریں", download: "متن کے طور پر ڈاؤن لوڈ کریں", restart: "ڈیمو دوبارہ شروع کریں" });
+
 export const journeyCopy: Record<Language, JourneyCopy> = {
   en: journeyEn,
   hi: journeyHi,
+  bn: journeyBn,
+  ta: journeyTa,
+  mr: journeyMr,
+  te: journeyTe,
+  ur: journeyUr,
 };
 
 /* Help text is indexed by step so the help panel always answers the question a
@@ -1964,4 +2052,13 @@ export const helpByStep: Record<Language, string[]> = {
     "पूरा रिटर्न एक जगह। फाइल करने से पहले यहाँ सब कुछ बदला जा सकता है।",
     "काल्पनिक पावती। असली पावती में यही जानकारी होती है, और असली रिफ़ंड पहले से सत्यापित बैंक खाते में जाता है।",
   ],
+  bn: [],
+  ta: [],
+  mr: [],
+  te: [],
+  ur: [],
 };
+
+for (const language of ["bn", "ta", "mr", "te", "ur"] as const) {
+  helpByStep[language] = helpByStep.en;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatLongDate, type Language } from "../case-data";
+import { formatLongDate } from "../case-data";
 import type { copy } from "../content";
 import {
   byMonth,
@@ -29,7 +29,7 @@ export function NoticesPage({
   onBack,
 }: {
   common: Common;
-  language: Language;
+  language: "en" | "hi";
   onBack: () => void;
 }) {
   const [filter, setFilter] = useState<NoticeFilter>("all");

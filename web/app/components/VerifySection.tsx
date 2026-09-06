@@ -1,7 +1,6 @@
 "use client";
 
 import { useId } from "react";
-import type { Language } from "../case-data";
 import {
   daysToVerify,
   DEMO_VERIFY_ROUTE,
@@ -40,7 +39,7 @@ export function VerifySection({
   onVerify,
   dateFormat,
 }: {
-  language: Language;
+  language: "en" | "hi";
   /** When the return was filed. Null on a draft that predates the field. */
   filedAt: Date | null;
   /** Today, so the days left are counted and not asserted. */

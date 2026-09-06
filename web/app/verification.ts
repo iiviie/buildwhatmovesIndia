@@ -17,7 +17,6 @@
  * Route names are the portal's own, recorded from its e-Verify screen, and
  * stay in English in both halves like every other portal quotation here. */
 
-import type { Language } from "./case-data";
 
 /** Days from filing to verify. See the note above. */
 export const VERIFY_WINDOW_DAYS = 30;
@@ -169,7 +168,7 @@ const routesHi: VerifyRoute[] = [
   },
 ];
 
-export const verifyRoutes: Record<Language, VerifyRoute[]> = {
+export const verifyRoutes: Record<"en" | "hi", VerifyRoute[]> = {
   en: routesEn,
   hi: routesHi,
 };
@@ -213,7 +212,7 @@ export type VerificationCopy = {
   paperNote: string;
 };
 
-export const verificationCopy: Record<Language, VerificationCopy> = {
+export const verificationCopy: Record<"en" | "hi", VerificationCopy> = {
   en: {
     title: "This return is not verified yet",
     intro:

@@ -40,6 +40,8 @@ import {
   helplines,
   incomeEntries,
   isHelplineOpen,
+  isLanguage,
+  languageDirection,
   type IncomeAnswer,
   MAX_FILE_MB,
   OFFICIAL_AIS_HELP,
@@ -64,6 +66,7 @@ import {
   type Theme,
   validateFile,
 } from "./case-data";
+import { guidedLocaleCopy } from "./guided-locales";
 import { REBATE_NEW_LIMIT } from "./tax";
 import {
   formatBytes,
@@ -147,6 +150,7 @@ const parseDraft = (value: string | null): DraftState | null => {
     return {
       ...defaultDraft,
       ...parsed,
+      language: isLanguage(parsed.language) ? parsed.language : defaultDraft.language,
       step: Math.max(0, Math.min(TOTAL_STEPS - 1, parsed.step)),
       /* You cannot be standing further along than you have ever been, so the
          mark is never below the step. That also carries a draft written before
@@ -350,7 +354,9 @@ export function SahiReturnApp() {
   };
 
   const language = draft.language;
+  const contentLanguage = language === "hi" ? "hi" : "en";
   const common = copy[language];
+  const guided = guidedLocaleCopy[language];
 
   /* The wizard gives the verdict; the journey files ITR-1 either way, because
      that is the only route this prototype builds. So the form named on the
@@ -441,6 +447,7 @@ export function SahiReturnApp() {
 
   useEffect(() => {
     document.documentElement.lang = draft.language;
+    document.documentElement.dir = languageDirection(draft.language);
   }, [draft.language]);
 
   useEffect(() => {
@@ -1266,34 +1273,7 @@ export function SahiReturnApp() {
   );
 
   const renderHome = () => {
-    const homeText =
-      language === "hi"
-        ? {
-            eyebrow: "वेतनभोगी रिटर्न का निर्देशित डेमो",
-            title: "सवालों के जवाब दें। रिटर्न हम तैयार करेंगे।",
-            intro:
-              "आपको फॉर्म, धारा या कर व्यवस्था जानने की जरूरत नहीं। हम सिर्फ़ वही पूछेंगे जो आप बता सकते हैं।",
-            cardTitle: "काल्पनिक वेतनभोगी रिटर्न आज़माएँ",
-            person: "अनन्या राव",
-            time: "लगभग 5 मिनट",
-            data: "कोई असली डेटा नहीं",
-            start: "निर्देशित डेमो शुरू करें",
-            flow: ["विवरण की पुष्टि", "आय पहचानें", "कम कर चुनें", "जाँचकर फाइल करें"],
-            more: "अन्य कर सेवाएँ, नोटिस और मदद देखें",
-          }
-        : {
-            eyebrow: "Guided salaried return demo",
-            title: "Answer simple questions. We will build the return.",
-            intro:
-              "You do not need to know forms, sections, or tax regimes. We only ask what you can answer.",
-            cardTitle: "Try a fictional salaried return",
-            person: "Ananya Rao",
-            time: "About 5 minutes",
-            data: "No real data",
-            start: "Start the guided demo",
-            flow: ["Confirm details", "Recognise income", "Pick the lower tax", "Check and file"],
-            more: "Other tax tasks, notices, and help",
-          };
+    const homeText = guided.home;
 
     return (
       <div className="guided-home">
@@ -1309,9 +1289,9 @@ export function SahiReturnApp() {
             <h2 id="guided-start-title">{homeText.cardTitle}</h2>
           </div>
           <div className="guided-start-meta">
-            <div><span className="label">{language === "hi" ? "डेमो व्यक्ति" : "Demo person"}</span><strong>{homeText.person}</strong></div>
-            <div><span className="label">{language === "hi" ? "समय" : "Time"}</span><strong>{homeText.time}</strong></div>
-            <div><span className="label">{language === "hi" ? "गोपनीयता" : "Privacy"}</span><strong>{homeText.data}</strong></div>
+            <div><span className="label">{homeText.personLabel}</span><strong>{homeText.person}</strong></div>
+            <div><span className="label">{homeText.timeLabel}</span><strong>{homeText.time}</strong></div>
+            <div><span className="label">{homeText.privacyLabel}</span><strong>{homeText.data}</strong></div>
           </div>
           <div className="guided-card-actions no-print">
             <button className="btn btn-lg" onClick={() => goTo(1)} type="button">
@@ -1331,7 +1311,7 @@ export function SahiReturnApp() {
           )}
         </section>
 
-        <ol className="guided-flow" aria-label={language === "hi" ? "डेमो के चार भाग" : "Four parts of the demo"}>
+        <ol className="guided-flow" aria-label={homeText.flowLabel}>
           {homeText.flow.map((item) => <li key={item}>{item}</li>)}
         </ol>
 
@@ -1343,7 +1323,7 @@ export function SahiReturnApp() {
             <section className="section">
               <h2>{common.homeAnnouncementsTitle}</h2>
               <ul className="notice-list">
-                {newestFirst(notices[language]).slice(0, HOME_NOTICES).map((item) => (
+                {newestFirst(notices[contentLanguage]).slice(0, HOME_NOTICES).map((item) => (
                   <li key={item.id}>
                     <p className="notice-meta">
                       <span className={item.affectsYou ? "pill is-alert" : "pill is-quiet"}>
@@ -1371,25 +1351,23 @@ export function SahiReturnApp() {
       <div className="guided-head">
         <p className="guided-kicker">{page.check.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {language === "hi" ? "क्या ये बातें आप पर लागू होती हैं?" : "Does this sound like you?"}
+          {guided.check.title}
         </h1>
         <p className="lede">
-          {language === "hi"
-            ? "हमने विभाग के काल्पनिक रिकॉर्ड से ये बातें पहले ही पता कर ली हैं।"
-            : "We worked these out from the fictional records already on file."}
+          {guided.check.intro}
         </p>
       </div>
 
       <section className="guided-panel">
-        <h2>{language === "hi" ? "आपकी स्थिति" : "Your situation"}</h2>
+        <h2>{guided.check.situation}</h2>
         <div className="guided-fact-grid">
-          <div className="guided-fact"><span>{language === "hi" ? "काम" : "Work"}</span><strong>{language === "hi" ? "निजी नौकरी" : "Private salaried job"}</strong></div>
-          <div className="guided-fact"><span>{language === "hi" ? "आय" : "Income"}</span><strong>{language === "hi" ? "₹50 लाख से कम" : "Under ₹50 lakh"}</strong></div>
-          <div className="guided-fact"><span>{language === "hi" ? "अन्य आय" : "Other income"}</span><strong>{language === "hi" ? "बैंक ब्याज और लाभांश" : "Bank interest and dividends"}</strong></div>
-          <div className="guided-fact"><span>{language === "hi" ? "शेयर या व्यापार" : "Shares or business"}</span><strong>{language === "hi" ? "कोई नहीं" : "None"}</strong></div>
+          <div className="guided-fact"><span>{guided.check.work}</span><strong>{guided.check.workValue}</strong></div>
+          <div className="guided-fact"><span>{guided.check.income}</span><strong>{guided.check.incomeValue}</strong></div>
+          <div className="guided-fact"><span>{guided.check.otherIncome}</span><strong>{guided.check.otherIncomeValue}</strong></div>
+          <div className="guided-fact"><span>{guided.check.shares}</span><strong>{guided.check.none}</strong></div>
         </div>
         <p className="guided-income-status">
-          <span>{language === "hi" ? "हमने आपके लिए चुना" : "Chosen for you"}</span>
+          <span>{guided.check.chosen}</span>
           <strong>{decidedForm}</strong>
         </p>
         {!decision.eligible && <p className="alert" role="alert">{common.eligOutOfScope(decision.form)}</p>}
@@ -1405,24 +1383,24 @@ export function SahiReturnApp() {
       />
 
       <details className="guided-details">
-        <summary>{language === "hi" ? "कुछ गलत है? जवाब बदलें" : "Something is wrong? Change the answers"}</summary>
+        <summary>{guided.check.changeAnswers}</summary>
         <div className="guided-details-body">
           <EligibilityPanel
             answers={{ ...demoAnswers, ...draft.eligibilityAnswers }}
             labels={{ causesLabel: common.eligCausesLabel, changedFrom: common.eligChangedFrom, changedLabel: common.eligChangedLabel, disclaimer: common.eligDisclaimer, intro: common.eligIntro, decidedLabel: common.eligDecidedLabel, officialSummary: common.eligOfficialSummary, outOfScope: common.eligOutOfScope, outcomeBlocked: common.eligOutcomeBlocked, outcomeLabel: common.eligOutcomeLabel, outcomeSettled: common.eligOutcomeSettled, prototypeNote: common.eligPrototypeNote, sectionCount: common.eligSectionCount, stateBlocking: common.eligStateBlocking, stateChanged: common.eligStateChanged, stateSettled: common.eligStateSettled, summary: common.eligSummary, title: common.eligTitle, whyLabel: common.eligWhyLabel }}
-            language={language}
+            language={contentLanguage}
             onChange={(questionId, value) => updateDraft({ eligibilityAnswers: { ...draft.eligibilityAnswers, [questionId]: value } })}
           />
         </div>
       </details>
 
       <details className="guided-details">
-        <summary>{language === "hi" ? "नाम, संपर्क और रिफ़ंड खाता देखें" : "Review name, contact, and refund account"}</summary>
+        <summary>{guided.check.reviewDetails}</summary>
         <div className="guided-details-body">
           <PersonalSection
             labels={{ accountNumberLabel: common.persAccountNumberLabel, accountTypeLabel: common.persAccountTypeLabel, addAnotherNote: common.persAddAnotherNote, answerLabel: common.persAnswerLabel, appliesLabel: common.persAppliesLabel, filingIntro: common.persFilingIntro, filingReason: common.persFilingReason, filingTitle: common.persFilingTitle, ifscLabel: common.persIfscLabel, noticeNote: common.persNoticeNote, noticeOptionsSummary: common.persNoticeOptionsSummary, noticeStateLabel: common.persNoticeStateLabel, officialLabel: common.persOfficialLabel, otherOptionsLabel: common.persOtherOptionsLabel, otherOptionsNote: common.persOtherOptionsNote, portalAsksLabel: common.persPortalAsksLabel, profileTitle: common.persProfileTitle, profileIntro: common.persProfileIntro, contactTitle: common.persContactTitle, contactIntro: common.persContactIntro, portalCallsLabel: common.persPortalCallsLabel, separateFlowNote: common.persSeparateFlowNote, mandatoryNote: common.persMandatoryNote, editLabel: common.persEditLabel, saveLabel: common.persSaveLabel, cancelLabel: common.persCancelLabel, undoLabel: common.persUndoLabel, changedBadge: common.persChangedBadge, lockedBadge: common.persLockedBadge, emptyValue: common.persEmptyValue, refundLegend: common.persRefundLegend, representativeTitle: common.persRepresentativeTitle, rulesLabel: common.persRulesLabel, whenLabel: common.persWhenLabel }}
             details={draft.personalDetails}
-            language={language}
+            language={contentLanguage}
             nominatedId={draft.nominatedAccount || defaultNominatedAccount}
             onDetails={(next) => updateDraft({ personalDetails: next })}
             onNominate={(accountId) => updateDraft({ nominatedAccount: accountId })}
@@ -1439,12 +1417,10 @@ export function SahiReturnApp() {
       <div className="guided-head">
         <p className="guided-kicker">{page.salary.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {language === "hi" ? "अपने वेतन के कागज़ जोड़ें" : "Add your salary documents"}
+          {guided.salary.title}
         </h1>
         <p className="lede">
-          {language === "hi"
-            ? "डेमो कागज़ लोड करें। फिर काल्पनिक रकम की पुष्टि करें।"
-            : "Load the demo documents, then confirm the fictional amounts."}
+          {guided.salary.intro}
         </p>
       </div>
 
@@ -1453,9 +1429,9 @@ export function SahiReturnApp() {
         id="documents-in-use"
         tabIndex={-1}
       >
-        <h2>{language === "hi" ? "दो कागज़ चाहिए" : "Two documents"}</h2>
+        <h2>{guided.salary.documents}</h2>
         <p className="consequence">
-          {language === "hi" ? `PDF या फोटो, हर फ़ाइल ${MAX_FILE_MB} MB तक। इस डेमो में असली कागज़ न डालें।` : `PDF or photo, up to ${MAX_FILE_MB} MB each. Do not add real documents to this demo.`}
+          {guided.salary.safety(MAX_FILE_MB)}
         </p>
 
         <ul className="files">
@@ -1483,12 +1459,12 @@ export function SahiReturnApp() {
               <div className="file-actions no-print">
                 {document.loaded && (
                   <button
-                    aria-label={`${language === "hi" ? "देखें" : "View"} ${page.salary.kinds[document.kind]}`}
+                    aria-label={`${guided.salary.view} ${page.salary.kinds[document.kind]}`}
                     className="btn btn-secondary file-view"
                     onClick={() => setViewingDocument(document.kind)}
                     type="button"
                   >
-                    {language === "hi" ? "देखें" : "View"}
+                    {guided.salary.view}
                   </button>
                 )}
                 <label className="file-pick">
@@ -1535,7 +1511,7 @@ export function SahiReturnApp() {
               onClick={loadDemoDocuments}
               type="button"
             >
-              {language === "hi" ? "काल्पनिक कागज़ इस्तेमाल करें" : "Use fictional demo documents"}
+              {guided.salary.useDemo}
             </button>
           </div>
         )}
@@ -1543,10 +1519,10 @@ export function SahiReturnApp() {
 
       {hasAllDocuments(draft.documents) && (
         <section className="guided-panel">
-          <h2>{language === "hi" ? "हमें यह मिला" : "Here is what we found"}</h2>
+          <h2>{guided.salary.found}</h2>
           <div className="guided-money-grid">
-            <div className="guided-money"><span>{language === "hi" ? "कुल वेतन" : "Salary"}</span><strong>{money(demoCase.grossSalary)}</strong></div>
-            <div className="guided-money"><span>{language === "hi" ? "नियोक्ता ने पहले ही कर दिया" : "Tax already paid by employer"}</span><strong>{money(demoCase.salaryTds)}</strong></div>
+            <div className="guided-money"><span>{guided.salary.salary}</span><strong>{money(demoCase.grossSalary)}</strong></div>
+            <div className="guided-money"><span>{guided.salary.taxPaid}</span><strong>{money(demoCase.salaryTds)}</strong></div>
           </div>
           <label className={`guided-answer${spotlightClass("salary-confirm")}`} id="salary-confirm">
             <input checked={draft.salaryConfirmed} onChange={(event) => updateDraft({ salaryConfirmed: event.target.checked })} type="checkbox" />
@@ -1566,7 +1542,7 @@ export function SahiReturnApp() {
 
       {hasAllDocuments(draft.documents) && (
         <details className="guided-details">
-          <summary>{language === "hi" ? "रकम कहाँ से आई और पोर्टल उसे क्या कहता है" : "Where these amounts came from"}</summary>
+          <summary>{guided.salary.sources}</summary>
           <div className="guided-details-body">
             <table className="ledger-table">
               <tbody>
@@ -1589,16 +1565,16 @@ export function SahiReturnApp() {
         <div className="guided-head">
           <p className="guided-kicker">{page.income.eyebrow}</p>
           <h1 ref={headingRef} tabIndex={-1}>
-            {language === "hi" ? "क्या आप इन पैसों को पहचानते हैं?" : "Do you recognise this income?"}
+            {guided.income.title}
           </h1>
           <p className="lede">
-            {language === "hi" ? "हर लाइन पर बस हाँ, रकम गलत है, या नहीं चुनें।" : "For each payment, choose yes, wrong amount, or not mine."}
+            {guided.income.intro}
           </p>
         </div>
 
         <section id="income-entries">
           <p className="guided-income-status" aria-live="polite">
-            <span>{language === "hi" ? `सवाल ${incomeCursor + 1}, कुल ${incomeEntries.length}` : `Question ${incomeCursor + 1} of ${incomeEntries.length}`}</span>
+            <span>{guided.income.question(incomeCursor + 1, incomeEntries.length)}</span>
             <strong>{page.income.progress(answered, incomeEntries.length)}</strong>
           </p>
           <p className="portal-line">
@@ -1822,8 +1798,8 @@ export function SahiReturnApp() {
             );
           })}
           <div className="guided-card-actions income-nav no-print">
-            {incomeCursor > 0 && <button className="btn btn-secondary" onClick={() => setIncomeCursor((current) => current - 1)} type="button">{language === "hi" ? "पिछली आय" : "Previous income"}</button>}
-            {incomeCursor < incomeEntries.length - 1 && <button className="btn" disabled={!draft.incomeAnswers[incomeEntries[incomeCursor].id]} onClick={() => setIncomeCursor((current) => current + 1)} type="button">{language === "hi" ? "अगली आय" : "Next income"}</button>}
+            {incomeCursor > 0 && <button className="btn btn-secondary" onClick={() => setIncomeCursor((current) => current - 1)} type="button">{guided.income.previous}</button>}
+            {incomeCursor < incomeEntries.length - 1 && <button className="btn" disabled={!draft.incomeAnswers[incomeEntries[incomeCursor].id]} onClick={() => setIncomeCursor((current) => current + 1)} type="button">{guided.income.next}</button>}
           </div>
         </section>
 
@@ -1987,10 +1963,10 @@ export function SahiReturnApp() {
       <div className="guided-head">
         <p className="guided-kicker">{page.regime.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {language === "hi" ? "पहले आपकी कर बचत जाँच लेते हैं" : "First, check your tax savings"}
+          {guided.regime.title}
         </h1>
         <p className="lede">
-          {language === "hi" ? "हमने रोज़मर्रा के भुगतान को सही कर कटौती से मिलाया है। आपको धाराएँ याद रखने की ज़रूरत नहीं।" : "We matched everyday payments to the right deductions. You do not need to know the section numbers."}
+          {guided.regime.intro}
         </p>
       </div>
 
@@ -2095,9 +2071,9 @@ export function SahiReturnApp() {
       </section>
 
       <div className="guided-subhead">
-        <p className="label">{language === "hi" ? "आपकी तुलना" : "Your comparison"}</p>
-        <h2>{language === "hi" ? "कौन सा विकल्प आपका कर कम करता है?" : "Which option leaves you with less tax?"}</h2>
-        <p>{language === "hi" ? "हमने ऊपर की रकम समेत दोनों व्यवस्थाओं की गणना कर दी है।" : "Both totals now include the amounts checked above."}</p>
+        <p className="label">{guided.regime.comparison}</p>
+        <h2>{guided.regime.lowerTax}</h2>
+        <p>{guided.regime.totals}</p>
       </div>
 
       <div
@@ -2106,17 +2082,17 @@ export function SahiReturnApp() {
         tabIndex={-1}
       >
         <div className={comparison.better === "new" ? "guided-choice-card is-recommended" : "guided-choice-card"}>
-          <span className="guided-saved">{comparison.better === "new" ? (language === "hi" ? `${money(comparison.saving)} बचते हैं` : `Saves ${money(comparison.saving)}`) : page.regime.newRegime}</span>
+          <span className="guided-saved">{comparison.better === "new" ? guided.regime.saves(money(comparison.saving)) : page.regime.newRegime}</span>
           <h2>{page.regime.newRegime}</h2>
           <p className="price">{money(comparison.newRegime.totalTax)}</p>
-          <p className="consequence">{language === "hi" ? "इस साल का कुल कर" : "Total tax for this year"}</p>
+          <p className="consequence">{guided.regime.totalTax}</p>
           <button className={draft.regime === "new" ? "btn" : "btn btn-secondary"} onClick={() => updateDraft({ regime: "new" })} type="button">{draft.regime === "new" ? page.regime.chosen : page.regime.chooseNew}</button>
         </div>
         <div className={comparison.better === "old" ? "guided-choice-card is-recommended" : "guided-choice-card"}>
-          <span className="guided-saved">{comparison.better === "old" ? (language === "hi" ? `${money(comparison.saving)} बचते हैं` : `Saves ${money(comparison.saving)}`) : (language === "hi" ? "तुलना" : "For comparison")}</span>
+          <span className="guided-saved">{comparison.better === "old" ? guided.regime.saves(money(comparison.saving)) : guided.regime.comparison}</span>
           <h2>{page.regime.oldRegime}</h2>
           <p className="price">{money(comparison.oldRegime.totalTax)}</p>
-          <p className="consequence">{language === "hi" ? "इस साल का कुल कर" : "Total tax for this year"}</p>
+          <p className="consequence">{guided.regime.totalTax}</p>
           <button className={draft.regime === "old" ? "btn" : "btn btn-secondary"} onClick={() => updateDraft({ regime: "old" })} type="button">{draft.regime === "old" ? page.regime.chosen : page.regime.chooseOld}</button>
         </div>
       </div>
@@ -2131,12 +2107,12 @@ export function SahiReturnApp() {
       />
 
       <details className="guided-details">
-        <summary>{language === "hi" ? "गणना और कटौतियाँ देखें" : "See the calculation and deductions"}</summary>
+        <summary>{guided.regime.calculation}</summary>
         <div className="guided-details-body">
           <p className="prose">{page.regime.workingIntro}</p>
           <p className="consequence">{page.regime.rebateNote(money(REBATE_NEW_LIMIT))}</p>
           <div className="swap">{renderRegimeColumn("new")}{renderRegimeColumn("old")}</div>
-          <TaxPaidSection labels={{ amountAwaitingRegime: common.tpAmountAwaitingRegime, deductionsIntro: common.tpDeductionsIntro, deductionsTitle: common.tpDeductionsTitle, deductionsTotal: common.tpDeductionsTotal, entriesCount: common.tpEntriesCount, entriesNone: common.tpEntriesNone, headAmount: common.tpHeadAmount, headSection: common.tpHeadSection, headStatus: common.tpHeadStatus, headWhat: common.tpHeadWhat, officialSummary: common.tpOfficialSummary, regimeNew: common.tpRegimeNew, regimeOld: common.tpRegimeOld, regimeUnchosen: common.tpRegimeUnchosen, schedulesIntro: common.tpSchedulesIntro, schedulesSummary: common.tpSchedulesSummary, schedulesTitle: common.tpSchedulesTitle, sourceLabel: common.tpSourceLabel, statusAwaitingRegime: common.tpStatusAwaitingRegime, statusClaimed: common.tpStatusClaimed, statusNone: common.tpStatusNone, statusNotInRegime: common.tpStatusNotInRegime, taxPaidTotal: common.tpTaxPaidTotal, whyLabel: common.tpWhyLabel }} language={language} regime={draft.regime} />
+          <TaxPaidSection labels={{ amountAwaitingRegime: common.tpAmountAwaitingRegime, deductionsIntro: common.tpDeductionsIntro, deductionsTitle: common.tpDeductionsTitle, deductionsTotal: common.tpDeductionsTotal, entriesCount: common.tpEntriesCount, entriesNone: common.tpEntriesNone, headAmount: common.tpHeadAmount, headSection: common.tpHeadSection, headStatus: common.tpHeadStatus, headWhat: common.tpHeadWhat, officialSummary: common.tpOfficialSummary, regimeNew: common.tpRegimeNew, regimeOld: common.tpRegimeOld, regimeUnchosen: common.tpRegimeUnchosen, schedulesIntro: common.tpSchedulesIntro, schedulesSummary: common.tpSchedulesSummary, schedulesTitle: common.tpSchedulesTitle, sourceLabel: common.tpSourceLabel, statusAwaitingRegime: common.tpStatusAwaitingRegime, statusClaimed: common.tpStatusClaimed, statusNone: common.tpStatusNone, statusNotInRegime: common.tpStatusNotInRegime, taxPaidTotal: common.tpTaxPaidTotal, whyLabel: common.tpWhyLabel }} language={contentLanguage} regime={draft.regime} />
         </div>
       </details>
 
@@ -2154,11 +2130,11 @@ export function SahiReturnApp() {
           <p className="guided-kicker">{page.checks.eyebrow}</p>
           <h1 ref={headingRef} tabIndex={-1}>
             {attention.length === 0
-              ? language === "hi" ? "आपका रिटर्न तैयार है" : "Your return is ready"
-              : language === "hi" ? "एक बात ठीक करनी है" : "There is something to fix"}
+              ? guided.checks.ready
+              : guided.checks.fix}
           </h1>
           <p className="lede">
-            {language === "hi" ? "फाइल करने से पहले हमने आम गलतियाँ जाँच ली हैं।" : "We checked the common mistakes before anything is filed."}
+            {guided.checks.intro}
           </p>
         </div>
 
@@ -2188,7 +2164,7 @@ export function SahiReturnApp() {
         />
 
         <details className="guided-details">
-          <summary>{language === "hi" ? "चारों जाँच देखें" : "See all four checks"}</summary>
+          <summary>{guided.checks.details}</summary>
           <div className="guided-details-body">
             <ul className="sequence">
               {checks.map((check) => {
@@ -2196,7 +2172,7 @@ export function SahiReturnApp() {
                 return <li key={check.id}><h3><span className={check.state === "pass" ? "verdict-ok" : "verdict-missing"}>{page.checks.labels[id]}</span></h3><p>{page.checks.detail[id]}</p>{check.state !== "pass" && page.checks.fix[id] && <p><span className="label-alert">{page.checks.fix[id]}</span></p>}</li>;
               })}
             </ul>
-            <p className="no-print"><OutLink href={OFFICIAL_DEFECTIVE_FAQ} newWindow={common.newWindow}>{language === "hi" ? "धारा 139(9) पर आधिकारिक जानकारी" : "Official guidance on section 139(9)"}</OutLink></p>
+            <p className="no-print"><OutLink href={OFFICIAL_DEFECTIVE_FAQ} newWindow={common.newWindow}>{guided.checks.guidance}</OutLink></p>
           </div>
         </details>
 
@@ -2209,9 +2185,9 @@ export function SahiReturnApp() {
       <div className="guided-head">
         <p className="guided-kicker">{page.review.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
-          {language === "hi" ? "एक आखिरी नज़र" : "One last look"}
+          {guided.review.title}
         </h1>
-        <p className="lede">{language === "hi" ? "नतीजा पहले। जरूरत हो तो पूरी रकम नीचे देख सकते हैं।" : "The result comes first. Open the totals only if you want to check them."}</p>
+        <p className="lede">{guided.review.intro}</p>
       </div>
 
       <section className="guided-outcome review-outcome">
@@ -2221,7 +2197,7 @@ export function SahiReturnApp() {
         </div>
         {computation.refundDue > 0 && refundAccount && (
           <div className="review-refund-account">
-            <p className="label">{language === "hi" ? "रिफ़ंड इस खाते में आएगा" : "Refund goes to"}</p>
+            <p className="label">{guided.review.refundAccount}</p>
             <p>{page.review.refundAccountLine(refundAccount.bank, refundAccount.masked, refundAccount.kind)}</p>
           </div>
         )}
@@ -2229,16 +2205,16 @@ export function SahiReturnApp() {
           <div className="caution">
             <p>{language === "hi" ? "रिफ़ंड के लिए कोई सत्यापित खाता तैयार नहीं है।" : "No verified account is ready for the refund."}</p>
             <button className="link-btn no-print" onClick={() => goTo(1)} type="button">
-              {language === "hi" ? "खाता चुनें" : "Choose an account"}
+              {guided.review.chooseAccount}
             </button>
           </div>
         )}
       </section>
 
-      <section className="review-key-totals" aria-label={language === "hi" ? "रिटर्न का सार" : "Return summary"}>
+      <section className="review-key-totals" aria-label={guided.review.summary}>
         <div><span>{page.regime.totalIncome}</span><strong>{money(computation.totalIncome)}</strong></div>
         <div><span>{page.regime.totalTax}</span><strong>{money(computation.totalTax)}</strong></div>
-        <div><span>{language === "hi" ? "पहले से जमा कर" : "Tax already paid"}</span><strong>{money(computation.tdsPaid)}</strong></div>
+        <div><span>{guided.review.taxPaid}</span><strong>{money(computation.tdsPaid)}</strong></div>
       </section>
 
       {formError && <ErrorSummary message={formError} />}
@@ -2254,7 +2230,7 @@ export function SahiReturnApp() {
       )}
 
       <section className="guided-panel review-submit">
-        <h2>{language === "hi" ? "फाइल करने के लिए तैयार" : "Ready to file"}</h2>
+        <h2>{guided.review.ready}</h2>
         <label
           className={`guided-answer${spotlightClass("review-declare")}`}
           id="review-declare"
@@ -2286,7 +2262,7 @@ export function SahiReturnApp() {
       </section>
 
       <details className="guided-details">
-        <summary>{language === "hi" ? "आय का हिसाब देखें" : "See the income total"}</summary>
+        <summary>{guided.review.incomeDetails}</summary>
         <div className="guided-details-body">
         <table className="ledger-table">
           <tbody>
@@ -2313,7 +2289,7 @@ export function SahiReturnApp() {
       </details>
 
       <details className="guided-details">
-        <summary>{language === "hi" ? "कर का हिसाब देखें" : "See the tax total"}</summary>
+        <summary>{guided.review.taxDetails}</summary>
         <div className="guided-details-body">
         <table className="ledger-table">
           <tbody>
@@ -2344,20 +2320,20 @@ export function SahiReturnApp() {
         <p className="guided-kicker">{page.receipt.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
           {draft.verifiedAt
-            ? language === "hi" ? "रिटर्न फाइल और सत्यापित हो गया" : "Your return is filed and verified"
-            : language === "hi" ? "रिटर्न जमा हुआ। अब सत्यापन करें" : "Return submitted. Verify it now"}
+            ? guided.receipt.verified
+            : guided.receipt.unverified}
         </h1>
         <p className="lede">
           {draft.verifiedAt
-            ? language === "hi" ? "सब हो गया। रसीद अपने रिकॉर्ड के लिए रख लें।" : "You are done. Keep the receipt for your records."
-            : language === "hi" ? "इसे पूरा करने के लिए अब सत्यापन करें।" : "Verify it now to finish."}
+            ? guided.receipt.verifiedIntro
+            : guided.receipt.unverifiedIntro}
         </p>
       </div>
 
       <VerifySection
         dateFormat={(date) => formatDate(date, language)}
         filedAt={draft.submittedIso ? new Date(draft.submittedIso) : null}
-        language={language}
+        language={contentLanguage}
         now={now}
         onVerify={verifyReturn}
         reference={draft.verifiedAt ? DEMO_VERIFY_REFERENCE : null}
@@ -2365,7 +2341,7 @@ export function SahiReturnApp() {
       />
 
       <section
-        aria-label={language === "hi" ? "फाइलिंग रसीद का सार" : "Filing receipt summary"}
+        aria-label={guided.receipt.summary}
         className="guided-panel receipt-card"
       >
         <dl className="receipt-summary">
@@ -2401,7 +2377,7 @@ export function SahiReturnApp() {
       </section>
 
       <details className="guided-details receipt-details">
-        <summary>{language === "hi" ? "पूरी रसीद देखें" : "View full receipt"}</summary>
+        <summary>{guided.receipt.details}</summary>
         <div className="guided-details-body receipt-body">
           <dl className="rows receipt-refs">
           <Row
@@ -2499,7 +2475,7 @@ export function SahiReturnApp() {
       return (
         <NoticesPage
           common={common}
-          language={language}
+          language={contentLanguage}
           onBack={() => setScreen("home")}
         />
       );
@@ -2671,7 +2647,7 @@ export function SahiReturnApp() {
   return (
     /* Set once here so a jargon term can be written as `<Term id="tds" />`
        anywhere below without every call site threading the language. */
-    <TermLanguage value={language}>
+    <TermLanguage value={contentLanguage}>
     <div className={draft.lowData ? "app lite" : "app"}>
       <a className="skip-link" href="#main-content">
         {common.skip}
@@ -2768,7 +2744,7 @@ export function SahiReturnApp() {
             )}
             <SettingsMenu
               common={common}
-              language={language}
+              language={contentLanguage}
               lowData={draft.lowData}
               onClose={() => setSettingsOpen(false)}
               onLanguage={switchLanguage}
@@ -2794,7 +2770,7 @@ export function SahiReturnApp() {
             <StepRail
               complete={Boolean(draft.verifiedAt)}
               current={draft.step}
-              language={language}
+              language={contentLanguage}
               names={common.steps}
               onGo={goTo}
               reached={draft.reached}

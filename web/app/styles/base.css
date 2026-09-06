@@ -78,28 +78,32 @@ h3 {
 
 /* Instrument Serif has no Devanagari. Rather than let a random system serif
    stand in, Hindi display type is set in the reading face at a heavier weight. */
-:lang(hi) h1,
-:lang(hi) h2,
-:lang(hi) .statement {
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) h1,
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) h2,
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) .statement {
   font-family: var(--sans);
   font-weight: 600;
   font-style: normal;
   letter-spacing: 0;
 }
 
-:lang(hi) h1 {
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) h1 {
   max-width: 24ch;
   font-size: clamp(1.7rem, 1.35rem + 1.4vw, 2.5rem);
   line-height: 1.3;
 }
 
-:lang(hi) h2 {
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) h2 {
   font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.55rem);
   line-height: 1.4;
 }
 
-:lang(hi) {
+:is(:lang(hi), :lang(bn), :lang(ta), :lang(mr), :lang(te), :lang(ur)) {
   line-height: 1.75;
+}
+
+:lang(ur) {
+  line-height: 1.9;
 }
 
 p {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { formatRupees, type Language } from "../case-data";
+import { formatRupees } from "../case-data";
 import {
   deductions,
   taxPaidSchedules,
@@ -134,7 +134,7 @@ export function TaxPaidSection({
   regime,
   labels,
 }: {
-  language: Language;
+  language: "en" | "hi";
   regime: Regime;
   labels: TaxPaidLabels;
 }) {
