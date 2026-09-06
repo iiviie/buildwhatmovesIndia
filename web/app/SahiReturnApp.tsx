@@ -90,6 +90,8 @@ import { buildContext } from "./assistant";
 import { serviceById, type ServiceId } from "./services";
 import { Assistant } from "./components/Assistant";
 import { Dashboard } from "./components/Dashboard";
+import { TaxInbox } from "./components/TaxInbox";
+import { ImpactSummary } from "./components/ImpactSummary";
 import { EligibilityPanel } from "./components/EligibilityPanel";
 import { PersonalSection } from "./components/PersonalSection";
 import { VerifySection } from "./components/VerifySection";
@@ -189,6 +191,10 @@ const parseDraft = (value: string | null): DraftState | null => {
       benefitsReviewed:
         typeof parsed.benefitsReviewed === "boolean"
           ? parsed.benefitsReviewed
+          : false,
+      taxInboxDonationAdded:
+        typeof parsed.taxInboxDonationAdded === "boolean"
+          ? parsed.taxInboxDonationAdded
           : false,
     };
   } catch {
@@ -414,7 +420,7 @@ export function SahiReturnApp() {
          dashboard, however the browser was left. */
       if (isScreen(savedScreen)) {
         setScreen(
-          savedSession || (savedScreen !== "journey" && savedScreen !== "dashboard")
+          savedSession || (savedScreen !== "journey" && savedScreen !== "dashboard" && savedScreen !== "tax-inbox")
             ? savedScreen
             : "home",
         );
@@ -1007,6 +1013,16 @@ export function SahiReturnApp() {
 
     /* Not a step action, so not in the step group: the archive is a place. */
     const pageCommands: Command[] = [
+      ...(session
+        ? [{
+            id: "tax-inbox",
+            group: common.commandGroupPages,
+            title: language === "hi" ? "आपका टैक्स इनबॉक्स" : "Your Tax Inbox",
+            subtitle: language === "hi" ? "पूरे साल के कर रिकॉर्ड" : "Year-round tax records",
+            keywords: "tax inbox documents receipts records proof",
+            run: () => setScreen("tax-inbox"),
+          }]
+        : []),
       {
         id: "notices",
         group: common.commandGroupPages,
@@ -1135,7 +1151,7 @@ export function SahiReturnApp() {
       ...helpCommands,
     ];
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [common, draft, language, page, prefs.theme]);
+  }, [common, draft, language, page, prefs.theme, session]);
 
   /* ------------------------------------------------------------ renders */
 
@@ -2376,6 +2392,14 @@ export function SahiReturnApp() {
         </div>
       </section>
 
+      <ImpactSummary
+        excludedIncome={money(disputedEntries(draft).reduce((sum, entry) => sum + entry.amount, 0))}
+        incomeReviewed={answeredCount(draft)}
+        language={language}
+        lowerRegimeChosen={draft.regime === comparison.better}
+        regimeDifference={money(comparison.saving)}
+      />
+
       <details className="guided-details receipt-details">
         <summary>{guided.receipt.details}</summary>
         <div className="guided-details-body receipt-body">
@@ -2490,8 +2514,31 @@ export function SahiReturnApp() {
           now={now}
           onResume={() => goTo(Math.max(1, draft.step))}
           onService={openService}
+          onTaxInbox={() => setScreen("tax-inbox")}
           session={session}
           totalSteps={TOTAL_STEPS - 1}
+        />
+      );
+    }
+
+    if (screen === "tax-inbox" && session) {
+      return (
+        <TaxInbox
+          donationAdded={draft.taxInboxDonationAdded}
+          language={language}
+          onAddDonation={() => updateDraft({ taxInboxDonationAdded: true })}
+          onBack={() => setScreen("dashboard")}
+          onPrepare={() => {
+            updateDraft({
+              documents: demoDocuments,
+              deductions: {
+                s80C: demoCase.demo80C,
+                s80D: demoCase.demo80D,
+              },
+              benefitsReviewed: false,
+            });
+            goTo(2);
+          }}
         />
       );
     }

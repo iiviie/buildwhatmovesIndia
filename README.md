@@ -1,6 +1,6 @@
 # Sahi Return
 
-Sahi Return is an independent Build What Moves India prototype for the ordinary salaried filing journey on the Income Tax e-Filing portal. It lets a fictional salaried taxpayer file their own return without paying a professional: the form, the employment type and the filing reason are worked out for them, every figure is shown beside its source, both tax regimes are computed side by side with the slab working shown, and the return is checked for defects **before** it is filed rather than months afterwards by notice.
+Sahi Return is an independent Build What Moves India prototype for the ordinary salaried filing journey on the Income Tax e-Filing portal. It lets a fictional salaried taxpayer organise tax-relevant records throughout the year and file their own return without paying a professional: the form, the employment type and the filing reason are worked out for them, every figure is shown beside its source, both tax regimes are computed side by side with the slab working shown, and the return is checked for defects **before** it is filed rather than months afterwards by notice.
 
 The prototype does not connect to the Income Tax Department, calculate tax for a real person, or create a government record. Do not enter real tax documents, PAN details, credentials, or personal information. Nothing here is tax advice.
 
@@ -146,6 +146,8 @@ assistant is told to say so rather than imply it parsed your document.
 
 ## Implemented journey
 
+The signed-in dashboard includes a **Tax Inbox** for the fictional 2025–26 records. It demonstrates the year-round habit with Form 16, AIS/26AS, EPF and health-insurance evidence; distinguishes a normal supermarket receipt from tax-relevant proof; and lets a reviewer add a synthetic donation receipt. The receipt is classified immediately but held for review because Form 10BE is missing. Preparing the return carries only the ready Form 16 and AIS records into the existing guided journey. This is an on-device interaction using synthetic metadata—not a production document store or an upload to a server.
+
 Step 0 is the start screen and is not numbered.
 
 1. **What applies to you.** ITR-1, the employment type and the filing reason are decided from the facts and shown with the reason for each, rather than asked as unlabelled dropdowns. The statutory dates and the section 234F late fee are stated as facts.
@@ -154,7 +156,7 @@ Step 0 is the start screen and is not numbered.
 4. **Your tax regime.** Both regimes computed from the citizen's own figures, band by band, with a recommendation and the amount it saves.
 5. **Before you file.** The Section 139(9) defect rules run as a pre-submission check, with a fix instruction on anything blocking.
 6. **Review and file.** The whole return in one place, with a declaration and a simulated verification step.
-7. **Acknowledgement.** A synthetic acknowledgement number, transaction ID, calculation version, and a printable or downloadable receipt.
+7. **Acknowledgement and impact.** A synthetic acknowledgement number, transaction ID, calculation version, printable or downloadable receipt, and a plain-language summary of the income reviewed, regime difference and rejected income kept out of the return.
 
 The route works in English and Hindi, and the layout does not move when the language changes. A citizen can raise synthetic AIS feedback on an entry they do not recognise at any point before filing.
 

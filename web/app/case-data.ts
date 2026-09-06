@@ -96,6 +96,9 @@ export type DraftState = {
      accept. Savings-interest relief is derived from the AIS separately. */
   deductions: DeductionAmounts;
   benefitsReviewed: boolean;
+  /* A single synthetic upload makes the year-round inbox demonstrable without
+     inviting a reviewer to put real tax or health records into a prototype. */
+  taxInboxDonationAdded: boolean;
   regime: Regime | null;
   declaration: boolean;
   status: JourneyStatus;
@@ -293,6 +296,7 @@ export const defaultDraft: DraftState = {
     s80D: demoCase.demo80D,
   },
   benefitsReviewed: false,
+  taxInboxDonationAdded: false,
   regime: null,
   declaration: false,
   status: "draft",
