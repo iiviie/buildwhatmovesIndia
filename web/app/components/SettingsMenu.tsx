@@ -168,6 +168,7 @@ export function SettingsMenu({
             <div aria-labelledby={`${id}-lang`} className="language-grid" role="group">
               {languageOptions.map((option) => (
                 <button
+                  aria-label={option.label}
                   aria-pressed={language === option.code}
                   dir={option.dir}
                   key={option.code}
@@ -175,10 +176,18 @@ export function SettingsMenu({
                   onClick={() => onLanguage(option.code)}
                   type="button"
                 >
-                  {option.label}
+                  <span>{option.label}</span>
+                  {option.code !== "en" && option.code !== "hi" && (
+                    <span aria-hidden="true" className="language-preview">
+                      {common.languagePreview}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+            <p className="menu-hint language-note">
+              {common.languagePreviewNote}
+            </p>
           </div>
 
           <div className="menu-group">

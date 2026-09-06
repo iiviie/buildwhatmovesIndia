@@ -432,6 +432,9 @@
 }
 
 .language-grid button {
+  display: grid;
+  place-items: center;
+  gap: 1px;
   min-height: 42px;
   padding: 7px 10px;
   border: 1px solid var(--rule-2);
@@ -440,6 +443,25 @@
   cursor: pointer;
   font-size: var(--t-small);
   font-weight: 500;
+}
+
+.language-preview {
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.language-grid button[aria-pressed="true"] .language-preview {
+  color: inherit;
+  opacity: 0.76;
+}
+
+.language-note {
+  max-width: 30ch;
 }
 
 .language-grid button[aria-pressed="true"] {

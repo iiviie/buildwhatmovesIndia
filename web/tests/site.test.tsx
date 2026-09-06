@@ -68,6 +68,16 @@ describe("the guided navigation", () => {
 });
 
 describe("language selection", () => {
+  it("labels incomplete translations as previews", async () => {
+    const user = userEvent.setup();
+    render(<SahiReturnApp />);
+
+    await user.click(screen.getByRole("button", { name: en.settings }));
+
+    expect(screen.getAllByText(en.languagePreview)).toHaveLength(5);
+    expect(screen.getByText(en.languagePreviewNote)).toBeInTheDocument();
+  });
+
   it("switches the guided journey to Bengali and saves the choice", async () => {
     const user = userEvent.setup();
     render(<SahiReturnApp />);

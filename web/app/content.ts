@@ -45,6 +45,9 @@ const en = {
 
   settings: "Settings",
   settingsLanguage: "Language",
+  languagePreview: "Preview",
+  languagePreviewNote:
+    "Bengali, Tamil, Marathi, Telugu and Urdu are translation previews. All 22 Scheduled Languages are coming soon.",
   settingsAppearance: "Appearance",
   settingsLight: "Light",
   settingsDark: "Dark",
@@ -660,6 +663,9 @@ const hi: CommonCopy = {
 
   settings: "सेटिंग्स",
   settingsLanguage: "भाषा",
+  languagePreview: "पूर्वावलोकन",
+  languagePreviewNote:
+    "बांग्ला, तमिल, मराठी, तेलुगु और उर्दू अनुवाद के पूर्वावलोकन हैं। सभी 22 अनुसूचित भाषाएँ जल्द आ रही हैं।",
   settingsAppearance: "रूप",
   settingsLight: "उजला",
   settingsDark: "गहरा",
