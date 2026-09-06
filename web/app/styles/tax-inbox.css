@@ -8,8 +8,11 @@
   align-items: end;
   margin-top: var(--s6);
   padding: var(--s5);
-  border: 1px solid var(--rule-2);
-  background: var(--sheet);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--rule-2));
+  border-top: 4px solid var(--accent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--sheet) 94%, var(--accent));
+  box-shadow: var(--shadow-card);
 }
 
 .dash-inbox-copy h2 {
@@ -124,7 +127,10 @@
   align-items: center;
   margin-top: var(--s5);
   padding: var(--s5);
-  background: var(--paper-2);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--rule));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--sheet));
+  box-shadow: var(--shadow-card);
 }
 
 .tax-inbox-add p:last-child,
@@ -183,8 +189,28 @@
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: var(--s3);
-  padding: var(--s4) 0;
-  border-bottom: 1px solid var(--rule);
+  padding: var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  margin-top: var(--s3);
+  background: var(--sheet);
+  transition: border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.tax-record:hover {
+  border-color: var(--rule-2);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--ink) 8%, transparent);
+  transform: translateY(-1px);
+}
+
+.tax-record.is-review {
+  border-color: color-mix(in srgb, var(--alert) 42%, var(--rule));
+  background: color-mix(in srgb, var(--alert) 6%, var(--sheet));
+}
+
+.tax-record.is-ready {
+  border-inline-start: 3px solid var(--ok);
 }
 
 .tax-record-mark {
@@ -255,7 +281,9 @@
   margin-top: var(--s5);
   padding: var(--s5);
   border: 1px solid var(--alert);
-  background: var(--sheet);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--alert) 5%, var(--sheet));
+  box-shadow: var(--shadow-card);
 }
 
 .tax-review-panel h2 {
@@ -365,7 +393,9 @@
   padding: var(--s5);
   border: 1px solid var(--rule-2);
   border-top: 4px solid var(--accent);
-  background: var(--sheet);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--sheet) 95%, var(--accent));
+  box-shadow: var(--shadow-card);
 }
 
 .impact-summary-head h2 {
@@ -490,5 +520,22 @@
   .dash-inbox,
   .impact-summary {
     break-inside: avoid;
+  }
+}
+
+.lite .dash-inbox,
+.lite .tax-inbox-add,
+.lite .tax-inbox-prepare,
+.lite .tax-record,
+.lite .tax-review-panel,
+.lite .impact-summary {
+  box-shadow: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-panel .files li,
+  .tax-record {
+    transform: none;
   }
 }

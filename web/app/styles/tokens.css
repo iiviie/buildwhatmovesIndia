@@ -1,9 +1,10 @@
 /* Sahi Return design tokens.
 
    Direction: "Notice, properly set". A Section 139(9) notice arrives as a
-   printed legal document. The interface typesets that document rather than
-   wrapping it in dashboard furniture: paper, ink, hairline rules, and one
-   accent. No cards, no chips, no shadows.
+   printed legal document. The interface keeps that clarity—paper, ink,
+   hairline rules, and one accent—while reserving shallow elevation for the
+   single object a citizen must act on. Supporting content stays flat so the
+   hierarchy is visible rather than decorative.
 
    The palette is black, white and one blue. The greys are neutral: earlier
    versions tinted every surface towards the accent, which put a blue-grey
@@ -68,6 +69,11 @@
 
   --focus: #2f6fb0;
 
+  /* Elevation is deliberately shallow: enough to establish reading order,
+     never enough to make the filing journey feel like a stack of widgets. */
+  --shadow-card: 0 14px 34px color-mix(in srgb, var(--ink) 9%, transparent);
+  --shadow-focus: 0 18px 46px color-mix(in srgb, var(--accent) 16%, transparent);
+
   --serif: "Instrument Serif", Georgia, "Iowan Old Style", "Palatino Linotype",
     "Times New Roman", serif;
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -122,6 +128,9 @@
   --alert: #f0b429;
 
   --focus: #6ea8e2;
+
+  --shadow-card: 0 16px 38px rgba(0, 0, 0, 0.34);
+  --shadow-focus: 0 18px 48px rgba(0, 0, 0, 0.46);
 }
 
 /* The paper theme.
@@ -159,6 +168,9 @@
   --alert: #a11520;
 
   --focus: #3474b4;
+
+  --shadow-card: 0 16px 38px rgba(55, 45, 24, 0.12);
+  --shadow-focus: 0 20px 52px rgba(52, 116, 180, 0.16);
 }
 
 /* A wide viewport is not an invitation to stretch a line of prose. The columns
