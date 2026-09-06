@@ -449,6 +449,12 @@
   font-weight: 600;
 }
 
+/* The selector is visible before Telugu is the document language, so it
+   cannot rely on the root-level Telugu font token yet. */
+.language-grid button:lang(te) {
+  font-family: "Noto Sans Telugu", var(--sans);
+}
+
 /* The text-size control shows its three sizes at their three sizes.
 
    The markup has always carried the size on each glyph, and nothing was ever
