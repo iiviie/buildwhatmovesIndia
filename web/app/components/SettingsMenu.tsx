@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef } from "react";
 import { SlidersIcon } from "./icons";
 import type { copy } from "../content";
-import type { Language, TextScale, Theme } from "../case-data";
+import { languageOptions, type Language, type TextScale, type Theme } from "../case-data";
 
 type Common = (typeof copy)["en"];
 
@@ -165,24 +165,29 @@ export function SettingsMenu({
             <span className="label" id={`${id}-lang`}>
               {common.settingsLanguage}
             </span>
-            <div aria-labelledby={`${id}-lang`} className="segmented segmented-lang" role="group">
-              <button
-                aria-pressed={language === "en"}
-                lang="en"
-                onClick={() => onLanguage("en")}
-                type="button"
-              >
-                {common.english}
-              </button>
-              <button
-                aria-pressed={language === "hi"}
-                lang="hi"
-                onClick={() => onLanguage("hi")}
-                type="button"
-              >
-                {common.hindi}
-              </button>
+            <div aria-labelledby={`${id}-lang`} className="language-grid" role="group">
+              {languageOptions.map((option) => (
+                <button
+                  aria-label={option.label}
+                  aria-pressed={language === option.code}
+                  dir={option.dir}
+                  key={option.code}
+                  lang={option.code}
+                  onClick={() => onLanguage(option.code)}
+                  type="button"
+                >
+                  <span>{option.label}</span>
+                  {option.code !== "en" && option.code !== "hi" && (
+                    <span aria-hidden="true" className="language-preview">
+                      {common.languagePreview}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
+            <p className="menu-hint language-note">
+              {common.languagePreviewNote}
+            </p>
           </div>
 
           <div className="menu-group">

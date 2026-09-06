@@ -7,7 +7,23 @@ import {
   type RegimeComparison,
 } from "./tax";
 
-export type Language = "en" | "hi";
+export const languageOptions = [
+  { code: "en", label: "English", dir: "ltr" },
+  { code: "hi", label: "हिन्दी", dir: "ltr" },
+  { code: "bn", label: "বাংলা", dir: "ltr" },
+  { code: "ta", label: "தமிழ்", dir: "ltr" },
+  { code: "mr", label: "मराठी", dir: "ltr" },
+  { code: "te", label: "తెలుగు", dir: "ltr" },
+  { code: "ur", label: "اردو", dir: "rtl" },
+] as const;
+
+export type Language = (typeof languageOptions)[number]["code"];
+
+export const isLanguage = (value: unknown): value is Language =>
+  languageOptions.some((option) => option.code === value);
+
+export const languageDirection = (language: Language) =>
+  languageOptions.find((option) => option.code === language)?.dir ?? "ltr";
 
 export type Theme = "light" | "dark" | "paper" | "system";
 
@@ -307,11 +323,13 @@ export const confirmedEntries = (draft: DraftState) =>
 
 /* What actually goes into the return for an entry: the citizen's figure where
    they gave one, the statement's otherwise. */
-export const reportedAmount = (draft: DraftState, entry: IncomeEntry) =>
-  draft.incomeAnswers[entry.id] === "amended" &&
-  typeof draft.incomeAmounts[entry.id] === "number"
-    ? draft.incomeAmounts[entry.id]
+export const reportedAmount = (draft: DraftState, entry: IncomeEntry) => {
+  const amended = draft.incomeAmounts[entry.id];
+  return draft.incomeAnswers[entry.id] === "amended" &&
+    typeof amended === "number"
+    ? amended
     : entry.amount;
+};
 
 export const disputedEntries = (draft: DraftState) =>
   incomeEntries.filter((entry) => draft.incomeAnswers[entry.id] === "not-mine");
@@ -500,7 +518,16 @@ export const buildFilingWindow = (
   };
 };
 
-const locale = (language: Language) => (language === "hi" ? "hi-IN" : "en-IN");
+const locale = (language: Language) =>
+  ({
+    en: "en-IN",
+    hi: "hi-IN",
+    bn: "bn-IN",
+    ta: "ta-IN",
+    mr: "mr-IN",
+    te: "te-IN",
+    ur: "ur-IN",
+  })[language];
 
 export const formatDate = (date: Date, language: Language) =>
   new Intl.DateTimeFormat(locale(language), {
@@ -777,7 +804,7 @@ export const formatHour = (hour: number, language: Language) => {
   const whole = Math.floor(hour);
   const minutes = Math.round((hour - whole) * 60);
   const date = new Date(Date.UTC(2000, 0, 1, whole, minutes));
-  return new Intl.DateTimeFormat(language === "hi" ? "hi-IN" : "en-IN", {
+  return new Intl.DateTimeFormat(locale(language), {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,

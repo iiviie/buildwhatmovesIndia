@@ -67,6 +67,59 @@ describe("the guided navigation", () => {
   });
 });
 
+describe("language selection", () => {
+  it("labels incomplete translations as previews", async () => {
+    const user = userEvent.setup();
+    render(<SahiReturnApp />);
+
+    await user.click(screen.getByRole("button", { name: en.settings }));
+
+    expect(screen.getAllByText(en.languagePreview)).toHaveLength(5);
+    expect(screen.getByText(en.languagePreviewNote)).toBeInTheDocument();
+  });
+
+  it("switches the guided journey to Bengali and saves the choice", async () => {
+    const user = userEvent.setup();
+    render(<SahiReturnApp />);
+
+    await user.click(screen.getByRole("button", { name: en.settings }));
+    await user.click(screen.getByRole("button", { name: "বাংলা" }));
+
+    expect(
+      screen.getByRole("heading", {
+        name: "সহজ প্রশ্নের উত্তর দিন। রিটার্ন আমরা তৈরি করব।",
+      }),
+    ).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute("lang", "bn");
+    expect(document.documentElement).toHaveAttribute("dir", "ltr");
+    expect(screen.getByRole("button", { name: "বাংলা" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(JSON.parse(window.localStorage.getItem("sahi-return-filing-draft-v1") ?? "{}").language).toBe("bn");
+  });
+
+  it("uses right-to-left document direction for Urdu", async () => {
+    const user = userEvent.setup();
+    render(<SahiReturnApp />);
+
+    await user.click(screen.getByRole("button", { name: en.settings }));
+    await user.click(screen.getByRole("button", { name: "اردو" }));
+
+    expect(
+      screen.getByRole("heading", {
+        name: "آسان سوالوں کے جواب دیں۔ ریٹرن ہم تیار کریں گے۔",
+      }),
+    ).toBeInTheDocument();
+    expect(document.documentElement).toHaveAttribute("lang", "ur");
+    expect(document.documentElement).toHaveAttribute("dir", "rtl");
+  });
+});
+
 describe("the home page", () => {
   it("does not show the journey's step list before the journey has begun", () => {
     render(<SahiReturnApp />);

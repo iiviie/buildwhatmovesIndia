@@ -13,7 +13,7 @@
  *
  * The bank accounts are synthetic, like every other fixture here. */
 
-import { BELATED_DATE_ISO, demoCase, DUE_DATE_ISO, type Language } from "./case-data";
+import { BELATED_DATE_ISO, demoCase, DUE_DATE_ISO } from "./case-data";
 
 /** One of the portal's filing-section options. */
 export type FilingOption = {
@@ -661,7 +661,7 @@ export type PrefilledCopy = {
 };
 
 export const prefilledCopy: Record<
-  Language,
+  "en" | "hi",
   Record<PersonalBlockId, PrefilledCopy>
 > = {
   en: {

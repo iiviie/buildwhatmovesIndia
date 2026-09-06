@@ -425,6 +425,58 @@
   min-width: 82px;
 }
 
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+}
+
+.language-grid button {
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid var(--rule-2);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+
+.language-preview {
+  color: var(--ink-3);
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.language-grid button[aria-pressed="true"] .language-preview {
+  color: inherit;
+  opacity: 0.76;
+}
+
+.language-note {
+  max-width: 30ch;
+}
+
+.language-grid button[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+
+/* The selector is visible before Telugu is the document language, so it
+   cannot rely on the root-level Telugu font token yet. */
+.language-grid button:lang(te) {
+  font-family: "Noto Sans Telugu", var(--sans);
+}
+
 /* The text-size control shows its three sizes at their three sizes.
 
    The markup has always carried the size on each glyph, and nothing was ever
