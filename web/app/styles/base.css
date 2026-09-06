@@ -107,10 +107,13 @@ h3 {
 }
 
 /* Telugu is not installed on every desktop used to review the prototype.
-   Bundle its script subset so the language name and journey never render as
-   missing-glyph boxes; Latin text continues to use the normal reading face. */
-:lang(te) {
-  font-family: "Noto Sans Telugu", var(--sans);
+   Put the bundled face into the shared reading token so components that set
+   their own font (headings, labels, buttons) receive it too. The downloaded
+   file contains only Telugu glyphs, so Latin automatically falls through to
+   the normal system stack without adding weight. */
+:root:lang(te) {
+  --sans: "Noto Sans Telugu", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 p {
