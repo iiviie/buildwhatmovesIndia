@@ -114,6 +114,7 @@ import {
   ArrowIcon,
   CheckIcon,
   ExternalIcon,
+  FileIcon,
   GridIcon,
   HelpIcon,
   SignInIcon,
@@ -1447,7 +1448,7 @@ export function SahiReturnApp() {
       </div>
 
       <section
-        className={`guided-panel${spotlightClass("documents-in-use")}`}
+        className={`guided-panel document-panel${spotlightClass("documents-in-use")}`}
         id="documents-in-use"
         tabIndex={-1}
       >
@@ -1458,23 +1459,28 @@ export function SahiReturnApp() {
 
         <ul className="files">
           {draft.documents.map((document) => (
-            <li key={document.kind}>
-              <div>
-                <span className="file-name">
-                  {page.salary.kinds[document.kind]}
+            <li className={document.loaded ? "is-loaded" : "is-missing"} key={document.kind}>
+              <div className="file-summary">
+                <span className="file-mark" aria-hidden="true">
+                  {document.loaded ? <CheckIcon /> : <FileIcon />}
                 </span>
-                <span className="file-meta">
-                  {document.loaded
-                    ? `${document.name} · ${document.size} · ${document.source}`
-                    : document.source}
-                  <span className="file-state">
-                    {document.loaded ? (
-                      <span className="label-ok">{page.salary.loaded}</span>
-                    ) : (
-                      <span className="label-alert">
-                        {page.salary.notLoaded}
-                      </span>
-                    )}
+                <span className="file-copy">
+                  <span className="file-name">
+                    {page.salary.kinds[document.kind]}
+                  </span>
+                  <span className="file-meta">
+                    {document.loaded
+                      ? `${document.name} · ${document.size} · ${document.source}`
+                      : document.source}
+                    <span className="file-state">
+                      {document.loaded ? (
+                        <span className="label-ok">{page.salary.loaded}</span>
+                      ) : (
+                        <span className="label-alert">
+                          {page.salary.notLoaded}
+                        </span>
+                      )}
+                    </span>
                   </span>
                 </span>
               </div>
