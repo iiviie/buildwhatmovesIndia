@@ -1393,6 +1393,7 @@ const journeyEn = {
     answeredAmended: "Included, at the figure you give",
     answeredNotMine: "Left out, and its tax credit dropped",
     amendReported: (reported: string) => `The statement says ${reported}`,
+    amendSaved: "Saved",
     amendNote:
       "Your figure is what goes into the return. The tax already deducted is unchanged, because that is what the bank actually paid the department. Report the difference as AIS feedback so their record catches up with yours.",
     amendError: "Give the figure that should be reported, as a number.",
@@ -1743,6 +1744,7 @@ const journeyHi: JourneyCopy = {
     answeredMine: "आपके रिटर्न में शामिल",
     answeredAmended: "शामिल, आपकी बताई रकम पर",
     amendReported: (reported: string) => `विवरण में ${reported} लिखा है`,
+    amendSaved: "सहेजा गया",
     amendNote:
       "रिटर्न में आपकी बताई रकम जाती है। काटा गया कर वही रहता है, क्योंकि बैंक ने विभाग को उतना ही भेजा है। अंतर की सूचना AIS फ़ीडबैक में दें ताकि उनका रिकॉर्ड आपके रिकॉर्ड से मिल जाए।",
     amendError: "जो रकम दर्ज होनी चाहिए, वह अंक में लिखें।",

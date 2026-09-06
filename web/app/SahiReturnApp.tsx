@@ -261,6 +261,7 @@ export function SahiReturnApp() {
     Partial<Record<DocumentKind, { url: string; type: string }>>
   >({});
   const [incomeCursor, setIncomeCursor] = useState(0);
+  const [savedIncomeEntry, setSavedIncomeEntry] = useState<string | null>(null);
 
   /* Site-level state: which screen, who is signed in, and the two panels that
      sit outside the journey. */
@@ -283,10 +284,14 @@ export function SahiReturnApp() {
   } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previewUrls = useRef<string[]>([]);
+  const savedIncomeTimer = useRef<number | null>(null);
 
   useEffect(
     () => () => {
       previewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+      if (savedIncomeTimer.current !== null) {
+        window.clearTimeout(savedIncomeTimer.current);
+      }
     },
     [],
   );
@@ -708,6 +713,7 @@ export function SahiReturnApp() {
   };
 
   const answerEntry = (id: string, answer: IncomeAnswer) => {
+    setSavedIncomeEntry(null);
     updateDraft({ incomeAnswers: { ...draft.incomeAnswers, [id]: answer } });
     /* Choosing "yes, but the figure is wrong" turns the figure above into a
        box, several lines up from the radio that did it. Nothing about the
@@ -718,14 +724,31 @@ export function SahiReturnApp() {
     }
   };
 
-  /* An empty box is not zero income — clearing the field falls back to the
-     statement's own figure rather than silently wiping the entry. */
+  /* An empty box is not zero income. Preserve it as an unfinished correction
+     so the old statement figure does not spring back while a replacement is
+     being typed. */
   const amendEntry = (id: string, raw: string) => {
     const next = { ...draft.incomeAmounts };
     const parsed = Number(raw);
-    if (raw.trim() === "" || Number.isNaN(parsed) || parsed < 0) delete next[id];
-    else next[id] = Math.round(parsed);
+    const valid = raw.trim() !== "" && !Number.isNaN(parsed) && parsed >= 0;
+    next[id] = valid ? Math.round(parsed) : null;
     updateDraft({ incomeAmounts: next });
+
+    if (savedIncomeTimer.current !== null) {
+      window.clearTimeout(savedIncomeTimer.current);
+    }
+    setSavedIncomeEntry(null);
+    if (!valid) return;
+
+    /* Wait until typing has stopped before confirming the save. Showing this
+       on the first digit makes a half-entered amount look complete. */
+    savedIncomeTimer.current = window.setTimeout(() => {
+      setSavedIncomeEntry(id);
+      savedIncomeTimer.current = window.setTimeout(() => {
+        setSavedIncomeEntry((current) => (current === id ? null : current));
+        savedIncomeTimer.current = null;
+      }, 2500);
+    }, 1000);
   };
 
   const continueFromSalary = () => {
@@ -746,6 +769,16 @@ export function SahiReturnApp() {
   };
 
   const continueFromIncome = () => {
+    const unfinishedCorrection = incomeEntries.find(
+      (entry) =>
+        draft.incomeAnswers[entry.id] === "amended" &&
+        draft.incomeAmounts[entry.id] === null,
+    );
+    if (unfinishedCorrection) {
+      setIncomeCursor(incomeEntries.indexOf(unfinishedCorrection));
+      stopAt(`${unfinishedCorrection.id}-amount`, page.income.amendError);
+      return;
+    }
     if (!allIncomeAnswered(draft)) {
       /* Four entries, and usually only one of them is unanswered. Point at
          that one rather than at the list it is somewhere inside. */
@@ -1619,22 +1652,33 @@ export function SahiReturnApp() {
                     </dt>
                     <dd>
                       {answer === "amended" ? (
-                        <span className="amend-cell">
-                          <span aria-hidden="true" className="amend-unit">
-                            ₹
+                        <span aria-live="polite" className="amend-field">
+                          <span className="amend-cell">
+                            <span aria-hidden="true" className="amend-unit">
+                              ₹
+                            </span>
+                            <input
+                              className={`amend-input${spotlightClass(`${entry.id}-amount`)}`}
+                              id={`${entry.id}-amount`}
+                              inputMode="numeric"
+                              min={0}
+                              onChange={(event) =>
+                                amendEntry(entry.id, event.target.value)
+                              }
+                              step={1}
+                              type="number"
+                              value={
+                                draft.incomeAmounts[entry.id] === null
+                                  ? ""
+                                  : (draft.incomeAmounts[entry.id] ?? entry.amount)
+                              }
+                            />
                           </span>
-                          <input
-                            className={`amend-input${spotlightClass(`${entry.id}-amount`)}`}
-                            id={`${entry.id}-amount`}
-                            inputMode="numeric"
-                            min={0}
-                            onChange={(event) =>
-                              amendEntry(entry.id, event.target.value)
-                            }
-                            step={1}
-                            type="number"
-                            value={draft.incomeAmounts[entry.id] ?? entry.amount}
-                          />
+                          {savedIncomeEntry === entry.id && (
+                            <span className="amend-saved">
+                              {page.income.amendSaved}
+                            </span>
+                          )}
                         </span>
                       ) : (
                         money(entry.amount)

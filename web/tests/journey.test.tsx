@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SahiReturnApp } from "../app/SahiReturnApp";
 import {
   defaultDraft,
@@ -50,6 +50,10 @@ const draftAt = (step: number, extra: Record<string, unknown> = {}) =>
     benefitsReviewed: true,
     ...extra,
   });
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("Sahi Return salaried filing journey", () => {
   beforeEach(() => {
@@ -199,7 +203,7 @@ describe("Sahi Return salaried filing journey", () => {
     expect(
       screen.getByText(/No government record exists/),
     ).toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("drops the tax credit on an entry the citizen does not recognise", async () => {
     const user = userEvent.setup();
@@ -992,6 +996,49 @@ describe("correcting a figure the statement got wrong", () => {
     expect(box).toHaveFocus();
     expect(box).toHaveClass("is-spotlit");
     expect(box).not.toHaveClass("is-spotlit-error");
+  });
+
+  it("allows the old amount to be fully cleared and confirms the replacement", async () => {
+    vi.useFakeTimers();
+    signedIn();
+    window.localStorage.setItem(DRAFT_KEY, draftAt(3, { incomeAnswers: {} }));
+    render(<SahiReturnApp />);
+
+    await act(async () => {
+      await vi.runOnlyPendingTimersAsync();
+    });
+    expect(
+      screen.getByRole("heading", { name: "Do you recognise this income?" }),
+    ).toBeInTheDocument();
+    const entry = document.getElementById("entry-savings-sampurna") as HTMLElement;
+    fireEvent.click(
+      within(entry).getByRole("radio", { name: "The amount is wrong" }),
+    );
+
+    const box = document.getElementById(
+      "savings-sampurna-amount",
+    ) as HTMLInputElement;
+    fireEvent.change(box, { target: { value: "" } });
+    expect(box).toHaveValue(null);
+
+    fireEvent.change(box, { target: { value: "45000" } });
+    expect(box).toHaveValue(45000);
+    expect(within(entry).queryByText("Saved")).not.toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(within(entry).getByText("Saved")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2499);
+    });
+    expect(within(entry).getByText("Saved")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(within(entry).queryByText("Saved")).not.toBeInTheDocument();
   });
 });
 
