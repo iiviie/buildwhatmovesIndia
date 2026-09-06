@@ -146,7 +146,7 @@ assistant is told to say so rather than imply it parsed your document.
 
 ## Implemented journey
 
-The signed-in dashboard includes a **Tax Inbox** for the fictional 2025–26 records. It demonstrates the year-round habit with Form 16, AIS/26AS, EPF and health-insurance evidence; distinguishes a normal supermarket receipt from tax-relevant proof; and lets a reviewer add a synthetic donation receipt. The receipt is classified immediately but held for review because Form 10BE is missing. Preparing the return carries only the ready Form 16 and AIS records into the existing guided journey. This is an on-device interaction using synthetic metadata—not a production document store or an upload to a server.
+The signed-in dashboard includes a **Tax Inbox** for the fictional 2025–26 records. It demonstrates the year-round habit with Form 16, AIS/26AS, EPF and health-insurance evidence; distinguishes a normal supermarket receipt from tax-relevant proof; and lets a reviewer add a synthetic donation receipt. The receipt is classified immediately but held for review because Form 10BE is missing. A citizen can defer the decision, add a fictional matching Form 10BE, or explicitly exclude the claim—and can reverse that exclusion. Once matched, the eligible ₹5,500 section 80G amount is carried into the old-regime calculation, comparison and deductions ledger; unresolved or excluded claims stay out. This is an on-device interaction using synthetic metadata—not a production document store or an upload to a server.
 
 Step 0 is the start screen and is not numbered.
 

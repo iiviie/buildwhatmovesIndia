@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Language } from "../case-data";
+import type { Language, TaxInboxDonationStatus } from "../case-data";
 import { AlertIcon, ArrowIcon, CheckIcon, FileIcon } from "./icons";
 
 const translations = {
@@ -25,6 +25,24 @@ const translations = {
     add: "Add fictional donation receipt",
     reading: "Reading the receipt…",
     added: "Receipt read. One missing proof was found.",
+    reviewDonation: "Review missing proof",
+    reviewTitle: "Complete this donation record",
+    reviewIntro:
+      "The receipt shows a payment, but it cannot establish an 80G claim by itself. Match Form 10BE before using it.",
+    missing: "Missing",
+    missingValue: "Form 10BE from the trust",
+    foundAmount: "Donation found",
+    eligibleAmount: "Eligible deduction after match",
+    eligibilityValue: "₹5,500 · 50% of the donation · old regime only",
+    addProof: "Add fictional Form 10BE",
+    matching: "Matching certificate…",
+    getLater: "I’ll get it later",
+    exclude: "Do not claim this donation",
+    matchedProof: "Matched to fictional Form 10BE · ₹5,500 eligible under old regime",
+    resolved: "Donation verified. Its eligible amount is now included in the old-regime comparison.",
+    excluded: "Donation excluded from this return.",
+    excludedDetail: "You chose not to claim this donation. It will not affect the return.",
+    reconsider: "Review this donation again",
     source: "Source",
     applicable: "Applicable",
     matched: "Matched",
@@ -49,8 +67,14 @@ const translations = {
     oldOnly: "Old regime only",
     bothRecords: "Return evidence",
     prepareTitle: "Start with what is ready",
+    prepareNotAddedBody:
+      "Form 16 and AIS will be loaded into the guided return. You can return here later to add another fictional record.",
     prepareBody:
       "Form 16 and AIS will be loaded into the guided return. The donation stays out until its missing proof is reviewed.",
+    prepareReadyBody:
+      "Form 16, AIS and the verified donation deduction will be carried into the guided return for your review.",
+    prepareExcludedBody:
+      "Form 16 and AIS will be loaded into the guided return. The donation will stay out because you chose not to claim it.",
     prepare: "Prepare my return",
     back: "Back to dashboard",
   },
@@ -74,6 +98,24 @@ const translations = {
     add: "काल्पनिक दान रसीद जोड़ें",
     reading: "रसीद पढ़ी जा रही है…",
     added: "रसीद पढ़ी गई। एक गायब प्रमाण मिला।",
+    reviewDonation: "गायब प्रमाण जाँचें",
+    reviewTitle: "इस दान रिकॉर्ड को पूरा करें",
+    reviewIntro:
+      "रसीद भुगतान दिखाती है, लेकिन अकेले 80G दावा साबित नहीं करती। इस्तेमाल से पहले फॉर्म 10BE का मिलान करें।",
+    missing: "गायब",
+    missingValue: "ट्रस्ट का फॉर्म 10BE",
+    foundAmount: "मिला हुआ दान",
+    eligibleAmount: "मिलान के बाद योग्य कटौती",
+    eligibilityValue: "₹5,500 · दान का 50% · सिर्फ़ पुरानी व्यवस्था",
+    addProof: "काल्पनिक फॉर्म 10BE जोड़ें",
+    matching: "प्रमाणपत्र का मिलान हो रहा है…",
+    getLater: "मैं बाद में लाऊँगी",
+    exclude: "इस दान का दावा न करें",
+    matchedProof: "काल्पनिक फॉर्म 10BE से मिलान · पुरानी व्यवस्था में ₹5,500 योग्य",
+    resolved: "दान सत्यापित हुआ। योग्य रकम अब पुरानी व्यवस्था की तुलना में शामिल है।",
+    excluded: "दान को इस रिटर्न से बाहर रखा गया।",
+    excludedDetail: "आपने इस दान का दावा न करने का विकल्प चुना। इसका रिटर्न पर असर नहीं होगा।",
+    reconsider: "इस दान की फिर से जाँच करें",
     source: "स्रोत",
     applicable: "लागू",
     matched: "मिलान हुआ",
@@ -98,8 +140,14 @@ const translations = {
     oldOnly: "सिर्फ़ पुरानी व्यवस्था",
     bothRecords: "रिटर्न का प्रमाण",
     prepareTitle: "जो तैयार है उससे शुरू करें",
+    prepareNotAddedBody:
+      "फॉर्म 16 और AIS निर्देशित रिटर्न में लोड होंगे। दूसरा काल्पनिक रिकॉर्ड जोड़ने के लिए आप बाद में यहाँ लौट सकती हैं।",
     prepareBody:
       "फॉर्म 16 और AIS निर्देशित रिटर्न में लोड होंगे। गायब प्रमाण की जाँच होने तक दान बाहर रहेगा।",
+    prepareReadyBody:
+      "फॉर्म 16, AIS और सत्यापित दान कटौती आपकी जाँच के लिए निर्देशित रिटर्न में शामिल होंगे।",
+    prepareExcludedBody:
+      "फॉर्म 16 और AIS निर्देशित रिटर्न में लोड होंगे। आपके विकल्प के अनुसार दान का दावा शामिल नहीं होगा।",
     prepare: "मेरा रिटर्न तैयार करें",
     back: "डैशबोर्ड पर वापस जाएँ",
   },
@@ -115,20 +163,27 @@ type RecordItem = {
 };
 
 export function TaxInbox({
-  donationAdded,
+  donationStatus,
   language,
   onAddDonation,
   onBack,
+  onExcludeDonation,
   onPrepare,
+  onResolveDonation,
 }: {
-  donationAdded: boolean;
+  donationStatus: TaxInboxDonationStatus;
   language: Language;
   onAddDonation: () => void;
   onBack: () => void;
+  onExcludeDonation: () => void;
   onPrepare: () => void;
+  onResolveDonation: () => void;
 }) {
   const text = language === "hi" ? translations.hi : translations.en;
   const [reading, setReading] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const donationAdded = donationStatus !== "not-added";
 
   const records: RecordItem[] = [
     { id: "form16", title: text.form16, meta: text.form16Meta, detail: text.form16Detail, state: "ready", tag: text.bothRecords },
@@ -153,12 +208,18 @@ export function TaxInbox({
       ];
 
   if (donationAdded) {
+    const ready = donationStatus === "ready";
+    const excluded = donationStatus === "excluded";
     records.splice(4, 0, {
       id: "donation",
       title: text.donation,
       meta: text.donationMeta,
-      detail: text.donationDetail,
-      state: "review",
+      detail: ready
+        ? text.matchedProof
+        : excluded
+          ? text.excludedDetail
+          : text.donationDetail,
+      state: ready ? "ready" : excluded ? "unused" : "review",
       tag: text.oldOnly,
     });
   }
@@ -169,7 +230,18 @@ export function TaxInbox({
     window.setTimeout(() => {
       onAddDonation();
       setReading(false);
+      setReviewOpen(true);
     }, 850);
+  };
+
+  const resolveDonation = () => {
+    if (resolving) return;
+    setResolving(true);
+    window.setTimeout(() => {
+      onResolveDonation();
+      setResolving(false);
+      setReviewOpen(false);
+    }, 650);
   };
 
   return (
@@ -186,9 +258,9 @@ export function TaxInbox({
       </div>
 
       <section aria-label={text.eyebrow} className="tax-inbox-overview">
-        <div><strong>4</strong><span>{text.recordsReady}</span></div>
-        <div><strong>{donationAdded ? 1 : 0}</strong><span>{text.needsReview}</span></div>
-        <div><strong>1</strong><span>{text.notTaxRelevant}</span></div>
+        <div><strong>{donationStatus === "ready" ? 5 : 4}</strong><span>{text.recordsReady}</span></div>
+        <div><strong>{donationStatus === "needs-review" ? 1 : 0}</strong><span>{text.needsReview}</span></div>
+        <div><strong>{donationStatus === "excluded" ? 2 : 1}</strong><span>{text.notTaxRelevant}</span></div>
       </section>
 
       {!donationAdded && (
@@ -204,7 +276,9 @@ export function TaxInbox({
         </section>
       )}
 
-      {donationAdded && <p className="tax-inbox-added" role="status"><CheckIcon />{text.added}</p>}
+      {donationStatus === "needs-review" && <p className="tax-inbox-added" role="status"><AlertIcon />{text.added}</p>}
+      {donationStatus === "ready" && <p className="tax-inbox-added" role="status"><CheckIcon />{text.resolved}</p>}
+      {donationStatus === "excluded" && <p className="tax-inbox-added" role="status"><FileIcon />{text.excluded}</p>}
 
       <section className="tax-records">
         <div className="tax-records-head">
@@ -226,12 +300,65 @@ export function TaxInbox({
                 </div>
                 <p className="tax-record-meta">{record.meta}</p>
                 <p>{record.detail}</p>
+                {record.id === "donation" && donationStatus === "needs-review" && (
+                  <button
+                    aria-expanded={reviewOpen}
+                    className="link-btn tax-record-review"
+                    onClick={() => setReviewOpen((open) => !open)}
+                    type="button"
+                  >
+                    {text.reviewDonation}
+                  </button>
+                )}
+                {record.id === "donation" && donationStatus === "excluded" && (
+                  <button
+                    className="link-btn tax-record-review"
+                    onClick={() => {
+                      onAddDonation();
+                      setReviewOpen(true);
+                    }}
+                    type="button"
+                  >
+                    {text.reconsider}
+                  </button>
+                )}
               </div>
               <span className="tax-record-tag">{record.tag}</span>
             </li>
           ))}
         </ul>
       </section>
+
+      {donationStatus === "needs-review" && reviewOpen && (
+        <section aria-label={text.reviewTitle} className="tax-review-panel">
+          <div>
+            <p className="label">{text.review}</p>
+            <h2>{text.reviewTitle}</h2>
+            <p>{text.reviewIntro}</p>
+          </div>
+          <dl>
+            <div><dt>{text.foundAmount}</dt><dd>₹11,000</dd></div>
+            <div><dt>{text.missing}</dt><dd>{text.missingValue}</dd></div>
+            <div><dt>{text.eligibleAmount}</dt><dd>{text.eligibilityValue}</dd></div>
+          </dl>
+          <div className="actions tax-review-actions">
+            <button className="btn" disabled={resolving} onClick={resolveDonation} type="button">
+              {resolving ? text.matching : text.addProof}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setReviewOpen(false)} type="button">{text.getLater}</button>
+            <button
+              className="link-btn"
+              onClick={() => {
+                onExcludeDonation();
+                setReviewOpen(false);
+              }}
+              type="button"
+            >
+              {text.exclude}
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="tax-inbox-guide">
         <div className="tax-records-head">
@@ -250,7 +377,15 @@ export function TaxInbox({
       <section className="tax-inbox-prepare">
         <div>
           <p className="label">{text.prepareTitle}</p>
-          <p>{text.prepareBody}</p>
+          <p>
+            {donationStatus === "ready"
+              ? text.prepareReadyBody
+              : donationStatus === "excluded"
+                ? text.prepareExcludedBody
+                : donationStatus === "needs-review"
+                  ? text.prepareBody
+                  : text.prepareNotAddedBody}
+          </p>
         </div>
         <button className="btn" onClick={onPrepare} type="button">
           {text.prepare}<ArrowIcon />

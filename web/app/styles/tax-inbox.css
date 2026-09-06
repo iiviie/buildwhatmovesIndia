@@ -245,6 +245,63 @@
   color: var(--ink-2);
 }
 
+.tax-record-review {
+  margin-top: var(--s3);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.tax-review-panel {
+  margin-top: var(--s5);
+  padding: var(--s5);
+  border: 1px solid var(--alert);
+  background: var(--sheet);
+}
+
+.tax-review-panel h2 {
+  margin-top: var(--s2);
+}
+
+.tax-review-panel > div:first-child > p:last-child {
+  margin-top: var(--s3);
+  color: var(--ink-2);
+}
+
+.tax-review-panel dl {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s5);
+  padding-block: var(--s4);
+  border-block: 1px solid var(--rule);
+}
+
+.tax-review-panel dl > div {
+  display: grid;
+  gap: var(--s1);
+}
+
+.tax-review-panel dt {
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.tax-review-panel dd {
+  font-weight: 600;
+}
+
+.tax-review-actions {
+  margin-top: var(--s4);
+}
+
+@media (min-width: 720px) {
+  .tax-review-panel dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .tax-record-tag {
   grid-column: 2;
   width: max-content;

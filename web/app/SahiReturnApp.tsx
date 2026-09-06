@@ -192,10 +192,16 @@ const parseDraft = (value: string | null): DraftState | null => {
         typeof parsed.benefitsReviewed === "boolean"
           ? parsed.benefitsReviewed
           : false,
-      taxInboxDonationAdded:
-        typeof parsed.taxInboxDonationAdded === "boolean"
-          ? parsed.taxInboxDonationAdded
-          : false,
+      taxInboxDonationStatus:
+        parsed.taxInboxDonationStatus === "needs-review" ||
+        parsed.taxInboxDonationStatus === "ready" ||
+        parsed.taxInboxDonationStatus === "excluded" ||
+        parsed.taxInboxDonationStatus === "not-added"
+          ? parsed.taxInboxDonationStatus
+          : (parsed as Partial<DraftState> & { taxInboxDonationAdded?: boolean })
+                .taxInboxDonationAdded
+            ? "needs-review"
+            : "not-added",
     };
   } catch {
     return null;
@@ -1974,8 +1980,18 @@ export function SahiReturnApp() {
     );
   };
 
-  const renderRegime = () => (
-    <>
+  const renderRegime = () => {
+    const donationReady = draft.deductions.s80G > 0;
+    const benefitCount = donationReady ? 4 : 3;
+    const savingsInterestDeduction = Math.max(
+      0,
+      comparison.oldRegime.chapterViaDeductions -
+        Math.min(draft.deductions.s80C, 150_000) -
+        Math.min(draft.deductions.s80D, 25_000) -
+        draft.deductions.s80G,
+    );
+
+    return <>
       <div className="guided-head">
         <p className="guided-kicker">{page.regime.eyebrow}</p>
         <h1 ref={headingRef} tabIndex={-1}>
@@ -1996,7 +2012,9 @@ export function SahiReturnApp() {
                 : `${money(comparison.oldRegime.chapterViaDeductions)} of deductions under the old regime`}
             </h2>
           </div>
-          <span className="benefit-count">{language === "hi" ? "3 फायदे" : "3 benefits"}</span>
+          <span className="benefit-count">
+            {language === "hi" ? `${benefitCount} फायदे` : `${benefitCount} benefits`}
+          </span>
         </div>
 
         <div className="benefit-list">
@@ -2046,6 +2064,17 @@ export function SahiReturnApp() {
             </span>
           </label>
 
+          {donationReady && (
+            <div className="benefit-row">
+              <span className="benefit-copy">
+                <strong>{language === "hi" ? "सत्यापित योग्य दान" : "Verified eligible donation"}</strong>
+                <span>{language === "hi" ? "₹11,000 की रसीद और फॉर्म 10BE का मिलान; 50% योग्य" : "₹11,000 receipt matched with Form 10BE; 50% eligible"}</span>
+                <span className="benefit-source">{language === "hi" ? "टैक्स इनबॉक्स से · धारा 80G" : "From Tax Inbox · Section 80G"}</span>
+              </span>
+              <strong className="benefit-auto">{money(draft.deductions.s80G)}</strong>
+            </div>
+          )}
+
           <div className="benefit-row">
             <span className="benefit-copy">
               <strong>{language === "hi" ? "बचत खाते का ब्याज" : "Savings-account interest"}</strong>
@@ -2053,14 +2082,7 @@ export function SahiReturnApp() {
               <span className="benefit-source">{language === "hi" ? "डेमो AIS से · धारा 80TTA" : "From demo AIS · Section 80TTA"}</span>
             </span>
             <strong className="benefit-auto">
-              {money(
-                Math.max(
-                  0,
-                  comparison.oldRegime.chapterViaDeductions -
-                    Math.min(draft.deductions.s80C, 150_000) -
-                    Math.min(draft.deductions.s80D, 25_000),
-                ),
-              )}
+              {money(savingsInterestDeduction)}
             </strong>
           </div>
         </div>
@@ -2076,8 +2098,8 @@ export function SahiReturnApp() {
 
         <p className="benefit-plain-note">
           {language === "hi"
-            ? "नई व्यवस्था में ये तीन कटौतियाँ नहीं मिलतीं। तुलना में हमने इन्हें पुरानी व्यवस्था में ही लगाया है।"
-            : "The new regime does not allow these three deductions. We apply them only to the old-regime side of the comparison."}
+            ? `नई व्यवस्था में ये ${donationReady ? "चार" : "तीन"} कटौतियाँ नहीं मिलतीं। तुलना में हमने इन्हें पुरानी व्यवस्था में ही लगाया है।`
+            : `The new regime does not allow these ${donationReady ? "four" : "three"} deductions. We apply them only to the old-regime side of the comparison.`}
         </p>
         <p className="no-print benefit-official-link">
           <OutLink href={OFFICIAL_ITR1_FAQ} newWindow={common.newWindow}>
@@ -2128,12 +2150,12 @@ export function SahiReturnApp() {
           <p className="prose">{page.regime.workingIntro}</p>
           <p className="consequence">{page.regime.rebateNote(money(REBATE_NEW_LIMIT))}</p>
           <div className="swap">{renderRegimeColumn("new")}{renderRegimeColumn("old")}</div>
-          <TaxPaidSection labels={{ amountAwaitingRegime: common.tpAmountAwaitingRegime, deductionsIntro: common.tpDeductionsIntro, deductionsTitle: common.tpDeductionsTitle, deductionsTotal: common.tpDeductionsTotal, entriesCount: common.tpEntriesCount, entriesNone: common.tpEntriesNone, headAmount: common.tpHeadAmount, headSection: common.tpHeadSection, headStatus: common.tpHeadStatus, headWhat: common.tpHeadWhat, officialSummary: common.tpOfficialSummary, regimeNew: common.tpRegimeNew, regimeOld: common.tpRegimeOld, regimeUnchosen: common.tpRegimeUnchosen, schedulesIntro: common.tpSchedulesIntro, schedulesSummary: common.tpSchedulesSummary, schedulesTitle: common.tpSchedulesTitle, sourceLabel: common.tpSourceLabel, statusAwaitingRegime: common.tpStatusAwaitingRegime, statusClaimed: common.tpStatusClaimed, statusNone: common.tpStatusNone, statusNotInRegime: common.tpStatusNotInRegime, taxPaidTotal: common.tpTaxPaidTotal, whyLabel: common.tpWhyLabel }} language={contentLanguage} regime={draft.regime} />
+          <TaxPaidSection labels={{ amountAwaitingRegime: common.tpAmountAwaitingRegime, deductionsIntro: common.tpDeductionsIntro, deductionsTitle: common.tpDeductionsTitle, deductionsTotal: common.tpDeductionsTotal, entriesCount: common.tpEntriesCount, entriesNone: common.tpEntriesNone, headAmount: common.tpHeadAmount, headSection: common.tpHeadSection, headStatus: common.tpHeadStatus, headWhat: common.tpHeadWhat, officialSummary: common.tpOfficialSummary, regimeNew: common.tpRegimeNew, regimeOld: common.tpRegimeOld, regimeUnchosen: common.tpRegimeUnchosen, schedulesIntro: common.tpSchedulesIntro, schedulesSummary: common.tpSchedulesSummary, schedulesTitle: common.tpSchedulesTitle, sourceLabel: common.tpSourceLabel, statusAwaitingRegime: common.tpStatusAwaitingRegime, statusClaimed: common.tpStatusClaimed, statusNone: common.tpStatusNone, statusNotInRegime: common.tpStatusNotInRegime, taxPaidTotal: common.tpTaxPaidTotal, whyLabel: common.tpWhyLabel }} language={contentLanguage} otherDeductionAmount={comparison.oldRegime.chapterViaDeductions} regime={draft.regime} />
         </div>
       </details>
 
-    </>
-  );
+    </>;
+  };
 
   const renderChecks = () => {
     const passed = checks.filter((check) => check.state === "pass").length;
@@ -2524,21 +2546,32 @@ export function SahiReturnApp() {
     if (screen === "tax-inbox" && session) {
       return (
         <TaxInbox
-          donationAdded={draft.taxInboxDonationAdded}
+          donationStatus={draft.taxInboxDonationStatus}
           language={language}
-          onAddDonation={() => updateDraft({ taxInboxDonationAdded: true })}
+          onAddDonation={() => updateDraft({ taxInboxDonationStatus: "needs-review" })}
           onBack={() => setScreen("dashboard")}
+          onExcludeDonation={() => updateDraft({
+            taxInboxDonationStatus: "excluded",
+            deductions: { ...draft.deductions, s80G: 0 },
+            benefitsReviewed: false,
+          })}
           onPrepare={() => {
             updateDraft({
               documents: demoDocuments,
               deductions: {
                 s80C: demoCase.demo80C,
                 s80D: demoCase.demo80D,
+                s80G: draft.deductions.s80G,
               },
               benefitsReviewed: false,
             });
             goTo(2);
           }}
+          onResolveDonation={() => updateDraft({
+            taxInboxDonationStatus: "ready",
+            deductions: { ...draft.deductions, s80G: 5_500 },
+            benefitsReviewed: false,
+          })}
         />
       );
     }

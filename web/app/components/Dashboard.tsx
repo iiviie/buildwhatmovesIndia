@@ -60,16 +60,28 @@ export function Dashboard({
         eyebrow: "पूरे साल की तैयारी",
         title: "आपका टैक्स इनबॉक्स",
         body: "फॉर्म 16, AIS, बीमा और निवेश के प्रमाण एक जगह—ताकि फाइलिंग के समय सिर्फ़ जाँच करनी पड़े।",
-        ready: "4 रिकॉर्ड तैयार",
-        review: draft.taxInboxDonationAdded ? "1 की जाँच बाकी" : "काल्पनिक रसीद जोड़कर देखें",
+        ready: draft.taxInboxDonationStatus === "ready" ? "5 रिकॉर्ड तैयार" : "4 रिकॉर्ड तैयार",
+        review: draft.taxInboxDonationStatus === "needs-review"
+          ? "1 की जाँच बाकी"
+          : draft.taxInboxDonationStatus === "ready"
+            ? "सभी जरूरी रिकॉर्ड तैयार"
+            : draft.taxInboxDonationStatus === "excluded"
+              ? "दान का दावा न करने का विकल्प चुना"
+              : "काल्पनिक रसीद जोड़कर देखें",
         action: "टैक्स इनबॉक्स खोलें",
       }
     : {
         eyebrow: "Ready throughout the year",
         title: "Your Tax Inbox",
         body: "Form 16, AIS, insurance and investment evidence in one place—so filing season becomes a review, not a search.",
-        ready: "4 records ready",
-        review: draft.taxInboxDonationAdded ? "1 needs review" : "Try adding a fictional receipt",
+        ready: draft.taxInboxDonationStatus === "ready" ? "5 records ready" : "4 records ready",
+        review: draft.taxInboxDonationStatus === "needs-review"
+          ? "1 needs review"
+          : draft.taxInboxDonationStatus === "ready"
+            ? "All required records ready"
+            : draft.taxInboxDonationStatus === "excluded"
+              ? "Donation intentionally not claimed"
+              : "Try adding a fictional receipt",
         action: "Open Tax Inbox",
       };
 
