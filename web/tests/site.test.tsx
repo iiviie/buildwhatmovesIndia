@@ -82,6 +82,14 @@ describe("language selection", () => {
     ).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("lang", "bn");
     expect(document.documentElement).toHaveAttribute("dir", "ltr");
+    expect(screen.getByRole("button", { name: "বাংলা" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
     expect(JSON.parse(window.localStorage.getItem("sahi-return-filing-draft-v1") ?? "{}").language).toBe("bn");
   });
 

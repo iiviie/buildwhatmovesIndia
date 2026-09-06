@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import "@fontsource/noto-sans-telugu/telugu-400.css";
+import "@fontsource/noto-sans-telugu/telugu-600.css";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {

@@ -2744,7 +2744,7 @@ export function SahiReturnApp() {
             )}
             <SettingsMenu
               common={common}
-              language={contentLanguage}
+              language={language}
               lowData={draft.lowData}
               onClose={() => setSettingsOpen(false)}
               onLanguage={switchLanguage}

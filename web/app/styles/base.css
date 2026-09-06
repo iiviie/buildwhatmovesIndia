@@ -106,6 +106,13 @@ h3 {
   line-height: 1.9;
 }
 
+/* Telugu is not installed on every desktop used to review the prototype.
+   Bundle its script subset so the language name and journey never render as
+   missing-glyph boxes; Latin text continues to use the normal reading face. */
+:lang(te) {
+  font-family: "Noto Sans Telugu", var(--sans);
+}
+
 p {
   max-width: var(--measure);
   text-wrap: pretty;
