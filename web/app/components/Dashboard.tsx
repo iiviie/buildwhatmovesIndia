@@ -4,7 +4,7 @@ import { greetingFor, maskUserId, type Session } from "../auth";
 import { demoCase, type DraftState, type Language } from "../case-data";
 import type { copy } from "../content";
 import { services, type ServiceId } from "../services";
-import { ArrowIcon, CheckIcon, LockIcon } from "./icons";
+import { ArrowIcon, CheckIcon, FileIcon, LockIcon } from "./icons";
 
 type Common = (typeof copy)["en"];
 
@@ -20,6 +20,7 @@ export function Dashboard({
   now,
   onResume,
   onService,
+  onTaxInbox,
   session,
   totalSteps,
 }: {
@@ -29,6 +30,7 @@ export function Dashboard({
   now: Date;
   onResume: () => void;
   onService: (id: ServiceId) => void;
+  onTaxInbox: () => void;
   session: Session;
   totalSteps: number;
 }) {
@@ -53,6 +55,36 @@ export function Dashboard({
       ? common.dashResume
       : common.dashStart;
 
+  const inbox = language === "hi"
+    ? {
+        eyebrow: "पूरे साल की तैयारी",
+        title: "आपका टैक्स इनबॉक्स",
+        body: "फॉर्म 16, AIS, बीमा और निवेश के प्रमाण एक जगह—ताकि फाइलिंग के समय सिर्फ़ जाँच करनी पड़े।",
+        ready: draft.taxInboxDonationStatus === "ready" ? "5 रिकॉर्ड तैयार" : "4 रिकॉर्ड तैयार",
+        review: draft.taxInboxDonationStatus === "needs-review"
+          ? "1 की जाँच बाकी"
+          : draft.taxInboxDonationStatus === "ready"
+            ? "सभी जरूरी रिकॉर्ड तैयार"
+            : draft.taxInboxDonationStatus === "excluded"
+              ? "दान का दावा न करने का विकल्प चुना"
+              : "काल्पनिक रसीद जोड़कर देखें",
+        action: "टैक्स इनबॉक्स खोलें",
+      }
+    : {
+        eyebrow: "Ready throughout the year",
+        title: "Your Tax Inbox",
+        body: "Form 16, AIS, insurance and investment evidence in one place—so filing season becomes a review, not a search.",
+        ready: draft.taxInboxDonationStatus === "ready" ? "5 records ready" : "4 records ready",
+        review: draft.taxInboxDonationStatus === "needs-review"
+          ? "1 needs review"
+          : draft.taxInboxDonationStatus === "ready"
+            ? "All required records ready"
+            : draft.taxInboxDonationStatus === "excluded"
+              ? "Donation intentionally not claimed"
+              : "Try adding a fictional receipt",
+        action: "Open Tax Inbox",
+      };
+
   return (
     <>
       <div className="page-head">
@@ -72,6 +104,21 @@ export function Dashboard({
         </h1>
         <p className="lede">{common.dashIntro}</p>
       </div>
+
+      <section className="dash-inbox">
+        <div className="dash-inbox-copy">
+          <p className="label">{inbox.eyebrow}</p>
+          <h2>{inbox.title}</h2>
+          <p>{inbox.body}</p>
+          <div className="dash-inbox-status">
+            <span><CheckIcon />{inbox.ready}</span>
+            <span><FileIcon />{inbox.review}</span>
+          </div>
+        </div>
+        <button className="btn" onClick={onTaxInbox} type="button">
+          {inbox.action}<ArrowIcon />
+        </button>
+      </section>
 
       <section className="section">
         <h2>{common.dashPendingTitle}</h2>

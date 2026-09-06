@@ -131,15 +131,32 @@ const moneyColumns = (schedule: TaxPaidSchedule): boolean[] =>
 
 export function TaxPaidSection({
   language,
+  otherDeductionAmount,
   regime,
   labels,
 }: {
   language: "en" | "hi";
+  otherDeductionAmount?: number;
   regime: Regime;
   labels: TaxPaidLabels;
 }) {
   const uid = useId();
-  const rows = deductions[language];
+  const eligibleDonation = Math.max(0, (otherDeductionAmount ?? 185_000) - 185_000);
+  const rows = deductions[language].map((row) =>
+    row.section === "Any other deduction"
+      ? {
+          ...row,
+          amount: otherDeductionAmount ?? row.amount,
+          note: language === "hi"
+            ? eligibleDonation > 0
+              ? `पुरानी व्यवस्था में इस कुल में धारा 80C के ₹1,50,000, धारा 80D के ₹25,000, योग्य बचत ब्याज के ₹10,000 और टैक्स इनबॉक्स से सत्यापित धारा 80G दान के ${formatRupees(eligibleDonation, language)} शामिल हैं। नई व्यवस्था में ये ₹0 गिने जाते हैं।`
+              : "पुरानी व्यवस्था में इस कुल में धारा 80C के ₹1,50,000, धारा 80D के ₹25,000 और योग्य बचत ब्याज के ₹10,000 शामिल हैं। नई व्यवस्था में ये ₹0 गिने जाते हैं।"
+            : eligibleDonation > 0
+              ? `Under the old regime this total combines ₹1,50,000 under section 80C, ₹25,000 under section 80D, ₹10,000 of eligible savings interest and the ${formatRupees(eligibleDonation, language)} section 80G donation verified in Tax Inbox. Under the new regime they count as ₹0.`
+              : "Under the old regime this total combines ₹1,50,000 under section 80C, ₹25,000 under section 80D and ₹10,000 of eligible savings interest. Under the new regime they count as ₹0.",
+        }
+      : row,
+  );
   const schedules = taxPaidSchedules[language];
 
   const totalRow = rows[rows.length - 1];

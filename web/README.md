@@ -12,4 +12,4 @@ npm test
 npm run build
 ```
 
-The application stores only the synthetic demo draft in browser local storage. It has no runtime database, login, OpenAI API call, payment, or government integration.
+The application stores only the synthetic demo draft and Tax Inbox state in browser local storage. The Tax Inbox simulates document classification but accepts no real document. The app has no runtime database, real login, payment, or government integration; its optional filing assistant is the only server-side API feature.

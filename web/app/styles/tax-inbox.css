@@ -1,0 +1,494 @@
+/* The inbox is a year's worth of evidence, not a file manager. The page stays
+   chronological and editorial: status is readable in words and the single
+   warm surface is reserved for the action that creates a new record. */
+
+.dash-inbox {
+  display: grid;
+  gap: var(--s5);
+  align-items: end;
+  margin-top: var(--s6);
+  padding: var(--s5);
+  border: 1px solid var(--rule-2);
+  background: var(--sheet);
+}
+
+.dash-inbox-copy h2 {
+  margin-top: var(--s2);
+}
+
+.dash-inbox-copy > p:last-of-type {
+  margin-top: var(--s2);
+  color: var(--ink-2);
+}
+
+.dash-inbox-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+  margin-top: var(--s4);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.dash-inbox-status span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dash-inbox-status svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+
+@media (min-width: 760px) {
+  .dash-inbox {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.tax-inbox {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+.tax-inbox-head {
+  max-width: 800px;
+}
+
+.tax-inbox-head .lede {
+  max-width: 64ch;
+}
+
+.tax-inbox-safety {
+  display: flex;
+  gap: var(--s3);
+  margin-top: var(--s5);
+  padding: var(--s3) var(--s4);
+  border-inline-start: 3px solid var(--alert);
+  background: var(--paper-2);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.tax-inbox-safety > svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 3px;
+  color: var(--alert);
+}
+
+.tax-inbox-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--s6);
+  border-block: 1px solid var(--rule-2);
+}
+
+.tax-inbox-overview > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s4) clamp(var(--s3), 3vw, var(--s5));
+  border-inline-end: 1px solid var(--rule);
+}
+
+.tax-inbox-overview > div:first-child {
+  padding-inline-start: 0;
+}
+
+.tax-inbox-overview > div:last-child {
+  border-inline-end: 0;
+}
+
+.tax-inbox-overview strong {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.tax-inbox-overview span {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.tax-inbox-add,
+.tax-inbox-prepare {
+  display: grid;
+  gap: var(--s4);
+  align-items: center;
+  margin-top: var(--s5);
+  padding: var(--s5);
+  background: var(--paper-2);
+}
+
+.tax-inbox-add p:last-child,
+.tax-inbox-prepare p:last-child {
+  margin-top: var(--s2);
+  color: var(--ink-2);
+}
+
+.tax-inbox-add .btn svg,
+.tax-inbox-prepare .btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.tax-inbox-added {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-top: var(--s5);
+  color: var(--ok);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.tax-inbox-added svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 760px) {
+  .tax-inbox-add,
+  .tax-inbox-prepare {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.tax-records {
+  margin-top: var(--s6);
+}
+
+.tax-records-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-bottom: var(--s3);
+  border-bottom: 2px solid var(--ink);
+}
+
+.tax-records-head span {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.tax-record {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: var(--s3);
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tax-record-mark {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--rule-2);
+  border-radius: 50%;
+  color: var(--ok);
+}
+
+.tax-record.is-review .tax-record-mark {
+  color: var(--alert);
+}
+
+.tax-record.is-unused {
+  color: var(--ink-3);
+}
+
+.tax-record-mark svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tax-record-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+}
+
+.tax-record-state,
+.tax-record-tag {
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.tax-record-state {
+  color: var(--ok);
+}
+
+.tax-record.is-review .tax-record-state {
+  color: var(--alert);
+}
+
+.tax-record-meta {
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+.tax-record-body > p:last-child {
+  margin-top: var(--s2);
+  color: var(--ink-2);
+}
+
+.tax-record-review {
+  margin-top: var(--s3);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.tax-review-panel {
+  margin-top: var(--s5);
+  padding: var(--s5);
+  border: 1px solid var(--alert);
+  background: var(--sheet);
+}
+
+.tax-review-panel h2 {
+  margin-top: var(--s2);
+}
+
+.tax-review-panel > div:first-child > p:last-child {
+  margin-top: var(--s3);
+  color: var(--ink-2);
+}
+
+.tax-review-panel dl {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s5);
+  padding-block: var(--s4);
+  border-block: 1px solid var(--rule);
+}
+
+.tax-review-panel dl > div {
+  display: grid;
+  gap: var(--s1);
+}
+
+.tax-review-panel dt {
+  color: var(--ink-3);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.tax-review-panel dd {
+  font-weight: 600;
+}
+
+.tax-review-actions {
+  margin-top: var(--s4);
+}
+
+@media (min-width: 720px) {
+  .tax-review-panel dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tax-record-tag {
+  grid-column: 2;
+  width: max-content;
+  max-width: 100%;
+  padding: 3px 7px;
+  border: 1px solid var(--rule-2);
+  color: var(--ink-3);
+}
+
+@media (min-width: 840px) {
+  .tax-record {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .tax-record-tag {
+    grid-column: auto;
+  }
+}
+
+.tax-inbox-back {
+  margin-top: var(--s5);
+}
+
+.tax-inbox-guide {
+  margin-top: var(--s6);
+}
+
+.tax-inbox-guide-note {
+  margin-top: var(--s4);
+  color: var(--ink-2);
+}
+
+.tax-inbox-guide ul {
+  display: grid;
+  gap: var(--s4);
+  margin-top: var(--s5);
+}
+
+.tax-inbox-guide li {
+  padding-inline-start: var(--s3);
+  border-inline-start: 2px solid var(--rule-2);
+}
+
+.tax-inbox-guide li p {
+  margin-top: var(--s1);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+@media (min-width: 760px) {
+  .tax-inbox-guide ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The final screen uses the accent as a proof line, not confetti. Each number
+   names a concrete action in the journey and avoids invented time-saved claims. */
+.impact-summary {
+  margin-top: var(--s6);
+  padding: var(--s5);
+  border: 1px solid var(--rule-2);
+  border-top: 4px solid var(--accent);
+  background: var(--sheet);
+}
+
+.impact-summary-head h2 {
+  max-width: 22ch;
+  margin-top: var(--s2);
+}
+
+.impact-grid {
+  display: grid;
+  margin-top: var(--s5);
+  border-block: 1px solid var(--rule-2);
+}
+
+.impact-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.impact-grid > div:last-child {
+  border-bottom: 0;
+}
+
+.impact-grid strong {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.impact-grid span {
+  max-width: 26ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+}
+
+.impact-checks {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s5);
+}
+
+.impact-checks li {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.impact-checks svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--ok);
+}
+
+.impact-caveat {
+  margin-top: var(--s5);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: var(--t-small);
+}
+
+@media (min-width: 720px) {
+  .impact-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .impact-grid > div {
+    padding: var(--s4);
+    border-inline-end: 1px solid var(--rule);
+    border-bottom: 0;
+  }
+
+  .impact-grid > div:first-child {
+    padding-inline-start: 0;
+  }
+
+  .impact-grid > div:last-child {
+    border-inline-end: 0;
+  }
+
+  .impact-checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .tax-inbox-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-inbox-overview > div,
+  .tax-inbox-overview > div:first-child {
+    padding: var(--s3) 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tax-inbox-overview > div:last-child {
+    border-bottom: 0;
+  }
+
+  .tax-inbox-add,
+  .tax-inbox-prepare,
+  .impact-summary {
+    padding: var(--s4);
+  }
+
+  .tax-inbox-add .btn,
+  .tax-inbox-prepare .btn {
+    width: 100%;
+  }
+}
+
+@media print {
+  .tax-inbox,
+  .dash-inbox,
+  .impact-summary {
+    break-inside: avoid;
+  }
+}

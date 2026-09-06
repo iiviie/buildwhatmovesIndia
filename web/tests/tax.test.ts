@@ -73,6 +73,16 @@ describe("the demo case", () => {
     expect(comparison.better).toBe("new");
     expect(comparison.saving).toBe(84_489);
   });
+
+  it("adds only the verified eligible share of an 80G donation to the old regime", () => {
+    const comparison = compareRegimes({
+      ...input,
+      deductions: { ...input.deductions, s80G: 5_500 },
+    });
+    expect(comparison.oldRegime.chapterViaDeductions).toBe(190_500);
+    expect(comparison.newRegime.chapterViaDeductions).toBe(0);
+    expect(comparison.saving).toBe(82_773);
+  });
 });
 
 describe("the section 87A rebate", () => {

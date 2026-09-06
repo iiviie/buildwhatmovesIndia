@@ -53,7 +53,17 @@ export type DemoDocument = {
 export type DeductionAmounts = {
   s80C: number;
   s80D: number;
+  /* Eligible amount after the donation's statutory percentage is applied.
+     The fictional ₹11,000 receipt qualifies at 50%, so this is ₹5,500 only
+     after its matching Form 10BE has been reviewed. */
+  s80G: number;
 };
+
+export type TaxInboxDonationStatus =
+  | "not-added"
+  | "needs-review"
+  | "ready"
+  | "excluded";
 
 export type JourneyStatus =
   | "draft"
@@ -96,6 +106,9 @@ export type DraftState = {
      accept. Savings-interest relief is derived from the AIS separately. */
   deductions: DeductionAmounts;
   benefitsReviewed: boolean;
+  /* A single synthetic upload makes the year-round inbox demonstrable without
+     inviting a reviewer to put real tax or health records into a prototype. */
+  taxInboxDonationStatus: TaxInboxDonationStatus;
   regime: Regime | null;
   declaration: boolean;
   status: JourneyStatus;
@@ -291,8 +304,10 @@ export const defaultDraft: DraftState = {
   deductions: {
     s80C: demoCase.demo80C,
     s80D: demoCase.demo80D,
+    s80G: 0,
   },
   benefitsReviewed: false,
+  taxInboxDonationStatus: "not-added",
   regime: null,
   declaration: false,
   status: "draft",
@@ -357,6 +372,7 @@ export const buildComparison = (draft: DraftState): RegimeComparison =>
     deductions: {
       s80C: draft.deductions.s80C,
       s80D: draft.deductions.s80D,
+      s80G: draft.deductions.s80G,
       s80TTA: confirmedEntries(draft)
         .filter((entry) => entry.kind === "savings")
         .reduce((sum, entry) => sum + reportedAmount(draft, entry), 0),
@@ -372,6 +388,7 @@ export const buildComputation = (draft: DraftState): Computation =>
     deductions: {
       s80C: draft.deductions.s80C,
       s80D: draft.deductions.s80D,
+      s80G: draft.deductions.s80G,
       s80TTA: confirmedEntries(draft)
         .filter((entry) => entry.kind === "savings")
         .reduce((sum, entry) => sum + reportedAmount(draft, entry), 0),

@@ -193,7 +193,7 @@ const widths = [
 /* Seed one of the site's own screens, outside the journey. Sign-in and
    registration are reached signed out; the dashboard needs a session. */
 const seedScreen = (name, language) => `
-  ${name === "dashboard"
+  ${name === "dashboard" || name === "tax-inbox"
     ? `localStorage.setItem("sahi-return-session-v1", JSON.stringify({
          userId: "DEMOA1234X",
          kind: "pan",
@@ -203,7 +203,7 @@ const seedScreen = (name, language) => `
     : `localStorage.removeItem("sahi-return-session-v1");`}
   localStorage.setItem("sahi-return-screen-v1", ${JSON.stringify(name)});
   localStorage.setItem("sahi-return-filing-draft-v1", JSON.stringify({
-    step: ${name === "dashboard" ? 3 : 0},
+    step: ${name === "dashboard" || name === "tax-inbox" ? 3 : 0},
     language: ${JSON.stringify(language)},
     lowData: false,
     documents: [],
@@ -222,7 +222,7 @@ const failures = [];
 const steps = [0, 1, 2, 3, 4, 5, 6, 7];
 /* The screens around the journey: the sign-in wall, registration, and the
    signed-in dashboard. */
-const screens = ["login", "register", "dashboard"];
+const screens = ["login", "register", "dashboard", "tax-inbox"];
 
 const readReport = () =>
   evaluate(`(() => {

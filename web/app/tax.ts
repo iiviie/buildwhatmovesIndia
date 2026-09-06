@@ -111,7 +111,9 @@ export type ComputeInput = {
   otherIncome: number;
   /* Only meaningful under the old regime. The new regime allows almost none of
      these, which is the point the deductions step has to make plainly. */
-  deductions?: { s80C?: number; s80D?: number; s80TTA?: number };
+  /* s80G is already the eligible deduction, after the applicable donation
+     percentage and evidence checks—not the gross amount on a receipt. */
+  deductions?: { s80C?: number; s80D?: number; s80G?: number; s80TTA?: number };
   tdsPaid: number;
 };
 
@@ -134,6 +136,7 @@ export const compute = (input: ComputeInput): Computation => {
     ? 0
     : Math.min(d.s80C ?? 0, CAP_80C) +
       Math.min(d.s80D ?? 0, CAP_80D) +
+      Math.max(0, d.s80G ?? 0) +
       Math.min(d.s80TTA ?? 0, CAP_80TTA);
 
   const totalIncome = Math.max(0, grossTotalIncome - chapterViaDeductions);

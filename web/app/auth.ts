@@ -21,6 +21,7 @@ export type Screen =
   | "login"
   | "register"
   | "dashboard"
+  | "tax-inbox"
   | "journey"
   | "notices";
 
@@ -31,6 +32,7 @@ export const isScreen = (value: unknown): value is Screen =>
   value === "login" ||
   value === "register" ||
   value === "dashboard" ||
+  value === "tax-inbox" ||
   value === "journey" ||
   value === "notices";
 
