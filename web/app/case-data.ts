@@ -58,8 +58,10 @@ export type DraftState = {
   salaryConfirmed: boolean;
   incomeAnswers: Record<string, IncomeAnswer>;
   /* The citizen's own figure for an entry answered "amended". Keyed by entry
-     id; absent means the statement's figure stands. */
-  incomeAmounts: Record<string, number>;
+     id; null preserves an explicitly cleared correction while the citizen
+     types a replacement, while an absent key means the statement's figure
+     stands. */
+  incomeAmounts: Record<string, number | null>;
   /* The eighteen "Help me select ITR" answers. Seeded from the department's
      own records and overridden only where the citizen disagrees, so an empty
      map means "nothing changed", not "nothing answered". */

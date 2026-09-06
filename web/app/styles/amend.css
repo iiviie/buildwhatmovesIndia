@@ -12,6 +12,12 @@
 
 /* The rupee sign and the figure are one field, so the box reads as the thing
    you type in rather than as a symbol sitting beside a box. */
+.amend-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
 .amend-cell {
   display: inline-flex;
   align-items: center;
@@ -21,6 +27,13 @@
   border-radius: 8px;
   background: var(--paper);
   transition: border-color var(--dur) var(--ease);
+}
+
+.amend-saved {
+  color: var(--accent-strong);
+  font-size: var(--t-small);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .amend-cell:focus-within {
